@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sparsamp-semantic"
+version = "0.1.0"
+description = "Reproducible SparSamp implementation for semantic instruction models"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "SparSamp reproduction project" }]
+dependencies = [
+  "cryptography>=44,<47",
+]
+
+[project.optional-dependencies]
+local = [
+  "accelerate>=1.2,<2",
+  "safetensors>=0.5,<1",
+  "sentencepiece>=0.2,<1",
+  "transformers>=4.48,<5",
+]
+api = [
+  "openai>=1.75,<3",
+]
+web = [
+  "fastapi>=0.116,<1",
+  "uvicorn[standard]>=0.35,<1",
+]
+dev = [
+  "httpx>=0.28,<1",
+  "pytest>=8.3,<10",
+  "ruff>=0.9,<1",
+]
+
+[project.scripts]
+sparsamp = "sparsamp_semantic.cli:main"
+sparsamp-web = "sparsamp_semantic.api.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sparsamp_semantic"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
