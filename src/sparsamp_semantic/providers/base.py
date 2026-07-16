@@ -54,4 +54,3 @@ class Provider(ABC):
         for token_id in token_ids:
             session.append(token_id)
         return session
-

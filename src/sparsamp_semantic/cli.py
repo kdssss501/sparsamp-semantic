@@ -20,9 +20,7 @@ from .providers.mock import MockProvider
 def _secret_key() -> bytes:
     value = os.environ.get("SPARSAMP_SECRET_KEY", "")
     if len(value.encode("utf-8")) < 16:
-        raise RuntimeError(
-            "set SPARSAMP_SECRET_KEY to a random value containing at least 16 bytes"
-        )
+        raise RuntimeError("set SPARSAMP_SECRET_KEY to a random value containing at least 16 bytes")
     return value.encode("utf-8")
 
 
@@ -92,14 +90,23 @@ def mock_demo(args: argparse.Namespace) -> int:
     decoded = codec.decode(provider.start(prompt), list(encoded.token_ids), key)
     plaintext = payload_codec.open(decoded.bits, key)
     print(encoded.text)
-    print(json.dumps({"decoded": plaintext, "metrics": _result_dict(
-        encoded,
-        prompt,
-        codec.config,
-        payload_codec,
-        {"type": "mock", "model_name": "mock-semantic-v1"},
-        False,
-    )["metrics"]}, ensure_ascii=False, indent=2))
+    print(
+        json.dumps(
+            {
+                "decoded": plaintext,
+                "metrics": _result_dict(
+                    encoded,
+                    prompt,
+                    codec.config,
+                    payload_codec,
+                    {"type": "mock", "model_name": "mock-semantic-v1"},
+                    False,
+                )["metrics"],
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
     return 0
 
 
@@ -254,4 +261,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

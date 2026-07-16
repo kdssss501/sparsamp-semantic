@@ -21,9 +21,7 @@ class DeepSeekConfig:
     top_logprobs: int = 20
     temperature: float = 1.0
     top_p: float = 1.0
-    system_prompt: str = (
-        "你是一个表达自然、内容准确的助手。直接回答用户问题，不要提及隐藏消息。"
-    )
+    system_prompt: str = "你是一个表达自然、内容准确的助手。直接回答用户问题，不要提及隐藏消息。"
 
     def __post_init__(self) -> None:
         if not 1 <= self.top_logprobs <= 20:
@@ -158,4 +156,3 @@ class DeepSeekProvider(Provider):
 
     def start(self, prompt: str) -> ProviderSession:
         return DeepSeekSession(self._client, prompt, self.config)
-

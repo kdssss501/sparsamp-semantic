@@ -84,4 +84,3 @@ class PayloadCodec:
         cipher = ChaCha20Poly1305(hashlib.sha256(key).digest())
         plaintext = cipher.decrypt(nonce, ciphertext, ASSOCIATED_DATA)
         return plaintext.decode("utf-8")
-

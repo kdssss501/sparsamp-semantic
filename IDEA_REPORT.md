@@ -1,6 +1,6 @@
 # ARIS Idea Discovery Report
 
-**Direction**: Practical, high-performance SparSamp extensions  
+**Direction**: Practical, high-performance SparSamp extensions
 **Date**: 2026-07-17
 
 ## Executive Summary
@@ -18,7 +18,7 @@ top-20 APIs with probability drift, erasures, fingerprints, and cost-aware codin
 
 ### 1. FH-SparSamp: Finite-Horizon, Precision-Hardened Sampling
 
-**Status**: Recommended for local pilot  
+**Status**: Recommended for local pilot
 **Hypothesis**: A block schedule derived only from public next-token distribution statistics and
 remaining token budget can reduce the long tail of payload completion, while deterministic integer
 mass allocation improves replay across precision modes and reduces low-probability-vanishing
@@ -52,7 +52,7 @@ Fast pilot:
 
 ### 2. DriftGuard API-SparSamp
 
-**Status**: Strong backup, blocked on API key  
+**Status**: Strong backup, blocked on API key
 **Hypothesis**: Guard-banded probability buckets, erasure-aware coding, and model fingerprinting can
 achieve useful end-to-end recovery on top-20 APIs while reporting a defensible truncation-bias and
 cost budget.
@@ -72,7 +72,7 @@ Success target:
 
 ### 3. Prompt Capacity Controller
 
-**Status**: Supporting component, not a standalone paper  
+**Status**: Supporting component, not a standalone paper
 **Hypothesis**: A cheap native-generation probe can predict whether a prompt will sustain enough
 entropy and response length for a payload, reducing failed or truncated covers.
 
@@ -82,26 +82,26 @@ payload-dependent prompt selection.
 
 ### 4. Semantic Finishing Tail
 
-**Status**: Must-have engineering ablation  
+**Status**: Must-have engineering ablation
 After payload completion, continue native sampling to a sentence boundary. This should improve human
 ratings and reduce obvious truncation without changing the already emitted steganographic prefix.
 
 ### 5. Canonical Token Filtering
 
-**Status**: Eliminated as dominant contribution  
+**Status**: Eliminated as dominant contribution
 The problem is real, but ReTokSync is a stronger and more recent direct baseline. Retain only as a
 simple baseline and diagnostic.
 
 ### 6. Replace SparSamp with ANS
 
-**Status**: Eliminated  
+**Status**: Eliminated
 ANStega already occupies this contribution space. Reimplement only for comparison if code is
 available.
 
 ## Recommended Paper Framing
 
 **Primary claim**: finite-horizon authenticated-payload completion can be improved without using
-message-dependent control decisions.  
+message-dependent control decisions.
 **Supporting claim**: deterministic integer probability contracts improve cross-precision replay and
 reduce finite-precision steganalysis signals.
 

@@ -24,4 +24,3 @@ class HmacRandomStream:
         message = domain + self._context + step.to_bytes(8, "big", signed=False)
         digest = hmac.new(self._key, message, hashlib.sha256).digest()
         return Fraction(int.from_bytes(digest, "big"), 1 << 256)
-

@@ -25,4 +25,3 @@ def test_repetition_code_corrects_one_error() -> None:
     encoded = list(repeat_bits("101", 3))
     encoded[1] = "0"
     assert recover_repeated_bits("".join(encoded), 3) == "101"
-

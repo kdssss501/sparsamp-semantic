@@ -44,4 +44,3 @@ def test_wrong_prompt_fails_or_changes_bits() -> None:
 
     decoded = codec.decode(provider.start("prompt-b"), list(encoded.token_ids), key)
     assert decoded.bits != "10100101"
-

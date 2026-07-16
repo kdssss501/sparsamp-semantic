@@ -103,7 +103,9 @@ class HuggingFaceSession(ProviderSession):
                 output = self._model(input_ids=self._prompt_ids, use_cache=True)
             else:
                 if self._pending_token is None:
-                    raise RuntimeError("a token must be appended before requesting the next distribution")
+                    raise RuntimeError(
+                        "a token must be appended before requesting the next distribution"
+                    )
                 input_ids = torch.tensor([[self._pending_token]], device=self._device)
                 output = self._model(
                     input_ids=input_ids,
@@ -265,9 +267,7 @@ class HuggingFaceProvider(Provider):
     def start(self, prompt: str) -> ProviderSession:
         return self.start_with_config(prompt, self.config)
 
-    def start_with_config(
-        self, prompt: str, session_config: HuggingFaceConfig
-    ) -> ProviderSession:
+    def start_with_config(self, prompt: str, session_config: HuggingFaceConfig) -> ProviderSession:
         """Create a session with sampling overrides while reusing loaded model weights."""
 
         immutable_fields = ("model_name", "revision", "device", "dtype", "load_in_4bit")

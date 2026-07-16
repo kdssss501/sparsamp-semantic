@@ -78,4 +78,3 @@ class MockProvider(Provider):
 
     def start(self, prompt: str) -> ProviderSession:
         return MockSession(prompt, source_mass=self._source_mass)
-

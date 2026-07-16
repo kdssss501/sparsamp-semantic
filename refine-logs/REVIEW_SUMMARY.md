@@ -1,6 +1,6 @@
 # ARIS Research Audit
 
-**Date**: 2026-07-17  
+**Date**: 2026-07-17
 **Mode**: Local critical-review fallback. The ARIS-required Codex reviewer MCP was unavailable,
 so no external-review claim is made.
 

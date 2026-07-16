@@ -1,9 +1,9 @@
 # Experiment Plan
 
-**Problem**: Practical finite-budget reliability and finite-precision security for SparSamp  
+**Problem**: Practical finite-budget reliability and finite-precision security for SparSamp
 **Method Thesis**: Public-state adaptive blocks plus deterministic integer probability mass improve
 authenticated-message completion under a token budget without message-dependent distribution
-control.  
+control.
 **Date**: 2026-07-17
 
 ## Claim Map

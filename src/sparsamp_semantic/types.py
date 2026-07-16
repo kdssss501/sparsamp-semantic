@@ -83,4 +83,3 @@ class DistributionSnapshot:
             )
         )
         return cls(candidates=normalized, source_mass=min(source_mass, 1.0), **kwargs)
-

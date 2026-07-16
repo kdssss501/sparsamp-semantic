@@ -52,9 +52,7 @@ class OperationManager:
         try:
             result = task(
                 operation_id,
-                lambda progress, stage: self._update(
-                    operation_id, progress=progress, stage=stage
-                ),
+                lambda progress, stage: self._update(operation_id, progress=progress, stage=stage),
             )
         except Exception as error:  # The operation resource carries worker failures to the UI.
             self._update(

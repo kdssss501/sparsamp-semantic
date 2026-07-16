@@ -156,9 +156,7 @@ class ResearchService:
             "mean_token_latency_ms": sum(latencies) / len(latencies) if latencies else None,
         }
 
-    def _provider(
-        self, sampling: SamplingConfig
-    ) -> tuple[HuggingFaceProvider, HuggingFaceConfig]:
+    def _provider(self, sampling: SamplingConfig) -> tuple[HuggingFaceProvider, HuggingFaceConfig]:
         values = sampling.model_dump()
         values["model_name"] = values.pop("model")
         config = HuggingFaceConfig(**values)

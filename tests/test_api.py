@@ -38,7 +38,9 @@ class StubResearchService:
 
 
 def test_operation_contract_and_secret_redaction(tmp_path: Path) -> None:
-    app = create_app(output_root=tmp_path, web_dist=tmp_path / "missing", service=StubResearchService())
+    app = create_app(
+        output_root=tmp_path, web_dist=tmp_path / "missing", service=StubResearchService()
+    )
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/operations",
@@ -62,7 +64,9 @@ def test_operation_contract_and_secret_redaction(tmp_path: Path) -> None:
 
 
 def test_validation_and_not_found_errors_include_request_id(tmp_path: Path) -> None:
-    app = create_app(output_root=tmp_path, web_dist=tmp_path / "missing", service=StubResearchService())
+    app = create_app(
+        output_root=tmp_path, web_dist=tmp_path / "missing", service=StubResearchService()
+    )
     with TestClient(app) as client:
         invalid = client.post("/api/v1/operations", json={"kind": "encode"})
         assert invalid.status_code == 422

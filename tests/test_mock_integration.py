@@ -18,4 +18,3 @@ def test_encrypted_text_round_trip() -> None:
 
     assert payload.open(decoded.bits, key) == "实验编号 A-17"
     assert "method" in encoded.text or "system" in encoded.text or "study" in encoded.text
-

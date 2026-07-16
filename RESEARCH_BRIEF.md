@@ -1,6 +1,6 @@
 # Research Brief: Practical SparSamp for Instruction LLMs
 
-**Date**: 2026-07-17  
+**Date**: 2026-07-17
 **Reference**: SparSamp, USENIX Security 2025, arXiv:2503.19499
 
 ## Problem Anchor
