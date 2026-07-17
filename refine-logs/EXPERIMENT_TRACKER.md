@@ -12,3 +12,4 @@
 | R008 | M3 | Precision detector | mass variants | Native/stego samples | detector AUC | MUST | TODO | Reproduce published signal |
 | R009 | M4 | Semantic finishing tail | stop/punctuation/EOS | 50 covers | preference, completeness | MUST | NEXT | Directly addresses observed truncated Qwen sentences; keep capacity prefix metrics separate |
 | R010 | API | Repeated-query drift probe | DeepSeek top-20 | 20 prompts | churn, drift, mass, cost | NICE | BLOCKED | Needs API key |
+| R011 | M3 | ACL 2026 RRC termination audit | Paper Algorithm 3/4 clean-room | Mock deterministic distributions | exact decode, modular wrap | MUST | COUNTEREXAMPLE | 500 samples show 5%-9% decode failure; implement verified termination before Qwen scale |

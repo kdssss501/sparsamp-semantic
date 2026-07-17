@@ -34,6 +34,7 @@ from sparsamp_semantic.providers.huggingface import (  # noqa: E402
     HuggingFaceConfig,
     HuggingFaceProvider,
 )
+from sparsamp_semantic.rrc import RrcConfig, RotationRangeCodec  # noqa: E402
 
 
 def _utc_now() -> str:
@@ -223,7 +224,7 @@ def _iter_specs(settings: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _build_codec(
     spec: dict[str, Any], settings: dict[str, Any], total_bits: int
-) -> SparSampCodec | FhSparSampCodec:
+) -> SparSampCodec | FhSparSampCodec | RotationRangeCodec:
     common = {
         "max_tokens": spec["token_budget"],
         "min_source_mass": float(settings.get("min_source_mass", 0.0)),
@@ -255,6 +256,16 @@ def _build_codec(
                 block_sizes=tuple(sorted(set(schedule))),
                 block_schedule=schedule,
                 **common,
+            )
+        )
+    if kind == "rrc":
+        return RotationRangeCodec(
+            RrcConfig(
+                message_bits=total_bits,
+                max_tokens=spec["token_budget"],
+                probability_quantum=settings.get("probability_quantum", "1e-15"),
+                guard_digits=int(variant.get("guard_digits", 24)),
+                min_precision=int(variant.get("min_precision", 48)),
             )
         )
     raise ValueError(f"unsupported codec variant kind: {kind!r}")
@@ -377,7 +388,7 @@ def main() -> int:
                     records = error.records
                     padded_bits = (
                         0
-                        if isinstance(codec, FhSparSampCodec)
+                        if isinstance(codec, (FhSparSampCodec, RotationRangeCodec))
                         else (-len(payload_bits)) % codec.config.block_size
                     )
                 else:
