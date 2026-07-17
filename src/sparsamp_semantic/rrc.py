@@ -187,6 +187,12 @@ class RotationRangeCodec:
                         latency_ms=snapshot.latency_ms,
                         block_size=self.config.message_bits,
                         completed_bits=self.config.message_bits if completed else 0,
+                        base_entropy_bits=snapshot.metadata.get("base_entropy_bits"),
+                        effective_temperature=snapshot.metadata.get("effective_temperature"),
+                        rescue_active=bool(snapshot.metadata.get("rescue_active", False)),
+                        low_entropy_streak=int(
+                            snapshot.metadata.get("low_entropy_streak", 0)
+                        ),
                     )
                 )
                 if completed:

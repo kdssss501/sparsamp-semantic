@@ -85,6 +85,10 @@ class StepRecord:
     latency_ms: float
     block_size: int | None = None
     completed_bits: int = 0
+    base_entropy_bits: float | None = None
+    effective_temperature: float | None = None
+    rescue_active: bool = False
+    low_entropy_streak: int = 0
 
 
 @dataclass(frozen=True)
@@ -223,6 +227,10 @@ class SparSampCodec:
                     latency_ms=snapshot.latency_ms,
                     block_size=self.config.block_size,
                     completed_bits=min(block_index * self.config.block_size, len(bits)),
+                    base_entropy_bits=snapshot.metadata.get("base_entropy_bits"),
+                    effective_temperature=snapshot.metadata.get("effective_temperature"),
+                    rescue_active=bool(snapshot.metadata.get("rescue_active", False)),
+                    low_entropy_streak=int(snapshot.metadata.get("low_entropy_streak", 0)),
                 )
             )
 

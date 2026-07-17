@@ -111,6 +111,12 @@ def _record_metrics(records: tuple[StepRecord, ...]) -> dict[str, Any]:
         for record in records
         if record.block_completed and record.block_size is not None
     ]
+    rescue_records = [record for record in records if record.rescue_active]
+    base_entropies = [
+        record.base_entropy_bits
+        for record in records
+        if record.base_entropy_bits is not None
+    ]
     return {
         "embedded_steps": len(embedded),
         "skipped_steps": len(records) - len(embedded),
@@ -131,6 +137,14 @@ def _record_metrics(records: tuple[StepRecord, ...]) -> dict[str, Any]:
             str(block_size): count for block_size, count in sorted(block_token_counts.items())
         },
         "completed_block_schedule": completed_block_schedule,
+        "rescue_steps": len(rescue_records),
+        "rescue_fraction": len(rescue_records) / len(records) if records else 0.0,
+        "mean_base_entropy_bits": (
+            sum(base_entropies) / len(base_entropies) if base_entropies else None
+        ),
+        "max_low_entropy_streak": max(
+            (record.low_entropy_streak for record in records), default=0
+        ),
     }
 
 
@@ -326,6 +340,10 @@ def main() -> int:
         system_prompt=settings.get("system_prompt", HuggingFaceConfig.system_prompt),
         allow_eos=bool(settings.get("allow_eos", False)),
         seed=int(settings.get("model_seed", 42)),
+        adaptive_temperature=bool(settings.get("adaptive_temperature", False)),
+        entropy_floor_bits=float(settings.get("entropy_floor_bits", 0.75)),
+        rescue_temperature=float(settings.get("rescue_temperature", 1.1)),
+        rescue_patience=int(settings.get("rescue_patience", 8)),
     )
     provider = HuggingFaceProvider(base_config)
     runtime = _runtime_metadata()

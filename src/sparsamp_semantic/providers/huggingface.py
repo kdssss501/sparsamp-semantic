@@ -29,6 +29,10 @@ class HuggingFaceConfig:
     )
     allow_eos: bool = False
     seed: int = 42
+    adaptive_temperature: bool = False
+    entropy_floor_bits: float = 0.75
+    rescue_temperature: float = 1.1
+    rescue_patience: int = 8
 
     def __post_init__(self) -> None:
         if not 0.0 < self.top_p <= 1.0:
@@ -37,6 +41,30 @@ class HuggingFaceConfig:
             raise ValueError("top_k must be positive")
         if self.temperature <= 0:
             raise ValueError("temperature must be positive")
+        if self.entropy_floor_bits < 0:
+            raise ValueError("entropy_floor_bits must be non-negative")
+        if self.adaptive_temperature and self.rescue_temperature < self.temperature:
+            raise ValueError("rescue_temperature must be at least the base temperature")
+        if self.rescue_patience < 1:
+            raise ValueError("rescue_patience must be positive")
+
+
+def select_effective_temperature(
+    entropy_bits: float,
+    low_entropy_streak: int,
+    config: HuggingFaceConfig,
+) -> tuple[float, int, bool]:
+    """Update the public low-entropy controller and return this step's temperature."""
+
+    if not config.adaptive_temperature:
+        return config.temperature, 0, False
+    if entropy_bits < config.entropy_floor_bits:
+        low_entropy_streak += 1
+    else:
+        low_entropy_streak = 0
+    rescue_active = low_entropy_streak >= config.rescue_patience
+    temperature = config.rescue_temperature if rescue_active else config.temperature
+    return temperature, low_entropy_streak, rescue_active
 
 
 class HuggingFaceSession(ProviderSession):
@@ -72,6 +100,7 @@ class HuggingFaceSession(ProviderSession):
         self._last_candidates: set[int] = set()
         self._generator = torch.Generator(device=self._device)
         self._generator.manual_seed(config.seed)
+        self._low_entropy_streak = 0
 
     @property
     def context_id(self) -> bytes:
@@ -83,6 +112,10 @@ class HuggingFaceSession(ProviderSession):
                 str(self._config.top_p),
                 str(self._config.top_k),
                 str(self._config.temperature),
+                str(self._config.adaptive_temperature),
+                str(self._config.entropy_floor_bits),
+                str(self._config.rescue_temperature),
+                str(self._config.rescue_patience),
                 self._config.dtype,
                 str(self._config.load_in_4bit),
                 self._config.system_prompt,
@@ -119,7 +152,6 @@ class HuggingFaceSession(ProviderSession):
     def next_distribution(self) -> DistributionSnapshot:
         torch = self._torch
         logits, latency_ms = self._forward()
-        logits = logits / self._config.temperature
 
         if not self._config.allow_eos:
             blocked = {
@@ -133,7 +165,24 @@ class HuggingFaceSession(ProviderSession):
             for token_id in blocked:
                 logits[token_id] = -torch.inf
 
-        probabilities = torch.softmax(logits, dim=-1)
+        base_probabilities = torch.softmax(logits / self._config.temperature, dim=-1)
+        positive = base_probabilities > 0
+        base_entropy_bits = float(
+            -(
+                base_probabilities[positive]
+                * torch.log2(base_probabilities[positive])
+            ).sum().item()
+        )
+        effective_temperature, self._low_entropy_streak, rescue_active = (
+            select_effective_temperature(
+                base_entropy_bits, self._low_entropy_streak, self._config
+            )
+        )
+        probabilities = (
+            torch.softmax(logits / effective_temperature, dim=-1)
+            if rescue_active
+            else base_probabilities
+        )
         sorted_probabilities, sorted_indices = torch.sort(probabilities, descending=True)
 
         if self._config.top_k is not None:
@@ -194,6 +243,14 @@ class HuggingFaceSession(ProviderSession):
                 "top_p": self._config.top_p,
                 "top_k": self._config.top_k,
                 "temperature": self._config.temperature,
+                "effective_temperature": effective_temperature,
+                "base_entropy_bits": base_entropy_bits,
+                "adaptive_temperature": self._config.adaptive_temperature,
+                "entropy_floor_bits": self._config.entropy_floor_bits,
+                "rescue_temperature": self._config.rescue_temperature,
+                "rescue_patience": self._config.rescue_patience,
+                "low_entropy_streak": self._low_entropy_streak,
+                "rescue_active": rescue_active,
                 "dtype": self._config.dtype,
                 "load_in_4bit": self._config.load_in_4bit,
             },

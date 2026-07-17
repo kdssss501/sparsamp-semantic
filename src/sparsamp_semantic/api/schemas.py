@@ -19,6 +19,16 @@ class SamplingConfig(BaseModel):
     top_k: int | None = Field(default=None, ge=1)
     temperature: float = Field(default=0.8, gt=0.0, le=5.0)
     seed: int = 42
+    adaptive_temperature: bool = False
+    entropy_floor_bits: float = Field(default=0.75, ge=0.0, le=20.0)
+    rescue_temperature: float = Field(default=1.1, gt=0.0, le=5.0)
+    rescue_patience: int = Field(default=8, ge=1, le=256)
+
+    @model_validator(mode="after")
+    def rescue_temperature_is_not_lower(self) -> SamplingConfig:
+        if self.adaptive_temperature and self.rescue_temperature < self.temperature:
+            raise ValueError("rescue_temperature must be at least temperature")
+        return self
 
 
 class CodecSettings(BaseModel):

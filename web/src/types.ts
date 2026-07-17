@@ -11,6 +11,10 @@ export interface SamplingConfig {
   top_k: number | null
   temperature: number
   seed: number
+  adaptive_temperature: boolean
+  entropy_floor_bits: number
+  rescue_temperature: number
+  rescue_patience: number
 }
 
 export interface CodecSettings {

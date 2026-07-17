@@ -22,6 +22,10 @@ const sampling = reactive<SamplingConfig>({
   top_k: null,
   temperature: 0.8,
   seed: 42,
+  adaptive_temperature: false,
+  entropy_floor_bits: 0.75,
+  rescue_temperature: 1.1,
+  rescue_patience: 8,
 })
 const codec = reactive<CodecSettings>({
   block_size: 32,
@@ -173,6 +177,20 @@ function downloadCover() {
                   :max="256"
                   :step="8"
                   :disabled="codec.finish_mode === 'none'"
+                  controls-position="right"
+                />
+              </el-form-item>
+              <el-form-item label="低熵救援">
+                <el-switch v-model="sampling.adaptive_temperature" />
+              </el-form-item>
+              <el-form-item label="救援温度">
+                <el-input-number
+                  v-model="sampling.rescue_temperature"
+                  :min="sampling.temperature"
+                  :max="2"
+                  :step="0.1"
+                  :precision="1"
+                  :disabled="!sampling.adaptive_temperature"
                   controls-position="right"
                 />
               </el-form-item>

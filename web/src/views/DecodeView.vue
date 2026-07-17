@@ -25,6 +25,10 @@ const sampling = reactive<SamplingConfig>({
   top_k: null,
   temperature: 0.8,
   seed: 42,
+  adaptive_temperature: false,
+  entropy_floor_bits: 0.75,
+  rescue_temperature: 1.1,
+  rescue_patience: 8,
 })
 const codec = reactive<CodecSettings>({
   block_size: 32,
@@ -70,6 +74,16 @@ async function loadArtifact() {
       sampling.top_k = provider.top_k == null ? null : Number(provider.top_k)
       sampling.temperature = Number(provider.temperature ?? sampling.temperature)
       sampling.seed = Number(provider.seed ?? sampling.seed)
+      sampling.adaptive_temperature = Boolean(
+        provider.adaptive_temperature ?? sampling.adaptive_temperature,
+      )
+      sampling.entropy_floor_bits = Number(
+        provider.entropy_floor_bits ?? sampling.entropy_floor_bits,
+      )
+      sampling.rescue_temperature = Number(
+        provider.rescue_temperature ?? sampling.rescue_temperature,
+      )
+      sampling.rescue_patience = Number(provider.rescue_patience ?? sampling.rescue_patience)
     }
     if (settings) {
       codec.block_size = Number(settings.block_size ?? codec.block_size)
