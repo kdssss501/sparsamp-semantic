@@ -2,7 +2,7 @@
 
 from .core import CodecConfig, DecodeResult, EncodeResult, IncompleteEncodeError, SparSampCodec
 from .fh import FhCodecConfig, FhSparSampCodec
-from .finishing import FinishingConfig, FinishingResult, finish_session
+from .finishing import FinishingConfig, FinishingResult, finish_session, is_sentence_complete
 from .payload import PayloadCodec
 from .rrc import RrcConfig, RotationRangeCodec
 
@@ -20,4 +20,5 @@ __all__ = [
     "RotationRangeCodec",
     "SparSampCodec",
     "finish_session",
+    "is_sentence_complete",
 ]

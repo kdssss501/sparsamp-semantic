@@ -11,6 +11,15 @@ from .providers.base import ProviderSession
 
 
 _SENTENCE_END = re.compile(r"[.!?。！？](?:[\"'”’）)\]】》」』*_\s]*)$")
+_ORDERED_LIST_MARKER = re.compile(r"(?:^|\n)\s*\d{1,3}\.\s*$")
+
+
+def is_sentence_complete(text: str) -> bool:
+    """Return true for a visible sentence end, excluding standalone list markers."""
+
+    if _ORDERED_LIST_MARKER.search(text) is not None:
+        return False
+    return _SENTENCE_END.search(text) is not None
 
 
 @dataclass(frozen=True)
@@ -100,7 +109,7 @@ def finish_session(
             if (
                 config.mode == "punctuation"
                 and generated >= config.min_tokens
-                and _SENTENCE_END.search(session.render()) is not None
+                and is_sentence_complete(session.render())
             ):
                 stopped_on_punctuation = True
                 break

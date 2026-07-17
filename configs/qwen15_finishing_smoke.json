@@ -23,7 +23,7 @@
       "finish_mode": "none"
     },
     {
-      "name": "punctuation-32",
+      "name": "punctuation-32-v2",
       "kind": "fixed",
       "block_size": 16,
       "finish_mode": "punctuation",
