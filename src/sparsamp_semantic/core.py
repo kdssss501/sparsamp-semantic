@@ -83,6 +83,8 @@ class StepRecord:
     truncation_kl_nats: float
     candidate_count: int
     latency_ms: float
+    block_size: int | None = None
+    completed_bits: int = 0
 
 
 @dataclass(frozen=True)
@@ -133,7 +135,7 @@ class IncompleteEncodeError(RuntimeError):
         token_ids: tuple[Hashable, ...],
         text: str,
         completed_blocks: int,
-        total_blocks: int,
+        total_blocks: int | None,
         completed_bits: int,
         elapsed_seconds: float,
         records: tuple[StepRecord, ...],
@@ -219,6 +221,8 @@ class SparSampCodec:
                     truncation_kl_nats=snapshot.truncation_kl_nats,
                     candidate_count=len(snapshot.candidates),
                     latency_ms=snapshot.latency_ms,
+                    block_size=self.config.block_size,
+                    completed_bits=min(block_index * self.config.block_size, len(bits)),
                 )
             )
 

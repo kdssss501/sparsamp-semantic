@@ -11,6 +11,7 @@ import os
 import platform
 import subprocess
 import sys
+from collections import Counter
 from dataclasses import asdict, replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -27,6 +28,7 @@ from sparsamp_semantic.core import (  # noqa: E402
     SparSampCodec,
     StepRecord,
 )
+from sparsamp_semantic.fh import FhCodecConfig, FhSparSampCodec  # noqa: E402
 from sparsamp_semantic.payload import PayloadCodec, bytes_to_bits  # noqa: E402
 from sparsamp_semantic.providers.huggingface import (  # noqa: E402
     HuggingFaceConfig,
@@ -99,6 +101,14 @@ def _payload_for_seed(settings: dict[str, Any], key: bytes, seed: int) -> tuple[
 def _record_metrics(records: tuple[StepRecord, ...]) -> dict[str, Any]:
     embedded = [record for record in records if record.embedded]
     total_latency_ms = sum(record.latency_ms for record in records)
+    block_token_counts = Counter(
+        record.block_size for record in records if record.block_size is not None
+    )
+    completed_block_schedule = [
+        record.block_size
+        for record in records
+        if record.block_completed and record.block_size is not None
+    ]
     return {
         "embedded_steps": len(embedded),
         "skipped_steps": len(records) - len(embedded),
@@ -115,6 +125,10 @@ def _record_metrics(records: tuple[StepRecord, ...]) -> dict[str, Any]:
             sum(record.candidate_count for record in records) / len(records) if records else 0.0
         ),
         "truncation_kl_nats": sum(record.truncation_kl_nats for record in records),
+        "block_token_counts": {
+            str(block_size): count for block_size, count in sorted(block_token_counts.items())
+        },
+        "completed_block_schedule": completed_block_schedule,
     }
 
 
@@ -140,7 +154,13 @@ def _existing_results(path: Path) -> dict[str, dict[str, Any]]:
 
 
 def _trajectory_key(spec: dict[str, Any]) -> str:
-    trajectory = {key: value for key, value in spec.items() if key != "token_budget"}
+    variant = spec.get("codec_variant")
+    budget_changes_trajectory = variant is not None and variant.get("kind") == "fh"
+    trajectory = {
+        key: value
+        for key, value in spec.items()
+        if key != "token_budget" or budget_changes_trajectory
+    }
     return json.dumps(trajectory, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
@@ -163,10 +183,27 @@ def _sequence_difference(
 
 def _iter_specs(settings: dict[str, Any]) -> list[dict[str, Any]]:
     specs: list[dict[str, Any]] = []
+    variants = settings.get("variants")
     for prompt_index, prompt in enumerate(settings["prompts"]):
         for payload_seed in settings["payload_seeds"]:
             for token_budget in settings["token_budgets"]:
-                for block_size in settings["block_sizes"]:
+                if variants is None:
+                    for block_size in settings["block_sizes"]:
+                        specs.append(
+                            {
+                                "experiment_id": settings["experiment_id"],
+                                "prompt_index": prompt_index,
+                                "prompt": prompt,
+                                "payload_seed": int(payload_seed),
+                                "token_budget": int(token_budget),
+                                "block_size": int(block_size),
+                                "top_p": float(settings.get("top_p", 0.95)),
+                                "top_k": settings.get("top_k"),
+                                "temperature": float(settings.get("temperature", 1.0)),
+                            }
+                        )
+                    continue
+                for variant in variants:
                     specs.append(
                         {
                             "experiment_id": settings["experiment_id"],
@@ -174,13 +211,53 @@ def _iter_specs(settings: dict[str, Any]) -> list[dict[str, Any]]:
                             "prompt": prompt,
                             "payload_seed": int(payload_seed),
                             "token_budget": int(token_budget),
-                            "block_size": int(block_size),
+                            "variant": str(variant["name"]),
+                            "codec_variant": variant,
                             "top_p": float(settings.get("top_p", 0.95)),
                             "top_k": settings.get("top_k"),
                             "temperature": float(settings.get("temperature", 1.0)),
                         }
                     )
     return specs
+
+
+def _build_codec(
+    spec: dict[str, Any], settings: dict[str, Any], total_bits: int
+) -> SparSampCodec | FhSparSampCodec:
+    common = {
+        "max_tokens": spec["token_budget"],
+        "min_source_mass": float(settings.get("min_source_mass", 0.0)),
+        "probability_quantum": settings.get("probability_quantum", "1e-15"),
+    }
+    variant = spec.get("codec_variant")
+    if variant is None:
+        return SparSampCodec(CodecConfig(block_size=spec["block_size"], **common))
+    kind = variant.get("kind")
+    if kind == "fixed":
+        return SparSampCodec(CodecConfig(block_size=int(variant["block_size"]), **common))
+    if kind == "fh":
+        return FhSparSampCodec(
+            FhCodecConfig(
+                total_bits=total_bits,
+                block_sizes=tuple(int(value) for value in variant.get("block_sizes", [8, 16, 32])),
+                entropy_ema_alpha=float(variant.get("entropy_ema_alpha", 0.2)),
+                min_entropy_bits=float(variant.get("min_entropy_bits", 0.25)),
+                tight_capacity_ratio=float(variant.get("tight_capacity_ratio", 1.0)),
+                loose_capacity_ratio=float(variant.get("loose_capacity_ratio", 1.5)),
+                **common,
+            )
+        )
+    if kind == "schedule":
+        schedule = tuple(int(value) for value in variant["block_schedule"])
+        return FhSparSampCodec(
+            FhCodecConfig(
+                total_bits=total_bits,
+                block_sizes=tuple(sorted(set(schedule))),
+                block_schedule=schedule,
+                **common,
+            )
+        )
+    raise ValueError(f"unsupported codec variant kind: {kind!r}")
 
 
 def main() -> int:
@@ -258,24 +335,18 @@ def main() -> int:
                 )
                 continue
             payload_bits, payload_mode = _payload_for_seed(settings, key, spec["payload_seed"])
-            codec = SparSampCodec(
-                CodecConfig(
-                    block_size=spec["block_size"],
-                    max_tokens=spec["token_budget"],
-                    min_source_mass=float(settings.get("min_source_mass", 0.0)),
-                    probability_quantum=settings.get("probability_quantum", "1e-15"),
-                )
-            )
+            codec = _build_codec(spec, settings, len(payload_bits))
             session_config = replace(
                 base_config,
                 top_p=spec["top_p"],
                 top_k=spec["top_k"],
                 temperature=spec["temperature"],
             )
+            variant_label = spec.get("variant", f"fixed-{spec.get('block_size')}")
             print(
                 f"[{index}/{len(pending)}] run={run_id} prompt={spec['prompt_index']} "
                 f"seed={spec['payload_seed']} budget={spec['token_budget']} "
-                f"block={spec['block_size']}",
+                f"variant={variant_label}",
                 flush=True,
             )
             row: dict[str, Any] = {
@@ -304,7 +375,11 @@ def main() -> int:
                     completed_bits = error.completed_bits
                     elapsed_seconds = error.elapsed_seconds
                     records = error.records
-                    padded_bits = (-len(payload_bits)) % codec.config.block_size
+                    padded_bits = (
+                        0
+                        if isinstance(codec, FhSparSampCodec)
+                        else (-len(payload_bits)) % codec.config.block_size
+                    )
                 else:
                     status = "complete"
                     token_ids = encoded.token_ids

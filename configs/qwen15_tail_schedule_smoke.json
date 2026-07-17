@@ -1,0 +1,41 @@
+{
+  "experiment_id": "R005-qwen15-fh-pilot-v2",
+  "model": "models/qwen2.5-1.5b-instruct",
+  "revision": null,
+  "device": "cuda",
+  "dtype": "float16",
+  "load_in_4bit": false,
+  "top_p": 0.95,
+  "top_k": null,
+  "temperature": 0.8,
+  "probability_quantum": "1e-15",
+  "min_source_mass": 0.0,
+  "token_budgets": [96, 128, 160, 192],
+  "payload_seeds": [0, 1],
+  "payload": {
+    "mode": "raw",
+    "bit_length": 128
+  },
+  "variants": [
+    {
+      "name": "tail-16x7-8x2",
+      "kind": "schedule",
+      "block_schedule": [16, 16, 16, 16, 16, 16, 16, 8, 8]
+    },
+    {
+      "name": "tail-16x6-8x4",
+      "kind": "schedule",
+      "block_schedule": [16, 16, 16, 16, 16, 16, 8, 8, 8, 8]
+    },
+    {
+      "name": "mixed-32x3-16x2",
+      "kind": "schedule",
+      "block_schedule": [32, 32, 32, 16, 16]
+    }
+  ],
+  "verify_decode": true,
+  "continue_on_error": false,
+  "prompts": [
+    "请用自然、清晰的中文解释为什么可复现实验对于人工智能安全研究很重要。"
+  ]
+}

@@ -5,11 +5,12 @@
 
 ## Executive Summary
 
-The recommended direction is **Finite-Horizon Precision-Hardened SparSamp (FH-SparSamp)**: replace
-fixed-size, floating-probability interval progression with a public, message-independent adaptive
-schedule and deterministic integer probability mass allocation. The target is not merely higher
-conditional bit/token, but higher authenticated-message completion probability under a fixed token
-budget while resisting finite-precision detection.
+The original recommendation was **Finite-Horizon Precision-Hardened SparSamp (FH-SparSamp)**.
+The finite-horizon schedule component has now been tested and rejected: the capacity-ratio
+controller underperformed fixed block 16, and a targeted tail-fragmentation smoke test also failed
+to improve success or length. The remaining research-grade component is deterministic integer
+probability mass and cross-precision replay. Semantic finishing is the immediate product-quality
+priority because truncated sentences were directly observed in Qwen covers.
 
 The best backup direction is **DriftGuard API-SparSamp**, a bounded-bias protocol for black-box
 top-20 APIs with probability drift, erasures, fingerprints, and cost-aware coding.
@@ -18,7 +19,7 @@ top-20 APIs with probability drift, erasures, fingerprints, and cost-aware codin
 
 ### 1. FH-SparSamp: Finite-Horizon, Precision-Hardened Sampling
 
-**Status**: Recommended for local pilot
+**Status**: Schedule rejected; precision-hardening branch retained
 **Hypothesis**: A block schedule derived only from public next-token distribution statistics and
 remaining token budget can reduce the long tail of payload completion, while deterministic integer
 mass allocation improves replay across precision modes and reduces low-probability-vanishing
@@ -49,6 +50,13 @@ Fast pilot:
 - 20 prompts x 3 payload seeds.
 - Compare fixed block 8/16/32 against adaptive schedule at 256/512/1024 tokens.
 - Stop if completion gain is below 10 percentage points or detector AUC worsens by more than 0.02.
+
+Empirical update:
+
+- At 128 tokens, fixed block 16 recovered 5/6 complete payloads while FH v1 recovered 2/6.
+- At 160 tokens, fixed block 16 recovered 6/6 while FH v1 recovered 5/6.
+- Tail schedules did not beat fixed block 16 on the matched two-seed smoke test.
+- Do not continue threshold or schedule sweeps without a new coding mechanism.
 
 ### 2. DriftGuard API-SparSamp
 
@@ -100,10 +108,15 @@ available.
 
 ## Recommended Paper Framing
 
-**Primary claim**: finite-horizon authenticated-payload completion can be improved without using
-message-dependent control decisions.
-**Supporting claim**: deterministic integer probability contracts improve cross-precision replay and
-reduce finite-precision steganalysis signals.
+**Primary candidate claim**: deterministic integer probability contracts improve cross-precision
+replay and reduce finite-precision steganalysis signals without sacrificing the fixed-16 Qwen
+capacity baseline.
+
+**Supporting systems claim**: a native semantic finishing tail improves sentence completeness while
+leaving the already emitted steganographic prefix and recovered payload unchanged.
+
+The finite-horizon schedule claim is not supported by the current evidence and must not appear as a
+positive contribution.
 
 Do not combine the DeepSeek API story into the same primary paper unless it produces strong data;
 otherwise it should be a separate systems/security extension.

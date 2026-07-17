@@ -131,6 +131,25 @@ $env:SPARSAMP_SECRET_KEY = "replace-with-a-long-random-secret"
 [refine-logs/R003_PILOT_RESULTS.md](refine-logs/R003_PILOT_RESULTS.md)。该实验只有
 3 个 prompt 和 2 个 payload seed，用于验证实验管线，不作为论文性能结论。
 
+FH-SparSamp v1 的短预算消融使用：
+
+```powershell
+$env:SPARSAMP_SECRET_KEY = "replace-with-a-long-random-secret"
+& ".\.venv\Scripts\python.exe" scripts\run_completion_pilot.py `
+  --config configs\qwen15_fh_pilot.json `
+  --output outputs\qwen15-fh-pilot-v2.jsonl
+
+& ".\.venv\Scripts\python.exe" scripts\summarize_fh.py
+```
+
+v1 控制器没有超过固定 block 16，已按实验门禁拒绝。负面结果和下一版
+tail-fragmentation 方向见
+[refine-logs/R005_FH_V1_RESULTS.md](refine-logs/R005_FH_V1_RESULTS.md)。
+
+随后执行的 tail-fragmentation 烟雾实验同样未超过固定 block 16，结果见
+[refine-logs/R005_TAIL_SCHEDULE_SMOKE.md](refine-logs/R005_TAIL_SCHEDULE_SMOKE.md)。
+因此当前不再继续扫描 block schedule，下一阶段转向语义收尾和有限精度重放。
+
 算法、复杂度和安全边界见 [docs/algorithm.md](docs/algorithm.md)。
 
 ## 科研路线
