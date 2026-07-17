@@ -9,7 +9,7 @@
   "top_k": null,
   "temperature": 0.8,
   "probability_quantum": "1e-15",
-  "token_budgets": [160, 192],
+  "token_budgets": [160, 192, 224, 256],
   "payload_seeds": [0, 1],
   "payload": {
     "mode": "raw",

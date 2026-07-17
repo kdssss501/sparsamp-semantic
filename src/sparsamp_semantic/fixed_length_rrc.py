@@ -293,8 +293,6 @@ class FixedLengthRotationRangeCodec:
         _validate_key(key)
         context_id = session.context_id
         random_stream = HmacRandomStream(key, context_id)
-        candidates: dict[str, int] = {}
-
         with localcontext() as context:
             context.prec = self.config.rrc_config.decimal_precision
             left = Decimal(0)
@@ -333,21 +331,14 @@ class FixedLengthRotationRangeCodec:
                     self.config.tag_bits,
                 )
                 if payload is not None:
-                    candidates.setdefault(payload, step + 1)
+                    return FixedLengthDecodeResult(
+                        bits=payload,
+                        completed_blocks=1,
+                        consumed_tokens=self.config.total_tokens,
+                        authenticated_prefix_tokens=step + 1,
+                        authenticated_candidates=1,
+                    )
 
-        if not candidates:
-            raise FixedLengthDecodeError(
-                "no authenticated payload prefix was found; key, prompt, or text is wrong"
-            )
-        if len(candidates) > 1:
-            raise FixedLengthDecodeError(
-                "multiple distinct authenticated payload prefixes were found"
-            )
-        payload, prefix_tokens = next(iter(candidates.items()))
-        return FixedLengthDecodeResult(
-            bits=payload,
-            completed_blocks=1,
-            consumed_tokens=self.config.total_tokens,
-            authenticated_prefix_tokens=prefix_tokens,
-            authenticated_candidates=len(candidates),
+        raise FixedLengthDecodeError(
+            "no authenticated payload prefix was found; key, prompt, or text is wrong"
         )

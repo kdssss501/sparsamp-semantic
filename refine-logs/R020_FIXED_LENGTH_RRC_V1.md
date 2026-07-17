@@ -67,14 +67,15 @@ Qwen、跨硬件重放或真实文本 steganalysis 已通过。
 
 - 短 payload 的认证开销明显：16-bit payload 中标签占 frame 的 80%。
 - 固定长度 padding 降低净容量，但 128-bit Mock 仍达到 `1.058 bit/token`。
-- 解码仅需 `N` 次模型前向，但每个前缀完整逆重放，算术最坏复杂度为 `O(N^2)`。
+- 解码在首次认证前缀 `T_auth` 返回，需 `T_auth <= N` 次模型前向；每个前缀完整逆重放，
+  算术最坏复杂度仍为 `O(N^2)`。
 - 固定 token 长度不保证自然句尾，不能再附加数据相关标点收尾而声称同一固定长度定理。
 
 ## 下一门禁
 
-1. Qwen 128-bit、`N in {160,192}` smoke，报告 fallback、Token Ambiguity 和实际前缀长度。
-2. 为同配置量化分布实现 fixed-length cover baseline。
-3. 直接计算 cover `Q` 到实现 `R` 的论文方向 `KL(Q||R)`。
+1. 为同配置量化分布实现 fixed-length cover baseline。
+2. 直接计算 cover `Q` 到实现 `R` 的论文方向 `KL(Q||R)`。
+3. 扩展 Qwen prompt/seed，估计 224-token fallback 率置信区间。
 4. 在成功率稳定后比较固定长度 RRC 与变长 Verified-RRC 的 steganalysis。
 
 ## Qwen 单样本 Smoke
@@ -90,6 +91,29 @@ payload 加 64-bit 标签。使用同一 prompt 和 payload seed 比较两个预
 成功样本的编码吞吐为 `12.94 token/s`。该结果只证明真实 Qwen 链路能够完成固定长度认证恢复，
 同时说明 160-token 预算不足；`1/1` 成功不能外推为 Qwen 完成率，必须继续运行多 prompt、
 多 seed 预算实验。
+
+完成首轮 2 prompts x 2 seeds 后，160-token 完成率为 `1/4`，192-token 完成率为 `3/4`；
+所有成功样本均认证解码正确，8/8 无 Token Ambiguity。唯一的 192-token fallback 平均熵仅
+`0.854 bit/token`、平均候选数约 4.05，是本轮最低熵轨迹。基于这一结果，第二阶段新增
+`N in {224,256}` 用于定位可靠预算；这是事后自适应扩展，必须与首轮预设预算分开报告。
+
+第二阶段首次运行发现：224-token 四条轨迹均成功，但 256-token 中两条在解码 padding 时出现
+`fixed-length RRC interval collapsed to zero`。根因不是消息未完成，而是解码器在已经发现
+认证前缀后仍继续缩小区间。V1.1 改为首次认证立即返回，并新增 256-token 长 padding 回归
+测试。该修复不改变生成 token，只移除不必要的 padding 解码。
+
+修复后重跑两条 256-token 错误均成功，认证前缀保持不变。按 `run_id` 取最新结果后的完整
+预算曲线为：
+
+| Public N | 完成 | Fallback | Error | 精确解码 | Ambiguity | 完成前缀 | 平均 padding | 净 bit/token |
+|---:|---:|---:|---:|---:|---:|---|---:|---:|
+| 160 | 1/4 | 3 | 0 | 1/1 | 0/4 | 158 | 2.00 | 0.800 |
+| 192 | 3/4 | 1 | 0 | 3/3 | 0/4 | 181,172,158 | 21.67 | 0.667 |
+| 224 | 4/4 | 0 | 0 | 4/4 | 0/4 | 181,172,220,158 | 41.25 | 0.571 |
+| 256 | 4/4 | 0 | 0 | 4/4 | 0/4 | 181,172,220,158 | 73.25 | 0.500 |
+
+在当前四条轨迹中，224 是最小全成功公开预算；这只是小样本观察，不是完成前缀的理论上界
+或可靠完成率证明。256 不提高本组成功率，只增加 padding 并把净容量从 `0.571` 降至 `0.500`。
 
 ## 可复现命令
 

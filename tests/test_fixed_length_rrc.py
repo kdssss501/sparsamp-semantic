@@ -108,6 +108,17 @@ def test_fixed_length_decode_requires_the_public_token_count() -> None:
         codec.decode(MockProvider().start("length"), encoded.token_ids[:-1], KEY)
 
 
+def test_decoder_stops_at_authenticated_prefix_before_long_padding_collapses() -> None:
+    codec = _codec(total_tokens=256)
+    encoded = codec.encode(MockProvider().start("long-padding"), PAYLOAD, KEY)
+
+    decoded = codec.decode(MockProvider().start("long-padding"), encoded.token_ids, KEY)
+
+    assert decoded.bits == PAYLOAD
+    assert decoded.authenticated_prefix_tokens <= encoded.embedded_token_count
+    assert encoded.padding_token_count > 200
+
+
 def test_insufficient_budget_raises_by_default() -> None:
     codec = _codec(total_tokens=1)
 
