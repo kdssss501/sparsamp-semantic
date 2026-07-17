@@ -87,6 +87,9 @@ Qwen 的普通随机采样结果。
 
 ## 复现实验
 
+GPT-2 只用于通过官方 Artifact 的一致性门禁。语义质量、有限预算完成率、
+Token Ambiguity 和后续算法优化均以本地 Qwen2.5-1.5B 为主实验模型。
+
 首轮建议按以下顺序运行：
 
 1. Mock 测试验证算法互逆和载荷认证。
@@ -111,6 +114,22 @@ uv run --no-sync python scripts\run_semantic_grid.py `
   --config configs\qwen15_smoke_grid.json `
   --output outputs\qwen15-smoke-grid.jsonl
 ```
+
+有限 token 预算实验使用可恢复 JSONL，并对更大预算下已经提前完成的确定性轨迹
+生成带 `derived_from_run_id` 的记录，避免重复运行模型：
+
+```powershell
+$env:SPARSAMP_SECRET_KEY = "replace-with-a-long-random-secret"
+& ".\.venv\Scripts\python.exe" scripts\run_completion_pilot.py `
+  --config configs\qwen15_completion_pilot.json `
+  --output outputs\qwen15-completion.jsonl
+
+& ".\.venv\Scripts\python.exe" scripts\summarize_completion.py
+```
+
+当前 R003 烟雾实验报告见
+[refine-logs/R003_PILOT_RESULTS.md](refine-logs/R003_PILOT_RESULTS.md)。该实验只有
+3 个 prompt 和 2 个 payload seed，用于验证实验管线，不作为论文性能结论。
 
 算法、复杂度和安全边界见 [docs/algorithm.md](docs/algorithm.md)。
 

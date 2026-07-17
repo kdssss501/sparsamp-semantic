@@ -51,12 +51,14 @@ class PayloadCodec:
 
     repetitions: int = 1
 
-    def seal(self, message: str, key: bytes) -> str:
+    def seal(self, message: str, key: bytes, nonce: bytes | None = None) -> str:
         """Return an encrypted framed message as binary text."""
 
         from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
-        nonce = os.urandom(12)
+        nonce = nonce if nonce is not None else os.urandom(12)
+        if len(nonce) != 12:
+            raise ValueError("ChaCha20-Poly1305 nonce must contain exactly 12 bytes")
         cipher = ChaCha20Poly1305(hashlib.sha256(key).digest())
         ciphertext = cipher.encrypt(nonce, message.encode("utf-8"), ASSOCIATED_DATA)
         frame = MAGIC + len(ciphertext).to_bytes(4, "big") + nonce + ciphertext

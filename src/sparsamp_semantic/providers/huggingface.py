@@ -212,7 +212,7 @@ class HuggingFaceSession(ProviderSession):
             self._generated,
             skip_special_tokens=True,
             clean_up_tokenization_spaces=False,
-        ).strip()
+        )
 
     def retokenize(self, text: str) -> tuple[Hashable, ...]:
         return tuple(self._tokenizer.encode(text, add_special_tokens=False))

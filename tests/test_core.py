@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from sparsamp_semantic.core import CodecConfig, SparSampCodec
+from sparsamp_semantic.core import CodecConfig, IncompleteEncodeError, SparSampCodec
 from sparsamp_semantic.providers.mock import MockProvider
 
 
@@ -44,3 +44,15 @@ def test_wrong_prompt_fails_or_changes_bits() -> None:
 
     decoded = codec.decode(provider.start("prompt-b"), list(encoded.token_ids), key)
     assert decoded.bits != "10100101"
+
+
+def test_incomplete_encode_error_retains_partial_progress() -> None:
+    provider = MockProvider()
+    codec = SparSampCodec(CodecConfig(block_size=8, max_tokens=1))
+    with pytest.raises(IncompleteEncodeError) as captured:
+        codec.encode(provider.start("short budget"), "10100101" * 4, b"0123456789abcdef")
+    error = captured.value
+    assert len(error.token_ids) == 1
+    assert len(error.records) == 1
+    assert error.total_blocks == 4
+    assert 0 <= error.completed_blocks < error.total_blocks

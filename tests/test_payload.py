@@ -25,3 +25,15 @@ def test_repetition_code_corrects_one_error() -> None:
     encoded = list(repeat_bits("101", 3))
     encoded[1] = "0"
     assert recover_repeated_bits("".join(encoded), 3) == "101"
+
+
+def test_explicit_nonce_makes_payload_reproducible() -> None:
+    codec = PayloadCodec()
+    key = b"0123456789abcdef"
+    nonce = bytes(range(12))
+    assert codec.seal("message", key, nonce=nonce) == codec.seal("message", key, nonce=nonce)
+
+
+def test_nonce_must_be_12_bytes() -> None:
+    with pytest.raises(ValueError, match="exactly 12 bytes"):
+        PayloadCodec().seal("message", b"0123456789abcdef", nonce=b"short")

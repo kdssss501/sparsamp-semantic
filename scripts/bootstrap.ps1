@@ -1,7 +1,8 @@
 param(
     [switch]$Local,
     [switch]$Api,
-    [switch]$Web
+    [switch]$Web,
+    [switch]$Repro
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,6 +18,9 @@ if ($Api) {
 }
 if ($Web) {
     $syncArgs += @("--extra", "web")
+}
+if ($Repro) {
+    $syncArgs += @("--extra", "repro")
 }
 
 & uv @syncArgs

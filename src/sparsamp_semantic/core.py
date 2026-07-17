@@ -123,6 +123,31 @@ class DecodeResult:
     consumed_tokens: int
 
 
+class IncompleteEncodeError(RuntimeError):
+    """Raised with partial progress when a payload misses the token budget."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        token_ids: tuple[Hashable, ...],
+        text: str,
+        completed_blocks: int,
+        total_blocks: int,
+        completed_bits: int,
+        elapsed_seconds: float,
+        records: tuple[StepRecord, ...],
+    ) -> None:
+        super().__init__(message)
+        self.token_ids = token_ids
+        self.text = text
+        self.completed_blocks = completed_blocks
+        self.total_blocks = total_blocks
+        self.completed_bits = completed_bits
+        self.elapsed_seconds = elapsed_seconds
+        self.records = records
+
+
 class SparSampCodec:
     """Encode and decode binary payloads against any deterministic provider session."""
 
@@ -211,9 +236,16 @@ class SparSampCodec:
                 n_m = 1 << self.config.block_size
                 k_m = int(blocks[block_index], 2)
 
-        raise RuntimeError(
+        raise IncompleteEncodeError(
             f"message incomplete after {self.config.max_tokens} tokens; "
-            "increase max_tokens or reduce the payload"
+            "increase max_tokens or reduce the payload",
+            token_ids=session.generated_token_ids,
+            text=session.render(),
+            completed_blocks=block_index,
+            total_blocks=len(blocks),
+            completed_bits=min(block_index * self.config.block_size, len(bits)),
+            elapsed_seconds=perf_counter() - started,
+            records=tuple(records),
         )
 
     def decode(
