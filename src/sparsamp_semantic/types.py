@@ -53,7 +53,7 @@ class DistributionSnapshot:
 
     @property
     def truncation_kl_nats(self) -> float:
-        """KL(Q||P) when candidates are P conditioned on retained support."""
+        """Reverse KL(Q||P) when candidates are P conditioned on retained support."""
 
         return -log(min(self.source_mass, 1.0))
 

@@ -128,7 +128,7 @@ watch(rows, () => nextTick(renderChart), { deep: true })
         <el-table-column label="利用率" width="100">
           <template #default="scope">{{ (scope.row.metrics.entropy_utilization * 100).toFixed(1) }}%</template>
         </el-table-column>
-        <el-table-column label="累计 KL" width="110">
+        <el-table-column label="累计反向截断 KL" width="150">
           <template #default="scope">{{ scope.row.metrics.truncation_kl_nats.toFixed(3) }}</template>
         </el-table-column>
         <el-table-column label="歧义" width="84">

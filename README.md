@@ -158,6 +158,8 @@ tail-fragmentation 方向见
 - ARIS 方法审计：[refine-logs/REVIEW_SUMMARY.md](refine-logs/REVIEW_SUMMARY.md)
 - 候选创新方向：[IDEA_REPORT.md](IDEA_REPORT.md)
 - Claim-driven 实验计划：[refine-logs/EXPERIMENT_PLAN.md](refine-logs/EXPERIMENT_PLAN.md)
+- RRC 数学正确性审计：[refine-logs/R019_VERIFIED_RRC_THEORY_AUDIT.md](refine-logs/R019_VERIFIED_RRC_THEORY_AUDIT.md)
+- Verified-RRC 定理、反例与 Claim Matrix：[docs/verified_rrc_theory.md](docs/verified_rrc_theory.md)
 
 本仓库用于授权科研、复现与防御评估。公开数据或部署前请阅读
 [SECURITY.md](SECURITY.md)。

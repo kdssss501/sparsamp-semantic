@@ -13,7 +13,11 @@ const items = computed(() => [
     value: integer(props.metrics?.token_count),
     unit: props.metrics?.tail_token_count ? `含 ${props.metrics.tail_token_count} 尾部` : '',
   },
-  { label: '累计 KL', value: format(props.metrics?.truncation_kl_nats, 3), unit: 'nat' },
+  {
+    label: '累计反向截断 KL',
+    value: format(props.metrics?.truncation_kl_nats, 3),
+    unit: 'nat',
+  },
 ])
 
 function format(value: number | undefined, digits: number) {
