@@ -14,3 +14,4 @@
 | R010 | API | Repeated-query drift probe | DeepSeek top-20 | 20 prompts | churn, drift, mass, cost | NICE | BLOCKED | Needs API key |
 | R011 | M3 | ACL 2026 RRC termination audit | Paper Algorithm 3/4 clean-room | Mock deterministic distributions | exact decode, modular wrap | MUST | COUNTEREXAMPLE | 500 samples show 5%-9% decode failure; implement verified termination before Qwen scale |
 | R012 | M3 | Verified-RRC reliability/capacity | Reverse-verified termination | Mock then Qwen | exact decode, extra tokens, bit/token, speed | MUST | MOCK-PASS | 500/500 exact; mean overhead 0.04-0.15 token, max 2; proceed to Qwen smoke |
+| R013 | M3 | Verified-RRC semantic pilot | Fixed-16/64 vs Verified-RRC | Qwen 1.5B, 3 Chinese prompts x 2 seeds | completion, bits/token, ambiguity, readable cover | MUST | PILOT-DONE | At 128 tokens all variants 3/6; at 160 all 6/6. RRC entropy utilization 0.980, ambiguity 0/6; no completion win |
