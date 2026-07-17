@@ -18,7 +18,12 @@
   "variants": [
     {"name": "fixed-16", "kind": "fixed", "block_size": 16},
     {"name": "fixed-64", "kind": "fixed", "block_size": 64},
-    {"name": "rrc-decimal", "kind": "rrc", "guard_digits": 24}
+    {
+      "name": "rrc-verified",
+      "kind": "rrc",
+      "guard_digits": 24,
+      "termination_mode": "verified"
+    }
   ],
   "verify_decode": true,
   "continue_on_error": true,

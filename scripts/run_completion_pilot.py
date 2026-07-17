@@ -266,6 +266,7 @@ def _build_codec(
                 probability_quantum=settings.get("probability_quantum", "1e-15"),
                 guard_digits=int(variant.get("guard_digits", 24)),
                 min_precision=int(variant.get("min_precision", 48)),
+                termination_mode=str(variant.get("termination_mode", "verified")),
             )
         )
     raise ValueError(f"unsupported codec variant kind: {kind!r}")

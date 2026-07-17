@@ -13,3 +13,4 @@
 | R009 | M4 | Semantic finishing tail | stop/punctuation/EOS | 50 covers | preference, completeness | MUST | NEXT | Directly addresses observed truncated Qwen sentences; keep capacity prefix metrics separate |
 | R010 | API | Repeated-query drift probe | DeepSeek top-20 | 20 prompts | churn, drift, mass, cost | NICE | BLOCKED | Needs API key |
 | R011 | M3 | ACL 2026 RRC termination audit | Paper Algorithm 3/4 clean-room | Mock deterministic distributions | exact decode, modular wrap | MUST | COUNTEREXAMPLE | 500 samples show 5%-9% decode failure; implement verified termination before Qwen scale |
+| R012 | M3 | Verified-RRC reliability/capacity | Reverse-verified termination | Mock then Qwen | exact decode, extra tokens, bit/token, speed | MUST | MOCK-PASS | 500/500 exact; mean overhead 0.04-0.15 token, max 2; proceed to Qwen smoke |

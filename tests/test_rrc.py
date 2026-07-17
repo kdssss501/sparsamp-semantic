@@ -10,8 +10,8 @@ from sparsamp_semantic.rrc import RrcConfig, RotationRangeCodec
 KEY = b"0123456789abcdef0123456789abcdef"
 
 
-@pytest.mark.parametrize("bit_length", [1, 13, 128])
-def test_paper_rrc_round_trip_on_non_wrapping_examples(bit_length: int) -> None:
+@pytest.mark.parametrize("bit_length", [1, 13, 64, 128])
+def test_verified_rrc_mock_round_trip(bit_length: int) -> None:
     bits = ("10110100" * 20)[:bit_length]
     codec = RotationRangeCodec(RrcConfig(message_bits=bit_length, max_tokens=1000))
     provider = MockProvider()
@@ -30,7 +30,9 @@ def test_paper_rrc_has_a_modular_wrap_counterexample() -> None:
     """Algorithm 3's local stop test does not survive every reverse rotation."""
 
     bits = ("10110100" * 20)[:64]
-    codec = RotationRangeCodec(RrcConfig(message_bits=64, max_tokens=1000))
+    codec = RotationRangeCodec(
+        RrcConfig(message_bits=64, max_tokens=1000, termination_mode="paper")
+    )
     provider = MockProvider()
     prompt = "Explain rotation range coding."
 
@@ -39,6 +41,21 @@ def test_paper_rrc_has_a_modular_wrap_counterexample() -> None:
 
     assert decoded.bits != bits
     assert int(decoded.bits, 2) - int(bits, 2) == -2
+
+
+def test_verified_rrc_extends_the_known_counterexample() -> None:
+    bits = ("10110100" * 20)[:64]
+    provider = MockProvider()
+    prompt = "Explain rotation range coding."
+    paper = RotationRangeCodec(
+        RrcConfig(message_bits=64, max_tokens=1000, termination_mode="paper")
+    ).encode(provider.start(prompt), bits, KEY)
+    verified_codec = RotationRangeCodec(RrcConfig(message_bits=64, max_tokens=1000))
+    verified = verified_codec.encode(provider.start(prompt), bits, KEY)
+    decoded = verified_codec.decode(provider.start(prompt), verified.token_ids, KEY)
+
+    assert decoded.bits == bits
+    assert len(verified.token_ids) > len(paper.token_ids)
 
 
 def test_rrc_is_deterministic_for_same_context() -> None:

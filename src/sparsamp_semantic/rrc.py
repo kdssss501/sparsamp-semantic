@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_DOWN, localcontext
 from math import ceil, log10
 from time import perf_counter
-from typing import Hashable
+from typing import Hashable, Literal
 
 from .core import DecodeResult, EncodeResult, IncompleteEncodeError, StepRecord
 from .prf import HmacRandomStream
@@ -75,6 +75,7 @@ class RrcConfig:
     probability_quantum: str | None = "1e-15"
     guard_digits: int = 24
     min_precision: int = 48
+    termination_mode: Literal["paper", "verified"] = "verified"
 
     def __post_init__(self) -> None:
         if self.message_bits < 1:
@@ -85,6 +86,8 @@ class RrcConfig:
             raise ValueError("guard_digits must be at least 8")
         if self.min_precision < 16:
             raise ValueError("min_precision must be at least 16")
+        if self.termination_mode not in {"paper", "verified"}:
+            raise ValueError("termination_mode must be 'paper' or 'verified'")
         if self.probability_quantum is not None and Decimal(self.probability_quantum) <= 0:
             raise ValueError("probability quantum must be positive")
 
@@ -106,6 +109,22 @@ class RotationRangeCodec:
         if set(bits) - {"0", "1"}:
             raise ValueError("message must be a binary string")
 
+    @staticmethod
+    def _reverse_midpoint(
+        midpoint: Decimal,
+        history: list[tuple[Decimal, Decimal]],
+        random_stream: HmacRandomStream,
+    ) -> Decimal:
+        for step in range(len(history) - 1, -1, -1):
+            previous_left, previous_right = history[step]
+            width = previous_right - previous_left
+            offset_fraction = random_stream.fraction(step, domain=b"rrc")
+            offset = Decimal(offset_fraction.numerator) / Decimal(offset_fraction.denominator)
+            midpoint = previous_left + _positive_mod(
+                midpoint - previous_left - offset * width, width
+            )
+        return midpoint
+
     def encode(self, session: ProviderSession, bits: str, key: bytes) -> EncodeResult:
         """Embed a fixed-length bit string using Algorithm 3 from Yan and Murawaki."""
 
@@ -119,7 +138,9 @@ class RotationRangeCodec:
             left = Decimal(0)
             right = Decimal(1 << self.config.message_bits)
             secret = Decimal(int(bits, 2))
+            original_secret = int(bits, 2)
             half = Decimal("0.5")
+            history: list[tuple[Decimal, Decimal]] = []
 
             for step in range(self.config.max_tokens):
                 snapshot = session.next_distribution()
@@ -129,6 +150,7 @@ class RotationRangeCodec:
                 width = right - left
                 if width <= 0:
                     raise ArithmeticError("range-coding interval collapsed to zero")
+                history.append((left, right))
                 offset_fraction = random_stream.fraction(step, domain=b"rrc")
                 offset = Decimal(offset_fraction.numerator) / Decimal(offset_fraction.denominator)
                 secret = left + _positive_mod(secret - left + offset * width, width)
@@ -141,7 +163,16 @@ class RotationRangeCodec:
                 right = old_left + width * upper_probability
                 token_id = snapshot.candidates[candidate_index].token_id
                 midpoint_delta = (left + right) / 2 - secret
-                completed = -half < midpoint_delta <= half
+                paper_stop = -half < midpoint_delta <= half
+                completed = paper_stop
+                if paper_stop and self.config.termination_mode == "verified":
+                    initial_midpoint = self._reverse_midpoint(
+                        (left + right) / 2, history, random_stream
+                    )
+                    recovered = int(
+                        initial_midpoint.to_integral_value(rounding=ROUND_HALF_DOWN)
+                    )
+                    completed = recovered == original_secret
                 session.append(token_id)
                 records.append(
                     StepRecord(
@@ -216,14 +247,7 @@ class RotationRangeCodec:
                 session.append(observed_token_id)
 
             midpoint = (left + right) / 2
-            for step in range(len(history) - 1, -1, -1):
-                previous_left, previous_right = history[step]
-                width = previous_right - previous_left
-                offset_fraction = random_stream.fraction(step, domain=b"rrc")
-                offset = Decimal(offset_fraction.numerator) / Decimal(offset_fraction.denominator)
-                midpoint = previous_left + _positive_mod(
-                    midpoint - previous_left - offset * width, width
-                )
+            midpoint = self._reverse_midpoint(midpoint, history, random_stream)
 
             secret = int(midpoint.to_integral_value(rounding=ROUND_HALF_DOWN))
             if not 0 <= secret < 1 << self.config.message_bits:
