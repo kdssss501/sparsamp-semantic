@@ -19,14 +19,23 @@ export interface CodecSettings {
   min_source_mass: number
   probability_quantum: string
   repetitions: number
+  finish_mode: 'none' | 'punctuation' | 'fixed'
+  finish_max_tokens: number
+  finish_min_tokens: number
 }
 
 export interface Metrics {
   embedded_bits: number
   padded_bits: number
   token_count: number
+  embedded_token_count: number
+  visible_token_count: number
+  tail_token_count: number
   elapsed_seconds: number
+  embedding_elapsed_seconds: number
+  finishing_elapsed_seconds: number
   bits_per_token: number
+  visible_bits_per_token: number
   bits_per_second: number
   entropy_utilization: number
   truncation_kl_nats: number

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from scripts.run_completion_pilot import (
     _build_codec,
+    _finishing_config,
     _iter_specs,
     _payload_for_seed,
     _sequence_difference,
@@ -68,3 +69,20 @@ def test_variant_specs_and_fh_codec_building() -> None:
     assert spec["variant"] == "fh"
     assert isinstance(codec, FhSparSampCodec)
     assert codec.config.max_tokens == 128
+
+
+def test_variant_can_enable_punctuation_finishing() -> None:
+    spec = {
+        "codec_variant": {
+            "name": "fixed-16-tail",
+            "kind": "fixed",
+            "block_size": 16,
+            "finish_mode": "punctuation",
+            "finish_max_tokens": 24,
+        }
+    }
+
+    config = _finishing_config(spec, {})
+
+    assert config.mode == "punctuation"
+    assert config.max_tokens == 24

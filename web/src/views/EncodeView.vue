@@ -29,6 +29,9 @@ const codec = reactive<CodecSettings>({
   min_source_mass: 0,
   probability_quantum: '1e-15',
   repetitions: 1,
+  finish_mode: 'punctuation',
+  finish_max_tokens: 32,
+  finish_min_tokens: 4,
 })
 const coverText = ref('')
 const baselineText = ref('')
@@ -155,6 +158,23 @@ function downloadCover() {
                   <el-option value="bfloat16" label="BF16" />
                   <el-option value="float32" label="FP32" />
                 </el-select>
+              </el-form-item>
+              <el-form-item label="语义收尾">
+                <el-select v-model="codec.finish_mode">
+                  <el-option value="none" label="立即停止" />
+                  <el-option value="punctuation" label="生成到句末" />
+                  <el-option value="fixed" label="固定尾部" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="收尾 Token 上限">
+                <el-input-number
+                  v-model="codec.finish_max_tokens"
+                  :min="0"
+                  :max="256"
+                  :step="8"
+                  :disabled="codec.finish_mode === 'none'"
+                  controls-position="right"
+                />
               </el-form-item>
             </div>
           </el-collapse-item>

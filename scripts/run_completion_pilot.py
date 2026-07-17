@@ -29,6 +29,7 @@ from sparsamp_semantic.core import (  # noqa: E402
     StepRecord,
 )
 from sparsamp_semantic.fh import FhCodecConfig, FhSparSampCodec  # noqa: E402
+from sparsamp_semantic.finishing import FinishingConfig, finish_session  # noqa: E402
 from sparsamp_semantic.payload import PayloadCodec, bytes_to_bits  # noqa: E402
 from sparsamp_semantic.providers.huggingface import (  # noqa: E402
     HuggingFaceConfig,
@@ -272,6 +273,19 @@ def _build_codec(
     raise ValueError(f"unsupported codec variant kind: {kind!r}")
 
 
+def _finishing_config(spec: dict[str, Any], settings: dict[str, Any]) -> FinishingConfig:
+    variant = spec.get("codec_variant") or {}
+    return FinishingConfig(
+        mode=str(variant.get("finish_mode", settings.get("finish_mode", "none"))),
+        max_tokens=int(
+            variant.get("finish_max_tokens", settings.get("finish_max_tokens", 32))
+        ),
+        min_tokens=int(
+            variant.get("finish_min_tokens", settings.get("finish_min_tokens", 4))
+        ),
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("configs/qwen15_completion_pilot.json"))
@@ -327,7 +341,9 @@ def main() -> int:
         for index, spec in enumerate(pending, start=1):
             run_id = _run_id(spec)
             cached = completion_cache.get(_trajectory_key(spec))
-            if cached is not None and int(cached["metrics"]["token_count"]) <= spec["token_budget"]:
+            if cached is not None and int(
+                cached["metrics"].get("embedded_token_count", cached["metrics"]["token_count"])
+            ) <= spec["token_budget"]:
                 row = copy.deepcopy(cached)
                 row.update(
                     {
@@ -348,6 +364,7 @@ def main() -> int:
                 continue
             payload_bits, payload_mode = _payload_for_seed(settings, key, spec["payload_seed"])
             codec = _build_codec(spec, settings, len(payload_bits))
+            finishing_config = _finishing_config(spec, settings)
             session_config = replace(
                 base_config,
                 top_p=spec["top_p"],
@@ -374,6 +391,7 @@ def main() -> int:
                 },
                 "model": asdict(session_config),
                 "codec": asdict(codec.config),
+                "finishing": asdict(finishing_config),
                 "runtime": runtime,
             }
             try:
@@ -383,9 +401,11 @@ def main() -> int:
                 except IncompleteEncodeError as error:
                     status = "incomplete"
                     token_ids = error.token_ids
+                    embedded_token_count = len(token_ids)
                     cover_text = error.text
                     completed_bits = error.completed_bits
-                    elapsed_seconds = error.elapsed_seconds
+                    embedding_elapsed_seconds = error.elapsed_seconds
+                    finishing_elapsed_seconds = 0.0
                     records = error.records
                     padded_bits = (
                         0
@@ -394,10 +414,13 @@ def main() -> int:
                     )
                 else:
                     status = "complete"
-                    token_ids = encoded.token_ids
-                    cover_text = encoded.text
+                    embedded_token_count = len(encoded.token_ids)
+                    finished = finish_session(session, finishing_config)
+                    token_ids = finished.token_ids
+                    cover_text = finished.text
                     completed_bits = encoded.embedded_bits
-                    elapsed_seconds = encoded.elapsed_seconds
+                    embedding_elapsed_seconds = encoded.elapsed_seconds
+                    finishing_elapsed_seconds = finished.elapsed_seconds
                     records = encoded.records
                     padded_bits = encoded.padded_bits
 
@@ -408,7 +431,9 @@ def main() -> int:
                 recovered_message: str | None = None
                 if status == "complete" and bool(settings.get("verify_decode", True)):
                     decoded = codec.decode(
-                        provider.start_with_config(spec["prompt"], session_config), token_ids, key
+                        provider.start_with_config(spec["prompt"], session_config),
+                        token_ids[:embedded_token_count],
+                        key,
                     )
                     decode_exact = decoded.bits[: len(payload_bits)] == payload_bits
                     if decode_exact and payload_mode == "message":
@@ -425,12 +450,32 @@ def main() -> int:
                         "total_bits": len(payload_bits),
                         "completion_fraction": completed_bits / len(payload_bits),
                         "token_count": len(token_ids),
+                        "embedded_token_count": embedded_token_count,
+                        "visible_token_count": len(token_ids),
+                        "tail_token_count": len(token_ids) - embedded_token_count,
                         "completed_bits_per_token": (
+                            completed_bits / embedded_token_count
+                            if embedded_token_count
+                            else 0.0
+                        ),
+                        "completed_bits_per_visible_token": (
                             completed_bits / len(token_ids) if token_ids else 0.0
                         ),
-                        "elapsed_seconds": elapsed_seconds,
+                        "elapsed_seconds": (
+                            embedding_elapsed_seconds + finishing_elapsed_seconds
+                        ),
+                        "embedding_elapsed_seconds": embedding_elapsed_seconds,
+                        "finishing_elapsed_seconds": finishing_elapsed_seconds,
                         "tokens_per_second": (
-                            len(token_ids) / elapsed_seconds if elapsed_seconds else 0.0
+                            embedded_token_count / embedding_elapsed_seconds
+                            if embedding_elapsed_seconds
+                            else 0.0
+                        ),
+                        "visible_tokens_per_second": (
+                            len(token_ids)
+                            / (embedding_elapsed_seconds + finishing_elapsed_seconds)
+                            if embedding_elapsed_seconds + finishing_elapsed_seconds
+                            else 0.0
                         ),
                         "padded_bits": padded_bits,
                         "decode_exact": decode_exact,
@@ -459,7 +504,8 @@ def main() -> int:
                 if row["status"] == "complete":
                     completion_cache[_trajectory_key(spec)] = row
                 print(
-                    f"  status={row['status']} tokens={row['metrics']['token_count']} "
+                    f"  status={row['status']} embedded={row['metrics']['embedded_token_count']} "
+                    f"visible={row['metrics']['visible_token_count']} "
                     f"progress={row['metrics']['completion_fraction']:.1%} "
                     f"tok/s={row['metrics']['tokens_per_second']:.2f} "
                     f"ambiguity={row['metrics']['token_ambiguity']}",

@@ -32,6 +32,9 @@ const codec = reactive<CodecSettings>({
   min_source_mass: 0,
   probability_quantum: '1e-15',
   repetitions: 1,
+  finish_mode: 'punctuation',
+  finish_max_tokens: 32,
+  finish_min_tokens: 4,
 })
 const canDecode = computed(
   () =>
@@ -56,6 +59,7 @@ async function loadArtifact() {
     const provider = artifact.provider as Record<string, unknown> | undefined
     const settings = artifact.codec as Record<string, unknown> | undefined
     const payload = artifact.payload as Record<string, unknown> | undefined
+    const finishing = artifact.finishing as Record<string, unknown> | undefined
     if (provider) {
       sampling.model = String(provider.model_name ?? sampling.model)
       sampling.revision = (provider.revision as string | null) ?? null
@@ -74,6 +78,11 @@ async function loadArtifact() {
       codec.probability_quantum = String(settings.probability_quantum ?? codec.probability_quantum)
     }
     codec.repetitions = Number(payload?.repetitions ?? codec.repetitions)
+    if (finishing) {
+      codec.finish_mode = (finishing.mode as CodecSettings['finish_mode']) ?? codec.finish_mode
+      codec.finish_max_tokens = Number(finishing.max_tokens ?? codec.finish_max_tokens)
+      codec.finish_min_tokens = Number(finishing.min_tokens ?? codec.finish_min_tokens)
+    }
     decodeSource.value = 'artifact'
     ElMessage.success('实验参数已载入')
   } catch (error) {

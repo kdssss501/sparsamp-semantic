@@ -11,6 +11,7 @@ from threading import Lock
 from typing import Any, Callable
 
 from ..core import CodecConfig, SparSampCodec
+from ..finishing import FinishingConfig, finish_session
 from ..payload import PayloadCodec
 from ..providers.huggingface import HuggingFaceConfig, HuggingFaceProvider
 from .repository import ExperimentRepository
@@ -43,40 +44,55 @@ class ResearchService:
         key = request.secret_key.encode("utf-8")
         progress(10, "加载语言模型")
         provider, model_config = self._provider(request.sampling)
-        codec, payload_codec = self._codecs(request.codec)
+        codec, payload_codec, finishing_config = self._codecs(request.codec)
         payload_bits = payload_codec.seal(request.message, key)
         progress(25, "计算完整分布并嵌入")
         session = provider.start_with_config(request.prompt, model_config)
         encoded = codec.encode(session, payload_bits, key)
+        embedded_token_count = len(encoded.token_ids)
+        finished = finish_session(session, finishing_config)
         progress(88, "检测 Token Ambiguity")
-        retokenized = session.retokenize(encoded.text)
-        token_ambiguity = retokenized != encoded.token_ids
+        retokenized = session.retokenize(finished.text)
+        token_ambiguity = retokenized != finished.token_ids
+        visible_token_count = len(finished.token_ids)
+        elapsed_seconds = encoded.elapsed_seconds + finished.elapsed_seconds
         artifact = {
-            "schema": "sparsamp-semantic-result-v1",
+            "schema": "sparsamp-semantic-result-v2",
             "prompt": request.prompt,
             "provider": {"type": "huggingface", **asdict(model_config)},
             "codec": asdict(codec.config),
             "payload": {"repetitions": payload_codec.repetitions},
-            "cover_text": encoded.text,
-            "token_ids": list(encoded.token_ids),
+            "finishing": asdict(finishing_config),
+            "cover_text": finished.text,
+            "token_ids": list(finished.token_ids),
+            "embedded_token_count": embedded_token_count,
             "token_ambiguity": token_ambiguity,
             "metrics": {
                 "embedded_bits": encoded.embedded_bits,
                 "padded_bits": encoded.padded_bits,
-                "token_count": len(encoded.token_ids),
-                "elapsed_seconds": encoded.elapsed_seconds,
+                "token_count": visible_token_count,
+                "embedded_token_count": embedded_token_count,
+                "visible_token_count": visible_token_count,
+                "tail_token_count": finished.tail_token_count,
+                "elapsed_seconds": elapsed_seconds,
+                "embedding_elapsed_seconds": encoded.elapsed_seconds,
+                "finishing_elapsed_seconds": finished.elapsed_seconds,
                 "bits_per_token": encoded.bits_per_token,
+                "visible_bits_per_token": (
+                    encoded.embedded_bits / visible_token_count if visible_token_count else 0.0
+                ),
                 "bits_per_second": encoded.bits_per_second,
                 "entropy_utilization": encoded.entropy_utilization,
                 "truncation_kl_nats": encoded.truncation_kl_nats,
             },
             "records": [asdict(record) for record in encoded.records],
+            "finishing_records": [asdict(record) for record in finished.records],
         }
         artifact_path = self.repository.write(operation_id, artifact)
         progress(96, "保存脱敏实验记录")
         return {
             "artifact_id": artifact_path,
-            "cover_text": encoded.text,
+            "cover_text": finished.text,
             "token_ambiguity": token_ambiguity,
             "metrics": artifact["metrics"],
         }
@@ -99,14 +115,18 @@ class ResearchService:
             codec = SparSampCodec(CodecConfig(**artifact["codec"]))
             payload_codec = PayloadCodec(**artifact["payload"])
             prompt = artifact["prompt"]
-            token_ids = tuple(artifact["token_ids"])
+            visible_token_ids = tuple(artifact["token_ids"])
+            embedded_token_count = int(
+                artifact.get("embedded_token_count", len(visible_token_ids))
+            )
+            token_ids = visible_token_ids[:embedded_token_count]
             source = "artifact_token_ids"
             progress(25, "载入 artifact token IDs")
         else:
             if request.sampling is None or request.codec is None:
                 raise ValueError("text decode settings are missing")
             provider, model_config = self._provider(request.sampling)
-            codec, payload_codec = self._codecs(request.codec)
+            codec, payload_codec, _ = self._codecs(request.codec)
             prompt = request.prompt or ""
             progress(25, "重新分词 cover text")
             session_for_tokens = provider.start_with_config(prompt, model_config)
@@ -178,10 +198,23 @@ class ResearchService:
         return provider
 
     @staticmethod
-    def _codecs(settings: CodecSettings) -> tuple[SparSampCodec, PayloadCodec]:
+    def _codecs(
+        settings: CodecSettings,
+    ) -> tuple[SparSampCodec, PayloadCodec, FinishingConfig]:
         values = settings.model_dump()
         repetitions = values.pop("repetitions")
-        return SparSampCodec(CodecConfig(**values)), PayloadCodec(repetitions=repetitions)
+        finish_mode = values.pop("finish_mode")
+        finish_max_tokens = values.pop("finish_max_tokens")
+        finish_min_tokens = values.pop("finish_min_tokens")
+        return (
+            SparSampCodec(CodecConfig(**values)),
+            PayloadCodec(repetitions=repetitions),
+            FinishingConfig(
+                mode=finish_mode,
+                max_tokens=finish_max_tokens,
+                min_tokens=finish_min_tokens,
+            ),
+        )
 
 
 def project_root() -> Path:

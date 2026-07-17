@@ -29,6 +29,9 @@ class CodecSettings(BaseModel):
     min_source_mass: float = Field(default=0.0, ge=0.0, le=1.0)
     probability_quantum: str = "1e-15"
     repetitions: int = Field(default=1, ge=1, le=9)
+    finish_mode: Literal["none", "punctuation", "fixed"] = "punctuation"
+    finish_max_tokens: int = Field(default=32, ge=0, le=256)
+    finish_min_tokens: int = Field(default=4, ge=0, le=256)
 
     @field_validator("repetitions")
     @classmethod
@@ -36,6 +39,15 @@ class CodecSettings(BaseModel):
         if value % 2 == 0:
             raise ValueError("repetitions must be odd")
         return value
+
+    @model_validator(mode="after")
+    def finishing_budget_is_valid(self) -> CodecSettings:
+        if (
+            self.finish_mode == "punctuation"
+            and self.finish_min_tokens > self.finish_max_tokens
+        ):
+            raise ValueError("finish_min_tokens cannot exceed finish_max_tokens")
+        return self
 
 
 class EncodeOperationRequest(BaseModel):

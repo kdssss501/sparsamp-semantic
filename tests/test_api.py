@@ -9,8 +9,7 @@ from fastapi.testclient import TestClient
 
 from sparsamp_semantic.api.app import create_app
 from sparsamp_semantic.api.repository import ExperimentRepository
-from sparsamp_semantic.api.schemas import SamplingConfig
-from sparsamp_semantic.api.schemas import DecodeOperationRequest
+from sparsamp_semantic.api.schemas import CodecSettings, DecodeOperationRequest, SamplingConfig
 from sparsamp_semantic.api.service import ResearchService
 from sparsamp_semantic.core import DecodeResult
 
@@ -114,3 +113,22 @@ def test_artifact_decode_request_only_requires_secret_and_artifact() -> None:
         }
     )
     assert request.artifact_id == "web/example.json"
+
+
+def test_codec_settings_default_to_bounded_punctuation_finishing() -> None:
+    settings = CodecSettings()
+    codec, payload, finishing = ResearchService._codecs(settings)
+
+    assert codec.config.block_size == 32
+    assert payload.repetitions == 1
+    assert finishing.mode == "punctuation"
+    assert finishing.max_tokens == 32
+
+
+def test_codec_settings_reject_invalid_finishing_budget() -> None:
+    try:
+        CodecSettings(finish_min_tokens=9, finish_max_tokens=8)
+    except ValueError as error:
+        assert "finish_min_tokens" in str(error)
+    else:
+        raise AssertionError("invalid finishing budget must be rejected")
