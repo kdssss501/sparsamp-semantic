@@ -193,6 +193,12 @@ class RotationRangeCodec:
                         low_entropy_streak=int(
                             snapshot.metadata.get("low_entropy_streak", 0)
                         ),
+                        forward_quantization_kl_nats=snapshot.forward_kl_to_nats(
+                            probabilities
+                        ),
+                        quantization_total_variation=snapshot.total_variation_to(
+                            probabilities
+                        ),
                     )
                 )
                 if completed:

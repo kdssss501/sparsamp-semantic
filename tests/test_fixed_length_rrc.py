@@ -4,6 +4,7 @@ import pytest
 
 from sparsamp_semantic.core import IncompleteEncodeError
 from sparsamp_semantic.fixed_length_rrc import (
+    FixedLengthCoverSampler,
     FixedLengthDecodeError,
     FixedLengthRotationRangeCodec,
     FixedLengthRrcConfig,
@@ -150,6 +151,20 @@ def test_generate_cover_uses_exact_public_length_and_no_embedded_records() -> No
     assert cover.padding_token_count == 12
     assert not cover.payload_embedded
     assert all(not record.embedded for record in cover.records)
+
+
+def test_cover_sampler_uses_payload_seed_only_to_vary_cover_randomness() -> None:
+    config = FixedLengthRrcConfig(payload_bits=16, total_tokens=24, tag_bits=32)
+    sampler = FixedLengthCoverSampler(config)
+
+    first = sampler.encode(MockProvider().start("cover-sampler"), PAYLOAD, KEY)
+    repeated = sampler.encode(MockProvider().start("cover-sampler"), PAYLOAD, KEY)
+    changed = sampler.encode(MockProvider().start("cover-sampler"), PAYLOAD[::-1], KEY)
+
+    assert first.token_ids == repeated.token_ids
+    assert first.token_ids != changed.token_ids
+    assert not first.payload_embedded
+    assert all(record.forward_quantization_kl_nats >= 0 for record in first.records)
 
 
 @pytest.mark.parametrize(

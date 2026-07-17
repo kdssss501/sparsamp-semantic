@@ -43,6 +43,8 @@ export interface Metrics {
   bits_per_second: number
   entropy_utilization: number
   truncation_kl_nats: number
+  forward_quantization_kl_nats: number
+  quantization_tv_step_sum: number
 }
 
 export interface Operation {

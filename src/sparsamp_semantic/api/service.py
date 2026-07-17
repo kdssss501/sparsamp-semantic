@@ -84,6 +84,8 @@ class ResearchService:
                 "bits_per_second": encoded.bits_per_second,
                 "entropy_utilization": encoded.entropy_utilization,
                 "truncation_kl_nats": encoded.truncation_kl_nats,
+                "forward_quantization_kl_nats": encoded.forward_quantization_kl_nats,
+                "quantization_tv_step_sum": encoded.quantization_tv_step_sum,
             },
             "records": [asdict(record) for record in encoded.records],
             "finishing_records": [asdict(record) for record in finished.records],

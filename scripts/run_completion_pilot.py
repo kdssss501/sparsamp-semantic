@@ -15,6 +15,7 @@ from collections import Counter
 from dataclasses import asdict, replace
 from datetime import UTC, datetime
 from pathlib import Path
+from statistics import mean
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -31,6 +32,7 @@ from sparsamp_semantic.core import (  # noqa: E402
 from sparsamp_semantic.fh import FhCodecConfig, FhSparSampCodec  # noqa: E402
 from sparsamp_semantic.finishing import FinishingConfig, finish_session  # noqa: E402
 from sparsamp_semantic.fixed_length_rrc import (  # noqa: E402
+    FixedLengthCoverSampler,
     FixedLengthRotationRangeCodec,
     FixedLengthRrcConfig,
 )
@@ -106,6 +108,7 @@ def _payload_for_seed(settings: dict[str, Any], key: bytes, seed: int) -> tuple[
 
 def _record_metrics(records: tuple[StepRecord, ...]) -> dict[str, Any]:
     embedded = [record for record in records if record.embedded]
+    visible_entropies = [record.entropy_bits for record in records]
     total_latency_ms = sum(record.latency_ms for record in records)
     block_token_counts = Counter(
         record.block_size for record in records if record.block_size is not None
@@ -121,12 +124,17 @@ def _record_metrics(records: tuple[StepRecord, ...]) -> dict[str, Any]:
         for record in records
         if record.base_entropy_bits is not None
     ]
+    forward_quantization_kls = [record.forward_quantization_kl_nats for record in records]
+    quantization_tvs = [record.quantization_total_variation for record in records]
     return {
         "embedded_steps": len(embedded),
         "skipped_steps": len(records) - len(embedded),
         "completed_blocks": sum(record.block_completed for record in records),
         "mean_entropy_bits": (
             sum(record.entropy_bits for record in embedded) / len(embedded) if embedded else 0.0
+        ),
+        "mean_visible_entropy_bits": (
+            mean(visible_entropies) if visible_entropies else 0.0
         ),
         "mean_source_mass": (
             sum(record.source_mass for record in records) / len(records) if records else 0.0
@@ -137,6 +145,16 @@ def _record_metrics(records: tuple[StepRecord, ...]) -> dict[str, Any]:
             sum(record.candidate_count for record in records) / len(records) if records else 0.0
         ),
         "truncation_kl_nats": sum(record.truncation_kl_nats for record in records),
+        "forward_quantization_kl_nats": sum(forward_quantization_kls),
+        "mean_forward_quantization_kl_nats": (
+            mean(forward_quantization_kls) if forward_quantization_kls else 0.0
+        ),
+        "max_forward_quantization_kl_nats": max(forward_quantization_kls, default=0.0),
+        "mean_quantization_total_variation": (
+            mean(quantization_tvs) if quantization_tvs else 0.0
+        ),
+        "max_quantization_total_variation": max(quantization_tvs, default=0.0),
+        "quantization_tv_step_sum": sum(quantization_tvs),
         "block_token_counts": {
             str(block_size): count for block_size, count in sorted(block_token_counts.items())
         },
@@ -168,7 +186,7 @@ def _existing_results(path: Path) -> dict[str, dict[str, Any]]:
             row = json.loads(line)
         except json.JSONDecodeError as error:
             raise ValueError(f"invalid JSONL at {path}:{line_number}") from error
-        if row.get("status") in {"complete", "incomplete", "cover_fallback"}:
+        if row.get("status") in {"complete", "incomplete", "cover", "cover_fallback"}:
             completed[str(row["run_id"])] = row
     return completed
 
@@ -178,6 +196,7 @@ def _trajectory_key(spec: dict[str, Any]) -> str:
     budget_changes_trajectory = variant is not None and variant.get("kind") in {
         "fh",
         "fixed_rrc",
+        "fixed_rrc_cover",
     }
     trajectory = {
         key: value
@@ -303,6 +322,18 @@ def _build_codec(
                 failure_mode=str(variant.get("failure_mode", "raise")),
             )
         )
+    if kind == "fixed_rrc_cover":
+        return FixedLengthCoverSampler(
+            FixedLengthRrcConfig(
+                payload_bits=total_bits,
+                total_tokens=spec["token_budget"],
+                tag_bits=int(variant.get("tag_bits", 128)),
+                probability_quantum=settings.get("probability_quantum", "1e-15"),
+                guard_digits=int(variant.get("guard_digits", 24)),
+                min_precision=int(variant.get("min_precision", 48)),
+                failure_mode="cover",
+            )
+        )
     raise ValueError(f"unsupported codec variant kind: {kind!r}")
 
 
@@ -403,7 +434,7 @@ def main() -> int:
             codec = _build_codec(spec, settings, len(payload_bits))
             finishing_config = _finishing_config(spec, settings)
             if (
-                isinstance(codec, FixedLengthRotationRangeCodec)
+                isinstance(codec, (FixedLengthRotationRangeCodec, FixedLengthCoverSampler))
                 and finishing_config.mode != "none"
             ):
                 raise ValueError("fixed_rrc requires finish_mode='none'")
@@ -457,13 +488,19 @@ def main() -> int:
                                 FhSparSampCodec,
                                 RotationRangeCodec,
                                 FixedLengthRotationRangeCodec,
+                                FixedLengthCoverSampler,
                             ),
                         )
                         else (-len(payload_bits)) % codec.config.block_size
                     )
                 else:
+                    is_cover = isinstance(codec, FixedLengthCoverSampler)
                     payload_embedded = bool(getattr(encoded, "payload_embedded", True))
-                    status = "complete" if payload_embedded else "cover_fallback"
+                    status = (
+                        "cover"
+                        if is_cover
+                        else "complete" if payload_embedded else "cover_fallback"
+                    )
                     embedded_token_count = int(
                         getattr(encoded, "embedded_token_count", len(encoded.token_ids))
                     )
@@ -509,7 +546,9 @@ def main() -> int:
                         "token_count": len(token_ids),
                         "fixed_padding_token_count": (
                             len(token_ids) - embedded_token_count
-                            if isinstance(codec, FixedLengthRotationRangeCodec)
+                            if isinstance(
+                                codec, (FixedLengthRotationRangeCodec, FixedLengthCoverSampler)
+                            )
                             else 0
                         ),
                         "embedded_token_count": embedded_token_count,

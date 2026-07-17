@@ -4,6 +4,7 @@ from .core import CodecConfig, DecodeResult, EncodeResult, IncompleteEncodeError
 from .fh import FhCodecConfig, FhSparSampCodec
 from .finishing import FinishingConfig, FinishingResult, finish_session, is_sentence_complete
 from .fixed_length_rrc import (
+    FixedLengthCoverSampler,
     FixedLengthDecodeError,
     FixedLengthDecodeResult,
     FixedLengthEncodeResult,
@@ -21,6 +22,7 @@ __all__ = [
     "FhSparSampCodec",
     "FinishingConfig",
     "FinishingResult",
+    "FixedLengthCoverSampler",
     "FixedLengthDecodeError",
     "FixedLengthDecodeResult",
     "FixedLengthEncodeResult",

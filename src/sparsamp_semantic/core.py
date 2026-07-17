@@ -89,6 +89,8 @@ class StepRecord:
     effective_temperature: float | None = None
     rescue_active: bool = False
     low_entropy_streak: int = 0
+    forward_quantization_kl_nats: float = 0.0
+    quantization_total_variation: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -118,6 +120,16 @@ class EncodeResult:
     @property
     def truncation_kl_nats(self) -> float:
         return sum(record.truncation_kl_nats for record in self.records)
+
+    @property
+    def forward_quantization_kl_nats(self) -> float:
+        return sum(record.forward_quantization_kl_nats for record in self.records)
+
+    @property
+    def quantization_tv_step_sum(self) -> float:
+        """Sum per-step conditional TV values along the realized prefix path."""
+
+        return sum(record.quantization_total_variation for record in self.records)
 
 
 @dataclass(frozen=True)
@@ -231,6 +243,12 @@ class SparSampCodec:
                     effective_temperature=snapshot.metadata.get("effective_temperature"),
                     rescue_active=bool(snapshot.metadata.get("rescue_active", False)),
                     low_entropy_streak=int(snapshot.metadata.get("low_entropy_streak", 0)),
+                    forward_quantization_kl_nats=(
+                        snapshot.forward_kl_to_nats(probabilities) if embedded else 0.0
+                    ),
+                    quantization_total_variation=(
+                        snapshot.total_variation_to(probabilities) if embedded else 0.0
+                    ),
                 )
             )
 

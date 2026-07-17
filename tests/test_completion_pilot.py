@@ -5,11 +5,16 @@ from scripts.run_completion_pilot import (
     _finishing_config,
     _iter_specs,
     _payload_for_seed,
+    _record_metrics,
     _sequence_difference,
     _trajectory_key,
 )
+from sparsamp_semantic.core import StepRecord
 from sparsamp_semantic.fh import FhSparSampCodec
-from sparsamp_semantic.fixed_length_rrc import FixedLengthRotationRangeCodec
+from sparsamp_semantic.fixed_length_rrc import (
+    FixedLengthCoverSampler,
+    FixedLengthRotationRangeCodec,
+)
 
 
 def test_raw_payload_is_deterministic_and_seeded() -> None:
@@ -25,6 +30,38 @@ def test_raw_payload_is_deterministic_and_seeded() -> None:
     assert len(first) == 13
     assert first == repeated
     assert first != changed
+
+
+def test_record_metrics_separates_embedded_and_visible_entropy() -> None:
+    records = (
+        StepRecord(
+            step=0,
+            token_id=1,
+            embedded=True,
+            block_completed=False,
+            entropy_bits=1.0,
+            source_mass=1.0,
+            truncation_kl_nats=0.0,
+            candidate_count=2,
+            latency_ms=1.0,
+        ),
+        StepRecord(
+            step=1,
+            token_id=2,
+            embedded=False,
+            block_completed=False,
+            entropy_bits=3.0,
+            source_mass=1.0,
+            truncation_kl_nats=0.0,
+            candidate_count=4,
+            latency_ms=1.0,
+        ),
+    )
+
+    metrics = _record_metrics(records)
+
+    assert metrics["mean_entropy_bits"] == 1.0
+    assert metrics["mean_visible_entropy_bits"] == 2.0
 
 
 def test_trajectory_key_ignores_only_token_budget() -> None:
@@ -104,6 +141,28 @@ def test_fixed_length_rrc_codec_building() -> None:
     assert codec.config.total_tokens == 192
     assert codec.config.tag_bits == 64
     assert codec.config.failure_mode == "cover"
+
+
+def test_fixed_length_cover_codec_building() -> None:
+    settings = {
+        "experiment_id": "fixed-cover-test",
+        "prompts": ["prompt"],
+        "payload_seeds": [0],
+        "token_budgets": [224],
+        "variants": [
+            {
+                "name": "fixed-cover",
+                "kind": "fixed_rrc_cover",
+                "tag_bits": 64,
+            }
+        ],
+    }
+
+    spec = _iter_specs(settings)[0]
+    codec = _build_codec(spec, settings, total_bits=128)
+
+    assert isinstance(codec, FixedLengthCoverSampler)
+    assert codec.config.total_tokens == 224
 
 
 def test_variant_can_enable_punctuation_finishing() -> None:

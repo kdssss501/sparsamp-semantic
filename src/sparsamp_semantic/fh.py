@@ -207,6 +207,12 @@ class FhSparSampCodec:
                     effective_temperature=snapshot.metadata.get("effective_temperature"),
                     rescue_active=bool(snapshot.metadata.get("rescue_active", False)),
                     low_entropy_streak=int(snapshot.metadata.get("low_entropy_streak", 0)),
+                    forward_quantization_kl_nats=(
+                        snapshot.forward_kl_to_nats(probabilities) if embedded else 0.0
+                    ),
+                    quantization_total_variation=(
+                        snapshot.total_variation_to(probabilities) if embedded else 0.0
+                    ),
                 )
             )
 

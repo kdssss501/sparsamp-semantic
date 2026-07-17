@@ -3,8 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from decimal import Decimal, localcontext
+from fractions import Fraction
 from math import exp, log
-from typing import Any, Hashable
+from typing import Any, Hashable, Sequence
+
+
+def _as_decimal(value: Any) -> Decimal:
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, Fraction):
+        return Decimal(value.numerator) / Decimal(value.denominator)
+    return Decimal(str(value))
 
 
 @dataclass(frozen=True)
@@ -56,6 +66,53 @@ class DistributionSnapshot:
         """Reverse KL(Q||P) when candidates are P conditioned on retained support."""
 
         return -log(min(self.source_mass, 1.0))
+
+    def forward_kl_to_nats(self, implemented: Sequence[Any]) -> float:
+        """Return paper-direction KL(Q||R) for the actually sampled probabilities."""
+
+        if len(implemented) != len(self.candidates):
+            raise ValueError("implemented distribution must align with candidates")
+        with localcontext() as context:
+            context.prec = 60
+            cover = [Decimal(str(item.probability)) for item in self.candidates]
+            sampled = [_as_decimal(value) for value in implemented]
+            if any(value < 0 for value in sampled):
+                raise ValueError("implemented probabilities must be non-negative")
+            cover_total = sum(cover, start=Decimal(0))
+            sampled_total = sum(sampled, start=Decimal(0))
+            if cover_total <= 0 or sampled_total <= 0:
+                raise ValueError("probability distributions must have positive mass")
+            cover = [value / cover_total for value in cover]
+            sampled = [value / sampled_total for value in sampled]
+            divergence = Decimal(0)
+            for q_value, r_value in zip(cover, sampled, strict=True):
+                if q_value == 0:
+                    continue
+                if r_value == 0:
+                    return float("inf")
+                divergence += q_value * (q_value / r_value).ln()
+            return max(0.0, float(divergence))
+
+    def total_variation_to(self, implemented: Sequence[Any]) -> float:
+        """Return TV(Q,R) for the cover and actually sampled distributions."""
+
+        if len(implemented) != len(self.candidates):
+            raise ValueError("implemented distribution must align with candidates")
+        with localcontext() as context:
+            context.prec = 60
+            cover = [Decimal(str(item.probability)) for item in self.candidates]
+            sampled = [_as_decimal(value) for value in implemented]
+            if any(value < 0 for value in sampled):
+                raise ValueError("implemented probabilities must be non-negative")
+            cover_total = sum(cover, start=Decimal(0))
+            sampled_total = sum(sampled, start=Decimal(0))
+            if cover_total <= 0 or sampled_total <= 0:
+                raise ValueError("probability distributions must have positive mass")
+            distance = sum(
+                abs(q_value / cover_total - r_value / sampled_total)
+                for q_value, r_value in zip(cover, sampled, strict=True)
+            ) / 2
+            return float(distance)
 
     @classmethod
     def from_logprobs(

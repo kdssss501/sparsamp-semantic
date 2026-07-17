@@ -25,6 +25,7 @@ _AUTH_KEY_DOMAIN = b"fixed-length-rrc-auth-key-v1"
 _AUTH_TAG_DOMAIN = b"fixed-length-rrc-auth-tag-v1"
 _PADDING_DOMAIN = b"fixed-length-rrc-padding-v1"
 _COVER_DOMAIN = b"fixed-length-rrc-cover-v1"
+_COVER_RUN_KEY_DOMAIN = b"fixed-length-rrc-cover-run-key-v1"
 
 
 class FixedLengthDecodeError(ValueError):
@@ -146,6 +147,7 @@ def _step_record(
     step: int,
     token_id: Hashable,
     snapshot: DistributionSnapshot,
+    implemented_probabilities: tuple[Decimal, ...],
     embedded: bool,
 ) -> StepRecord:
     metadata = snapshot.metadata
@@ -165,6 +167,12 @@ def _step_record(
         effective_temperature=metadata.get("effective_temperature"),
         rescue_active=bool(metadata.get("rescue_active", False)),
         low_entropy_streak=int(metadata.get("low_entropy_streak", 0)),
+        forward_quantization_kl_nats=snapshot.forward_kl_to_nats(
+            implemented_probabilities
+        ),
+        quantization_total_variation=snapshot.total_variation_to(
+            implemented_probabilities
+        ),
     )
 
 
@@ -192,6 +200,7 @@ class FixedLengthRotationRangeCodec:
             step=step,
             token_id=token_id,
             snapshot=snapshot,
+            implemented_probabilities=probabilities,
             embedded=False,
         )
 
@@ -342,3 +351,23 @@ class FixedLengthRotationRangeCodec:
         raise FixedLengthDecodeError(
             "no authenticated payload prefix was found; key, prompt, or text is wrong"
         )
+
+
+class FixedLengthCoverSampler:
+    """Generate a matched fixed-length cover without embedding a payload."""
+
+    def __init__(self, config: FixedLengthRrcConfig) -> None:
+        self.config = config
+        self._codec = FixedLengthRotationRangeCodec(config)
+
+    def encode(self, session: ProviderSession, bits: str, key: bytes) -> FixedLengthEncodeResult:
+        """Use payload bits only to domain-separate reproducible cover samples."""
+
+        _validate_bits(bits, self.config.payload_bits)
+        _validate_key(key)
+        cover_key = hmac.new(
+            hashlib.sha256(key).digest(),
+            _COVER_RUN_KEY_DOMAIN + bits.encode("ascii"),
+            hashlib.sha256,
+        ).digest()
+        return self._codec.generate_cover(session, cover_key)

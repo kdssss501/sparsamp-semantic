@@ -18,6 +18,11 @@ const items = computed(() => [
     value: format(props.metrics?.truncation_kl_nats, 3),
     unit: 'nat',
   },
+  {
+    label: '累计量化正向 KL',
+    value: format(props.metrics?.forward_quantization_kl_nats, 6),
+    unit: 'nat',
+  },
 ])
 
 function format(value: number | undefined, digits: number) {
