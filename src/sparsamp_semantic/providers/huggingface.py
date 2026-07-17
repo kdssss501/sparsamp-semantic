@@ -104,6 +104,8 @@ class HuggingFaceSession(ProviderSession):
 
     @property
     def context_id(self) -> bytes:
+        # Controller fields are excluded so fixed/adaptive ablations share the PRF
+        # stream until the public entropy controller actually changes a distribution.
         material = "\0".join(
             [
                 "hf-v1",
@@ -112,10 +114,6 @@ class HuggingFaceSession(ProviderSession):
                 str(self._config.top_p),
                 str(self._config.top_k),
                 str(self._config.temperature),
-                str(self._config.adaptive_temperature),
-                str(self._config.entropy_floor_bits),
-                str(self._config.rescue_temperature),
-                str(self._config.rescue_patience),
                 self._config.dtype,
                 str(self._config.load_in_4bit),
                 self._config.system_prompt,

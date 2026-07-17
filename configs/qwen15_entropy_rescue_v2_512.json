@@ -1,0 +1,45 @@
+{
+  "experiment_id": "R016-qwen15-long-payload-512",
+  "model": "models/qwen2.5-1.5b-instruct",
+  "revision": null,
+  "device": "cuda",
+  "dtype": "float16",
+  "load_in_4bit": false,
+  "top_p": 0.95,
+  "top_k": null,
+  "temperature": 0.8,
+  "adaptive_temperature": true,
+  "entropy_floor_bits": 1.0,
+  "rescue_temperature": 1.4,
+  "rescue_patience": 8,
+  "probability_quantum": "1e-15",
+  "token_budgets": [800],
+  "payload_seeds": [0],
+  "payload": {"mode": "raw", "bit_length": 512},
+  "variants": [
+    {
+      "name": "fixed-16-entropy-rescue-v2",
+      "kind": "fixed",
+      "block_size": 16,
+      "finish_mode": "punctuation",
+      "finish_min_tokens": 4,
+      "finish_max_tokens": 32
+    },
+    {
+      "name": "rrc-verified-entropy-rescue-v2",
+      "kind": "rrc",
+      "guard_digits": 24,
+      "termination_mode": "verified",
+      "finish_mode": "punctuation",
+      "finish_min_tokens": 4,
+      "finish_max_tokens": 32
+    }
+  ],
+  "verify_decode": true,
+  "continue_on_error": true,
+  "prompts": [
+    "请用自然、清晰的中文解释为什么可复现实验对于人工智能安全研究很重要。",
+    "请总结生成式人工智能在教育中的一个优势和一个风险，并给出平衡建议。",
+    "请给出三条提高软件可靠性的具体建议，并简要说明每条建议的原因。"
+  ]
+}

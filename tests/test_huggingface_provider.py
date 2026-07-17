@@ -51,3 +51,20 @@ def test_entropy_rescue_rejects_lower_temperature() -> None:
             adaptive_temperature=True,
             rescue_temperature=0.9,
         )
+
+
+def test_entropy_controller_does_not_change_pre_intervention_prf_context() -> None:
+    fixed = object.__new__(HuggingFaceSession)
+    fixed._config = HuggingFaceConfig(temperature=0.8)
+    fixed._prompt = "paired prompt"
+    adaptive = object.__new__(HuggingFaceSession)
+    adaptive._config = HuggingFaceConfig(
+        temperature=0.8,
+        adaptive_temperature=True,
+        entropy_floor_bits=1.0,
+        rescue_temperature=1.4,
+        rescue_patience=8,
+    )
+    adaptive._prompt = "paired prompt"
+
+    assert fixed.context_id == adaptive.context_id
