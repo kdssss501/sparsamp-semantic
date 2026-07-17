@@ -68,6 +68,8 @@ k' = k - N - t0             其他情况
   `KL(Q||R)`；现有截断 KL 指标不记录这一项。
 - 每步条件分布匹配不自动保证数据相关停止后的全文分布匹配。需要固定公开总长度，或为
   cover 明确定义并匹配同一个停止 kernel。
+- `FixedLengthRotationRangeCodec` 通过认证前缀扫描和同分布 padding 固定公开 token 数；它只
+  消除直接停止长度通道，不消除量化差异、失败选择偏差或模型/tokenizer 重放风险。
 - 当前载荷使用 ChaCha20-Poly1305 加密认证；采样随机数使用 HMAC-SHA256。
 - 文本重新分词可能产生 Token Ambiguity。实验结果必须同时报告 token-ID
   解码和纯文本重分词解码，不能用前者掩盖后者失败。

@@ -9,6 +9,7 @@ from scripts.run_completion_pilot import (
     _trajectory_key,
 )
 from sparsamp_semantic.fh import FhSparSampCodec
+from sparsamp_semantic.fixed_length_rrc import FixedLengthRotationRangeCodec
 
 
 def test_raw_payload_is_deterministic_and_seeded() -> None:
@@ -43,6 +44,14 @@ def test_fh_trajectory_key_keeps_token_budget() -> None:
     assert _trajectory_key(short) != _trajectory_key(long)
 
 
+def test_fixed_rrc_trajectory_key_keeps_public_length() -> None:
+    variant = {"name": "fixed-rrc", "kind": "fixed_rrc", "tag_bits": 64}
+    short = {"prompt": "p", "token_budget": 128, "codec_variant": variant}
+    long = {**short, "token_budget": 192}
+
+    assert _trajectory_key(short) != _trajectory_key(long)
+
+
 def test_sequence_difference_reports_first_mismatch() -> None:
     assert _sequence_difference((1, 2), (1, 2)) is None
     assert _sequence_difference((1, 2, 3), (1, 9))["first_index"] == 1
@@ -69,6 +78,32 @@ def test_variant_specs_and_fh_codec_building() -> None:
     assert spec["variant"] == "fh"
     assert isinstance(codec, FhSparSampCodec)
     assert codec.config.max_tokens == 128
+
+
+def test_fixed_length_rrc_codec_building() -> None:
+    settings = {
+        "experiment_id": "fixed-rrc-test",
+        "prompts": ["prompt"],
+        "payload_seeds": [0],
+        "token_budgets": [192],
+        "variants": [
+            {
+                "name": "fixed-rrc-64",
+                "kind": "fixed_rrc",
+                "tag_bits": 64,
+                "failure_mode": "cover",
+            }
+        ],
+    }
+
+    spec = _iter_specs(settings)[0]
+    codec = _build_codec(spec, settings, total_bits=128)
+
+    assert isinstance(codec, FixedLengthRotationRangeCodec)
+    assert codec.config.payload_bits == 128
+    assert codec.config.total_tokens == 192
+    assert codec.config.tag_bits == 64
+    assert codec.config.failure_mode == "cover"
 
 
 def test_variant_can_enable_punctuation_finishing() -> None:

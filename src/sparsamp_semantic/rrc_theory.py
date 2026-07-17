@@ -270,6 +270,16 @@ def stopped_process_counterexample() -> StoppingLeakCounterexample:
     )
 
 
+def authentication_false_acceptance_bound(candidate_checks: int, tag_bits: int) -> Fraction:
+    """Return the union bound for ideal independent tag checks."""
+
+    if candidate_checks < 0:
+        raise ValueError("candidate_checks must be non-negative")
+    if tag_bits < 1:
+        raise ValueError("tag_bits must be positive")
+    return min(Fraction(1), Fraction(candidate_checks, 1 << tag_bits))
+
+
 @dataclass(frozen=True)
 class PaperStopCounterexample:
     """A two-step exact counterexample to the paper's local stopping implication."""

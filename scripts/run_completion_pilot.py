@@ -30,6 +30,10 @@ from sparsamp_semantic.core import (  # noqa: E402
 )
 from sparsamp_semantic.fh import FhCodecConfig, FhSparSampCodec  # noqa: E402
 from sparsamp_semantic.finishing import FinishingConfig, finish_session  # noqa: E402
+from sparsamp_semantic.fixed_length_rrc import (  # noqa: E402
+    FixedLengthRotationRangeCodec,
+    FixedLengthRrcConfig,
+)
 from sparsamp_semantic.payload import PayloadCodec, bytes_to_bits  # noqa: E402
 from sparsamp_semantic.providers.huggingface import (  # noqa: E402
     HuggingFaceConfig,
@@ -164,14 +168,17 @@ def _existing_results(path: Path) -> dict[str, dict[str, Any]]:
             row = json.loads(line)
         except json.JSONDecodeError as error:
             raise ValueError(f"invalid JSONL at {path}:{line_number}") from error
-        if row.get("status") in {"complete", "incomplete"}:
+        if row.get("status") in {"complete", "incomplete", "cover_fallback"}:
             completed[str(row["run_id"])] = row
     return completed
 
 
 def _trajectory_key(spec: dict[str, Any]) -> str:
     variant = spec.get("codec_variant")
-    budget_changes_trajectory = variant is not None and variant.get("kind") == "fh"
+    budget_changes_trajectory = variant is not None and variant.get("kind") in {
+        "fh",
+        "fixed_rrc",
+    }
     trajectory = {
         key: value
         for key, value in spec.items()
@@ -284,6 +291,18 @@ def _build_codec(
                 termination_mode=str(variant.get("termination_mode", "verified")),
             )
         )
+    if kind == "fixed_rrc":
+        return FixedLengthRotationRangeCodec(
+            FixedLengthRrcConfig(
+                payload_bits=total_bits,
+                total_tokens=spec["token_budget"],
+                tag_bits=int(variant.get("tag_bits", 128)),
+                probability_quantum=settings.get("probability_quantum", "1e-15"),
+                guard_digits=int(variant.get("guard_digits", 24)),
+                min_precision=int(variant.get("min_precision", 48)),
+                failure_mode=str(variant.get("failure_mode", "raise")),
+            )
+        )
     raise ValueError(f"unsupported codec variant kind: {kind!r}")
 
 
@@ -383,6 +402,11 @@ def main() -> int:
             payload_bits, payload_mode = _payload_for_seed(settings, key, spec["payload_seed"])
             codec = _build_codec(spec, settings, len(payload_bits))
             finishing_config = _finishing_config(spec, settings)
+            if (
+                isinstance(codec, FixedLengthRotationRangeCodec)
+                and finishing_config.mode != "none"
+            ):
+                raise ValueError("fixed_rrc requires finish_mode='none'")
             session_config = replace(
                 base_config,
                 top_p=spec["top_p"],
@@ -427,12 +451,22 @@ def main() -> int:
                     records = error.records
                     padded_bits = (
                         0
-                        if isinstance(codec, (FhSparSampCodec, RotationRangeCodec))
+                        if isinstance(
+                            codec,
+                            (
+                                FhSparSampCodec,
+                                RotationRangeCodec,
+                                FixedLengthRotationRangeCodec,
+                            ),
+                        )
                         else (-len(payload_bits)) % codec.config.block_size
                     )
                 else:
-                    status = "complete"
-                    embedded_token_count = len(encoded.token_ids)
+                    payload_embedded = bool(getattr(encoded, "payload_embedded", True))
+                    status = "complete" if payload_embedded else "cover_fallback"
+                    embedded_token_count = int(
+                        getattr(encoded, "embedded_token_count", len(encoded.token_ids))
+                    )
                     finished = finish_session(session, finishing_config)
                     token_ids = finished.token_ids
                     cover_text = finished.text
@@ -448,9 +482,14 @@ def main() -> int:
                 decode_exact: bool | None = None
                 recovered_message: str | None = None
                 if status == "complete" and bool(settings.get("verify_decode", True)):
+                    decode_tokens = (
+                        token_ids
+                        if isinstance(codec, FixedLengthRotationRangeCodec)
+                        else token_ids[:embedded_token_count]
+                    )
                     decoded = codec.decode(
                         provider.start_with_config(spec["prompt"], session_config),
-                        token_ids[:embedded_token_count],
+                        decode_tokens,
                         key,
                     )
                     decode_exact = decoded.bits[: len(payload_bits)] == payload_bits
@@ -468,6 +507,11 @@ def main() -> int:
                         "total_bits": len(payload_bits),
                         "completion_fraction": completed_bits / len(payload_bits),
                         "token_count": len(token_ids),
+                        "fixed_padding_token_count": (
+                            len(token_ids) - embedded_token_count
+                            if isinstance(codec, FixedLengthRotationRangeCodec)
+                            else 0
+                        ),
                         "embedded_token_count": embedded_token_count,
                         "visible_token_count": len(token_ids),
                         "tail_token_count": len(token_ids) - embedded_token_count,

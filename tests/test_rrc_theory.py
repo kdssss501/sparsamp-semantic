@@ -4,6 +4,7 @@ from fractions import Fraction
 from math import isclose, log
 
 from sparsamp_semantic.rrc_theory import (
+    authentication_false_acceptance_bound,
     inverse_rotate,
     kl_divergence_nats,
     kl_truncation_quantization_decomposition,
@@ -179,3 +180,9 @@ def test_data_dependent_stopping_leaks_despite_matching_length_marginals() -> No
     assert example.witness_event_cover_probability == Fraction(1, 4)
     assert example.witness_advantage == Fraction(1, 4)
     assert example.total_variation == Fraction(1, 2)
+
+
+def test_authenticated_prefix_scan_has_an_exact_union_bound() -> None:
+    assert authentication_false_acceptance_bound(121, 64) == Fraction(121, 1 << 64)
+    assert authentication_false_acceptance_bound(0, 64) == 0
+    assert authentication_false_acceptance_bound(10, 2) == 1
