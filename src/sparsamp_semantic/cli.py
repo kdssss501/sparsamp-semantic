@@ -73,9 +73,16 @@ def _common_codec(args: argparse.Namespace) -> tuple[SparSampCodec, PayloadCodec
             max_tokens=args.max_tokens,
             min_source_mass=args.min_source_mass,
             probability_quantum=(
-                None if args.probability_mass_bits is not None else args.probability_quantum
+                None
+                if (
+                    args.probability_mass_bits is not None
+                    or args.probability_mass_headroom_bits is not None
+                )
+                else args.probability_quantum
             ),
             probability_mass_bits=args.probability_mass_bits,
+            probability_mass_headroom_bits=args.probability_mass_headroom_bits,
+            probability_support_strategy=args.probability_support_strategy,
             preserve_probability_support=not args.allow_probability_support_loss,
         )
     )
@@ -134,6 +141,7 @@ def encode_local(args: argparse.Namespace) -> int:
         device=args.device,
         dtype=args.dtype,
         load_in_4bit=args.load_in_4bit,
+        precision_context=args.precision_context,
         seed=args.seed,
     )
     provider = HuggingFaceProvider(config)
@@ -190,6 +198,7 @@ def native_local(args: argparse.Namespace) -> int:
         device=args.device,
         dtype=args.dtype,
         load_in_4bit=args.load_in_4bit,
+        precision_context=args.precision_context,
         seed=args.seed,
     )
     session = HuggingFaceProvider(config).start(args.prompt)
@@ -215,6 +224,12 @@ def _add_codec_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--min-source-mass", type=float, default=0.0)
     parser.add_argument("--probability-quantum", default="1e-15")
     parser.add_argument("--probability-mass-bits", type=int)
+    parser.add_argument("--probability-mass-headroom-bits", type=int)
+    parser.add_argument(
+        "--probability-support-strategy",
+        choices=("base", "waterfill"),
+        default="base",
+    )
     parser.add_argument("--allow-probability-support-loss", action="store_true")
     parser.add_argument("--repetitions", type=int, default=1)
 
@@ -231,6 +246,9 @@ def _add_model_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--device", default="auto")
     parser.add_argument("--dtype", default="float16")
     parser.add_argument("--load-in-4bit", action="store_true")
+    parser.add_argument(
+        "--precision-context", choices=("strict", "portable"), default="strict"
+    )
     parser.add_argument("--seed", type=int, default=42)
 
 

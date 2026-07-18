@@ -139,3 +139,25 @@ def test_candidate_order_changes_prf_context_without_changing_default_context() 
 def test_candidate_order_rejects_unknown_contract() -> None:
     with pytest.raises(ValueError, match="candidate_order"):
         HuggingFaceConfig(candidate_order="unknown")  # type: ignore[arg-type]
+
+
+def test_portable_precision_context_matches_across_dtypes() -> None:
+    fp32 = object.__new__(HuggingFaceSession)
+    fp32._config = HuggingFaceConfig(dtype="float32", precision_context="portable")
+    fp32._prompt = "portable prompt"
+    fp16 = object.__new__(HuggingFaceSession)
+    fp16._config = HuggingFaceConfig(dtype="float16", precision_context="portable")
+    fp16._prompt = "portable prompt"
+
+    assert fp32.context_id == fp16.context_id
+
+
+def test_strict_precision_context_separates_dtypes() -> None:
+    fp32 = object.__new__(HuggingFaceSession)
+    fp32._config = HuggingFaceConfig(dtype="float32")
+    fp32._prompt = "strict prompt"
+    fp16 = object.__new__(HuggingFaceSession)
+    fp16._config = HuggingFaceConfig(dtype="float16")
+    fp16._prompt = "strict prompt"
+
+    assert fp32.context_id != fp16.context_id

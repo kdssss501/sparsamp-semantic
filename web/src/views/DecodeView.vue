@@ -21,6 +21,7 @@ const sampling = reactive<SamplingConfig>({
   device: 'cuda',
   dtype: 'float16',
   load_in_4bit: false,
+  precision_context: 'strict',
   top_p: 0.95,
   top_k: null,
   candidate_order: 'probability',
@@ -36,6 +37,9 @@ const codec = reactive<CodecSettings>({
   max_tokens: 2048,
   min_source_mass: 0,
   probability_quantum: '1e-15',
+  probability_mass_bits: null,
+  probability_mass_headroom_bits: null,
+  probability_support_strategy: 'base',
   repetitions: 1,
   finish_mode: 'punctuation',
   finish_max_tokens: 32,
@@ -48,6 +52,22 @@ const canDecode = computed(
       ? Boolean(selectedArtifact.value)
       : Boolean(form.prompt.trim() && form.coverText.trim())),
 )
+const adaptiveMassEnabled = ref(false)
+
+function setAdaptiveMass(enabled: boolean | string | number) {
+  adaptiveMassEnabled.value = Boolean(enabled)
+  if (adaptiveMassEnabled.value) {
+    codec.probability_quantum = null
+    codec.probability_mass_bits = null
+    codec.probability_mass_headroom_bits = 3
+    codec.probability_support_strategy = 'waterfill'
+  } else {
+    codec.probability_quantum = '1e-15'
+    codec.probability_mass_bits = null
+    codec.probability_mass_headroom_bits = null
+    codec.probability_support_strategy = 'base'
+  }
+}
 
 function useLatest() {
   form.prompt = store.lastPrompt
@@ -71,6 +91,8 @@ async function loadArtifact() {
       sampling.device = (provider.device as SamplingConfig['device']) ?? sampling.device
       sampling.dtype = (provider.dtype as SamplingConfig['dtype']) ?? sampling.dtype
       sampling.load_in_4bit = Boolean(provider.load_in_4bit)
+      sampling.precision_context =
+        (provider.precision_context as SamplingConfig['precision_context']) ?? 'strict'
       sampling.top_p = Number(provider.top_p ?? sampling.top_p)
       sampling.top_k = provider.top_k == null ? null : Number(provider.top_k)
       sampling.candidate_order =
@@ -92,7 +114,20 @@ async function loadArtifact() {
       codec.block_size = Number(settings.block_size ?? codec.block_size)
       codec.max_tokens = Number(settings.max_tokens ?? codec.max_tokens)
       codec.min_source_mass = Number(settings.min_source_mass ?? codec.min_source_mass)
-      codec.probability_quantum = String(settings.probability_quantum ?? codec.probability_quantum)
+      if ('probability_quantum' in settings) {
+        codec.probability_quantum =
+          settings.probability_quantum == null ? null : String(settings.probability_quantum)
+      }
+      codec.probability_mass_bits =
+        settings.probability_mass_bits == null ? null : Number(settings.probability_mass_bits)
+      codec.probability_mass_headroom_bits =
+        settings.probability_mass_headroom_bits == null
+          ? null
+          : Number(settings.probability_mass_headroom_bits)
+      codec.probability_support_strategy =
+        (settings.probability_support_strategy as CodecSettings['probability_support_strategy']) ??
+        'base'
+      adaptiveMassEnabled.value = codec.probability_mass_headroom_bits != null
     }
     codec.repetitions = Number(payload?.repetitions ?? codec.repetitions)
     if (finishing) {
@@ -201,6 +236,30 @@ async function decode() {
                     { label: '概率顺序', value: 'probability' },
                     { label: 'Token ID', value: 'token_id' },
                   ]"
+                />
+              </el-form-item>
+              <el-form-item label="跨精度上下文">
+                <el-segmented
+                  v-model="sampling.precision_context"
+                  :options="[
+                    { label: '严格', value: 'strict' },
+                    { label: '可移植', value: 'portable' },
+                  ]"
+                />
+              </el-form-item>
+              <el-form-item label="自适应 Waterfill">
+                <el-switch
+                  :model-value="adaptiveMassEnabled"
+                  @change="setAdaptiveMass"
+                />
+              </el-form-item>
+              <el-form-item label="质量 Headroom">
+                <el-input-number
+                  v-model="codec.probability_mass_headroom_bits"
+                  :min="0"
+                  :max="16"
+                  :disabled="!adaptiveMassEnabled"
+                  controls-position="right"
                 />
               </el-form-item>
               <el-form-item label="温度">

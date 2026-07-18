@@ -120,3 +120,9 @@ GPT-2 FP32 -> FP16 的 32-step 共享前缀审计中，固定 `16-32 bit` 合同
 按预注册门禁，R024 判定为机制级 `GO`，推荐 `waterfill+h3` 进入消息级验证。相同 headroom 下，waterfill 在全部 7 个设置上都降低 mean KL 和 mean TV，说明 KL 投影相对 legacy base 的改进不是单点偶然。
 
 该结果仍受 12 个 top-p 候选 churn 步骤限制。`15/32` 是逐步合同一致率，不是完整消息成功率，不能直接转写为端到端恢复提升。
+
+## R025 消息级复核
+
+在 3 prompts × 2 payload seeds 的真实 FP32 编码、FP16 解码 pilot 中，waterfill h4 与 Decimal 均恢复 `2/6` 条完整 16-bit payload；h3 与 fixed-16 均为 `0/6`。h4 aggregate BER 为 `0.4167`，略高于 Decimal 的 `0.3854`。
+
+因此 R024 的机制级 GO 没有转化为消息级优势。waterfill h4 保留为可行合同组件，但不再作为已验证的性能提升。后续研究必须直接优化失败传播和重同步，不能继续用逐步一致率替代完整消息成功率。

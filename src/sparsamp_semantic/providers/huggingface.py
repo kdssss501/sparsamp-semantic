@@ -12,6 +12,7 @@ from .base import Provider, ProviderSession
 
 
 CandidateOrder = Literal["probability", "token_id"]
+PrecisionContext = Literal["strict", "portable"]
 
 
 def _mutable_float_logits(logits: Any) -> Any:
@@ -45,6 +46,7 @@ class HuggingFaceConfig:
     device: str = "auto"
     dtype: str = "float16"
     load_in_4bit: bool = False
+    precision_context: PrecisionContext = "strict"
     system_prompt: str = (
         "你是一个表达自然、内容准确的助手。直接回答用户问题，保持上下文连贯，"
         "不要提及采样、编码或隐藏消息。"
@@ -63,6 +65,8 @@ class HuggingFaceConfig:
             raise ValueError("top_k must be positive")
         if self.candidate_order not in {"probability", "token_id"}:
             raise ValueError("candidate_order must be 'probability' or 'token_id'")
+        if self.precision_context not in {"strict", "portable"}:
+            raise ValueError("precision_context must be 'strict' or 'portable'")
         if self.temperature <= 0:
             raise ValueError("temperature must be positive")
         if self.entropy_floor_bits < 0:
@@ -130,6 +134,11 @@ class HuggingFaceSession(ProviderSession):
     def context_id(self) -> bytes:
         # Controller fields are excluded so fixed/adaptive ablations share the PRF
         # stream until the public entropy controller actually changes a distribution.
+        precision_fields = (
+            [self._config.dtype, str(self._config.load_in_4bit)]
+            if self._config.precision_context == "strict"
+            else ["portable-precision"]
+        )
         fields = [
             "hf-v1",
             self._config.model_name,
@@ -137,8 +146,7 @@ class HuggingFaceSession(ProviderSession):
             str(self._config.top_p),
             str(self._config.top_k),
             str(self._config.temperature),
-            self._config.dtype,
-            str(self._config.load_in_4bit),
+            *precision_fields,
             self._config.system_prompt,
             self._prompt,
         ]

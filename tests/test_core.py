@@ -58,6 +58,28 @@ def test_integer_mass_core_round_trip_preserves_support() -> None:
     assert encoded.forward_quantization_kl_nats >= 0
 
 
+def test_support_adaptive_waterfill_core_round_trip_records_effective_bits() -> None:
+    codec = SparSampCodec(
+        CodecConfig(
+            block_size=8,
+            max_tokens=1000,
+            probability_quantum=None,
+            probability_mass_headroom_bits=3,
+            probability_support_strategy="waterfill",
+            preserve_probability_support=True,
+        )
+    )
+    provider = MockProvider()
+    key = b"0123456789abcdef0123456789abcdef"
+    bits = "1011010010110100"
+
+    encoded = codec.encode(provider.start("adaptive integer core"), bits, key)
+    decoded = codec.decode(provider.start("adaptive integer core"), encoded.token_ids, key)
+
+    assert decoded.bits[: len(bits)] == bits
+    assert all(record.effective_probability_mass_bits == 5 for record in encoded.records)
+
+
 def test_wrong_prompt_fails_or_changes_bits() -> None:
     codec = SparSampCodec(CodecConfig(block_size=8, max_tokens=1000))
     provider = MockProvider()

@@ -15,6 +15,7 @@ class SamplingConfig(BaseModel):
     device: Literal["auto", "cuda", "cpu"] = "cuda"
     dtype: Literal["float16", "bfloat16", "float32"] = "float16"
     load_in_4bit: bool = False
+    precision_context: Literal["strict", "portable"] = "strict"
     top_p: float = Field(default=0.95, gt=0.0, le=1.0)
     top_k: int | None = Field(default=None, ge=1)
     candidate_order: Literal["probability", "token_id"] = "probability"
@@ -40,6 +41,8 @@ class CodecSettings(BaseModel):
     min_source_mass: float = Field(default=0.0, ge=0.0, le=1.0)
     probability_quantum: str | None = "1e-15"
     probability_mass_bits: int | None = Field(default=None, ge=16, le=52)
+    probability_mass_headroom_bits: int | None = Field(default=None, ge=0, le=51)
+    probability_support_strategy: Literal["base", "waterfill"] = "base"
     preserve_probability_support: bool = True
     repetitions: int = Field(default=1, ge=1, le=9)
     finish_mode: Literal["none", "punctuation", "fixed"] = "punctuation"
@@ -55,8 +58,19 @@ class CodecSettings(BaseModel):
 
     @model_validator(mode="after")
     def probability_contract_is_unambiguous(self) -> CodecSettings:
-        if self.probability_quantum is not None and self.probability_mass_bits is not None:
-            raise ValueError("probability_quantum and probability_mass_bits are mutually exclusive")
+        enabled = sum(
+            value is not None
+            for value in (
+                self.probability_quantum,
+                self.probability_mass_bits,
+                self.probability_mass_headroom_bits,
+            )
+        )
+        if enabled > 1:
+            raise ValueError(
+                "probability_quantum, probability_mass_bits, and "
+                "probability_mass_headroom_bits are mutually exclusive"
+            )
         return self
 
     @model_validator(mode="after")

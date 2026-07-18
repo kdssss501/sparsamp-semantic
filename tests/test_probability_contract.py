@@ -67,6 +67,8 @@ def test_probability_contract_validation_rejects_ambiguous_or_invalid_modes() ->
         allocate_integer_mass((0.5, 0.5), mass_bits=0)
     with pytest.raises(ValueError, match="non-negative"):
         allocate_integer_mass((0.6, -0.1, 0.5), mass_bits=16)
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        validate_probability_contract(None, 16, 3, "waterfill")
 
 
 def test_decimal_contract_remains_normalized_and_positive() -> None:

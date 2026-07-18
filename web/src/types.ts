@@ -7,6 +7,7 @@ export interface SamplingConfig {
   device: 'auto' | 'cuda' | 'cpu'
   dtype: 'float16' | 'bfloat16' | 'float32'
   load_in_4bit: boolean
+  precision_context: 'strict' | 'portable'
   top_p: number
   top_k: number | null
   candidate_order: 'probability' | 'token_id'
@@ -24,6 +25,8 @@ export interface CodecSettings {
   min_source_mass: number
   probability_quantum: string | null
   probability_mass_bits?: number | null
+  probability_mass_headroom_bits: number | null
+  probability_support_strategy: 'base' | 'waterfill'
   preserve_probability_support?: boolean
   repetitions: number
   finish_mode: 'none' | 'punctuation' | 'fixed'

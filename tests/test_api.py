@@ -147,3 +147,23 @@ def test_codec_settings_accept_integer_mass_or_decimal_quantum_but_not_both() ->
 
     with pytest.raises(ValueError, match="mutually exclusive"):
         CodecSettings(probability_quantum="1e-15", probability_mass_bits=32)
+
+
+def test_codec_settings_map_support_adaptive_waterfill() -> None:
+    settings = CodecSettings(
+        probability_quantum=None,
+        probability_mass_headroom_bits=3,
+        probability_support_strategy="waterfill",
+    )
+    codec, _, _ = ResearchService._codecs(settings)
+
+    assert codec.config.probability_mass_bits is None
+    assert codec.config.probability_mass_headroom_bits == 3
+    assert codec.config.probability_support_strategy == "waterfill"
+
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        CodecSettings(
+            probability_quantum=None,
+            probability_mass_bits=16,
+            probability_mass_headroom_bits=3,
+        )

@@ -215,6 +215,8 @@ def decimal_quantized_probabilities(
 def validate_probability_contract(
     probability_quantum: str | None,
     probability_mass_bits: int | None,
+    probability_mass_headroom_bits: int | None = None,
+    probability_support_strategy: SupportStrategy = "base",
 ) -> None:
     """Validate mutually exclusive Decimal and integer probability contracts."""
 
@@ -222,5 +224,19 @@ def validate_probability_contract(
         raise ValueError("probability quantum must be positive")
     if probability_mass_bits is not None and not 16 <= probability_mass_bits <= 52:
         raise ValueError("probability mass bits must lie in [16, 52]")
-    if probability_quantum is not None and probability_mass_bits is not None:
-        raise ValueError("probability quantum and integer mass bits are mutually exclusive")
+    if probability_mass_headroom_bits is not None and not 0 <= probability_mass_headroom_bits <= 51:
+        raise ValueError("probability mass headroom bits must lie in [0, 51]")
+    if probability_support_strategy not in {"base", "waterfill"}:
+        raise ValueError("probability support strategy must be 'base' or 'waterfill'")
+    enabled = sum(
+        value is not None
+        for value in (
+            probability_quantum,
+            probability_mass_bits,
+            probability_mass_headroom_bits,
+        )
+    )
+    if enabled > 1:
+        raise ValueError(
+            "probability quantum, integer mass bits, and adaptive headroom are mutually exclusive"
+        )

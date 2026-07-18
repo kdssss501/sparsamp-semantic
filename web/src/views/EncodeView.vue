@@ -18,6 +18,7 @@ const sampling = reactive<SamplingConfig>({
   device: 'cuda',
   dtype: 'float16',
   load_in_4bit: false,
+  precision_context: 'strict',
   top_p: 0.95,
   top_k: null,
   candidate_order: 'probability',
@@ -33,6 +34,9 @@ const codec = reactive<CodecSettings>({
   max_tokens: 2048,
   min_source_mass: 0,
   probability_quantum: '1e-15',
+  probability_mass_bits: null,
+  probability_mass_headroom_bits: null,
+  probability_support_strategy: 'base',
   repetitions: 1,
   finish_mode: 'punctuation',
   finish_max_tokens: 32,
@@ -43,6 +47,22 @@ const baselineText = ref('')
 const metrics = ref<Partial<Metrics> | null>(null)
 const tokenAmbiguity = ref<boolean | null>(null)
 const activeOutput = ref<'stego' | 'baseline'>('stego')
+const adaptiveMassEnabled = ref(false)
+
+function setAdaptiveMass(enabled: boolean | string | number) {
+  adaptiveMassEnabled.value = Boolean(enabled)
+  if (adaptiveMassEnabled.value) {
+    codec.probability_quantum = null
+    codec.probability_mass_bits = null
+    codec.probability_mass_headroom_bits = 3
+    codec.probability_support_strategy = 'waterfill'
+  } else {
+    codec.probability_quantum = '1e-15'
+    codec.probability_mass_bits = null
+    codec.probability_mass_headroom_bits = null
+    codec.probability_support_strategy = 'base'
+  }
+}
 
 const canEncode = computed(
   () => form.prompt.trim() && form.message.trim() && new TextEncoder().encode(form.secretKey).length >= 16,
@@ -159,6 +179,30 @@ function downloadCover() {
                     { label: '概率顺序', value: 'probability' },
                     { label: 'Token ID', value: 'token_id' },
                   ]"
+                />
+              </el-form-item>
+              <el-form-item label="跨精度上下文">
+                <el-segmented
+                  v-model="sampling.precision_context"
+                  :options="[
+                    { label: '严格', value: 'strict' },
+                    { label: '可移植', value: 'portable' },
+                  ]"
+                />
+              </el-form-item>
+              <el-form-item label="自适应 Waterfill">
+                <el-switch
+                  :model-value="adaptiveMassEnabled"
+                  @change="setAdaptiveMass"
+                />
+              </el-form-item>
+              <el-form-item label="质量 Headroom">
+                <el-input-number
+                  v-model="codec.probability_mass_headroom_bits"
+                  :min="0"
+                  :max="16"
+                  :disabled="!adaptiveMassEnabled"
+                  controls-position="right"
                 />
               </el-form-item>
               <el-form-item label="纠错重复数">

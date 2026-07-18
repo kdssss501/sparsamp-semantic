@@ -9,8 +9,10 @@ from time import perf_counter
 from typing import Hashable
 
 from .probability_contract import (
+    SupportStrategy,
     decimal_quantized_probabilities,
     integer_mass_probabilities,
+    support_feasible_mass_bits,
     validate_probability_contract,
 )
 from .prf import HmacRandomStream
@@ -31,13 +33,26 @@ def _probabilities(
     quantum: str | None,
     probability_mass_bits: int | None = None,
     preserve_probability_support: bool = True,
+    probability_mass_headroom_bits: int | None = None,
+    probability_support_strategy: SupportStrategy = "base",
 ) -> tuple[Fraction, ...]:
     probabilities = [_fraction_from_probability(item.probability) for item in snapshot.candidates]
+    if probability_mass_headroom_bits is not None:
+        effective_mass_bits = support_feasible_mass_bits(
+            len(snapshot.candidates), probability_mass_headroom_bits
+        )
+        return integer_mass_probabilities(
+            probabilities,
+            mass_bits=effective_mass_bits,
+            preserve_support=preserve_probability_support,
+            support_strategy=probability_support_strategy,
+        )
     if probability_mass_bits is not None:
         return integer_mass_probabilities(
             probabilities,
             mass_bits=probability_mass_bits,
             preserve_support=preserve_probability_support,
+            support_strategy=probability_support_strategy,
         )
     return decimal_quantized_probabilities(probabilities, quantum)
 
@@ -65,6 +80,8 @@ class CodecConfig:
     min_source_mass: float = 0.0
     probability_quantum: str | None = "1e-15"
     probability_mass_bits: int | None = None
+    probability_mass_headroom_bits: int | None = None
+    probability_support_strategy: SupportStrategy = "base"
     preserve_probability_support: bool = True
 
     def __post_init__(self) -> None:
@@ -74,7 +91,12 @@ class CodecConfig:
             raise ValueError("max_tokens must be positive")
         if not 0.0 <= self.min_source_mass <= 1.0:
             raise ValueError("min_source_mass must be in [0, 1]")
-        validate_probability_contract(self.probability_quantum, self.probability_mass_bits)
+        validate_probability_contract(
+            self.probability_quantum,
+            self.probability_mass_bits,
+            self.probability_mass_headroom_bits,
+            self.probability_support_strategy,
+        )
 
 
 @dataclass(frozen=True)
@@ -100,6 +122,7 @@ class StepRecord:
     quantization_total_variation: float = 0.0
     quantization_support_loss_count: int = 0
     quantization_support_loss_mass: float = 0.0
+    effective_probability_mass_bits: int | None = None
 
 
 @dataclass(frozen=True)
@@ -221,6 +244,8 @@ class SparSampCodec:
                 self.config.probability_quantum,
                 self.config.probability_mass_bits,
                 self.config.preserve_probability_support,
+                self.config.probability_mass_headroom_bits,
+                self.config.probability_support_strategy,
             )
             r = random_stream.fraction(step)
             embedded = snapshot.source_mass >= self.config.min_source_mass
@@ -280,6 +305,14 @@ class SparSampCodec:
                     quantization_total_variation=quantization_tv,
                     quantization_support_loss_count=support_loss_count,
                     quantization_support_loss_mass=support_loss_mass,
+                    effective_probability_mass_bits=(
+                        support_feasible_mass_bits(
+                            len(snapshot.candidates),
+                            self.config.probability_mass_headroom_bits,
+                        )
+                        if self.config.probability_mass_headroom_bits is not None
+                        else self.config.probability_mass_bits
+                    ),
                 )
             )
 
@@ -330,6 +363,8 @@ class SparSampCodec:
                 self.config.probability_quantum,
                 self.config.probability_mass_bits,
                 self.config.preserve_probability_support,
+                self.config.probability_mass_headroom_bits,
+                self.config.probability_support_strategy,
             )
             embedded = snapshot.source_mass >= self.config.min_source_mass
 
