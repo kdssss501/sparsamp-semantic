@@ -18,6 +18,7 @@ from .core import (
     _select,
 )
 from .prf import HmacRandomStream
+from .probability_contract import validate_probability_contract
 from .providers.base import ProviderSession
 
 
@@ -35,6 +36,8 @@ class FhCodecConfig:
     loose_capacity_ratio: float = 1.5
     min_source_mass: float = 0.0
     probability_quantum: str | None = "1e-15"
+    probability_mass_bits: int | None = None
+    preserve_probability_support: bool = True
 
     def __post_init__(self) -> None:
         if self.total_bits < 1:
@@ -62,6 +65,7 @@ class FhCodecConfig:
             raise ValueError("loose_capacity_ratio must exceed tight_capacity_ratio")
         if not 0.0 <= self.min_source_mass <= 1.0:
             raise ValueError("min_source_mass must be in [0, 1]")
+        validate_probability_contract(self.probability_quantum, self.probability_mass_bits)
 
 
 def select_block_size(
@@ -143,7 +147,12 @@ class FhSparSampCodec:
 
         for step in range(self.config.max_tokens):
             snapshot = session.next_distribution()
-            probabilities = _probabilities(snapshot, self.config.probability_quantum)
+            probabilities = _probabilities(
+                snapshot,
+                self.config.probability_quantum,
+                self.config.probability_mass_bits,
+                self.config.preserve_probability_support,
+            )
             entropy_ema = _update_entropy_ema(
                 entropy_ema, snapshot.entropy_bits, self.config.entropy_ema_alpha
             )
@@ -151,6 +160,15 @@ class FhSparSampCodec:
             embedded = snapshot.source_mass >= self.config.min_source_mass
             block_completed = False
             record_block_size = active_size
+            if embedded:
+                forward_kl = snapshot.forward_kl_to_nats(probabilities)
+                quantization_tv = snapshot.total_variation_to(probabilities)
+                support_loss_count, support_loss_mass = snapshot.support_loss_to(probabilities)
+            else:
+                forward_kl = 0.0
+                quantization_tv = 0.0
+                support_loss_count = 0
+                support_loss_mass = 0.0
 
             if not embedded:
                 if snapshot.native_token_id is not None:
@@ -207,12 +225,10 @@ class FhSparSampCodec:
                     effective_temperature=snapshot.metadata.get("effective_temperature"),
                     rescue_active=bool(snapshot.metadata.get("rescue_active", False)),
                     low_entropy_streak=int(snapshot.metadata.get("low_entropy_streak", 0)),
-                    forward_quantization_kl_nats=(
-                        snapshot.forward_kl_to_nats(probabilities) if embedded else 0.0
-                    ),
-                    quantization_total_variation=(
-                        snapshot.total_variation_to(probabilities) if embedded else 0.0
-                    ),
+                    forward_quantization_kl_nats=forward_kl,
+                    quantization_total_variation=quantization_tv,
+                    quantization_support_loss_count=support_loss_count,
+                    quantization_support_loss_mass=support_loss_mass,
                 )
             )
 
@@ -259,7 +275,12 @@ class FhSparSampCodec:
 
         for step, observed_token_id in enumerate(token_ids):
             snapshot = session.next_distribution()
-            probabilities = _probabilities(snapshot, self.config.probability_quantum)
+            probabilities = _probabilities(
+                snapshot,
+                self.config.probability_quantum,
+                self.config.probability_mass_bits,
+                self.config.preserve_probability_support,
+            )
             entropy_ema = _update_entropy_ema(
                 entropy_ema, snapshot.entropy_bits, self.config.entropy_ema_alpha
             )

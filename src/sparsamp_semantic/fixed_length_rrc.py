@@ -40,6 +40,8 @@ class FixedLengthRrcConfig:
     total_tokens: int
     tag_bits: int = 128
     probability_quantum: str | None = "1e-15"
+    probability_mass_bits: int | None = None
+    preserve_probability_support: bool = True
     guard_digits: int = 24
     min_precision: int = 48
     failure_mode: Literal["raise", "cover"] = "raise"
@@ -57,6 +59,8 @@ class FixedLengthRrcConfig:
             message_bits=self.frame_bits,
             max_tokens=self.total_tokens,
             probability_quantum=self.probability_quantum,
+            probability_mass_bits=self.probability_mass_bits,
+            preserve_probability_support=self.preserve_probability_support,
             guard_digits=self.guard_digits,
             min_precision=self.min_precision,
         )
@@ -71,6 +75,8 @@ class FixedLengthRrcConfig:
             message_bits=self.frame_bits,
             max_tokens=self.total_tokens,
             probability_quantum=self.probability_quantum,
+            probability_mass_bits=self.probability_mass_bits,
+            preserve_probability_support=self.preserve_probability_support,
             guard_digits=self.guard_digits,
             min_precision=self.min_precision,
             termination_mode="verified",
@@ -151,6 +157,11 @@ def _step_record(
     embedded: bool,
 ) -> StepRecord:
     metadata = snapshot.metadata
+    forward_kl = snapshot.forward_kl_to_nats(implemented_probabilities)
+    quantization_tv = snapshot.total_variation_to(implemented_probabilities)
+    support_loss_count, support_loss_mass = snapshot.support_loss_to(
+        implemented_probabilities
+    )
     return StepRecord(
         step=step,
         token_id=token_id,
@@ -167,12 +178,10 @@ def _step_record(
         effective_temperature=metadata.get("effective_temperature"),
         rescue_active=bool(metadata.get("rescue_active", False)),
         low_entropy_streak=int(metadata.get("low_entropy_streak", 0)),
-        forward_quantization_kl_nats=snapshot.forward_kl_to_nats(
-            implemented_probabilities
-        ),
-        quantization_total_variation=snapshot.total_variation_to(
-            implemented_probabilities
-        ),
+        forward_quantization_kl_nats=forward_kl,
+        quantization_total_variation=quantization_tv,
+        quantization_support_loss_count=support_loss_count,
+        quantization_support_loss_mass=support_loss_mass,
     )
 
 
@@ -190,7 +199,12 @@ class FixedLengthRotationRangeCodec:
         domain: bytes,
     ) -> StepRecord:
         snapshot = session.next_distribution()
-        probabilities = _decimal_probabilities(snapshot, self.config.probability_quantum)
+        probabilities = _decimal_probabilities(
+            snapshot,
+            self.config.probability_quantum,
+            self.config.probability_mass_bits,
+            self.config.preserve_probability_support,
+        )
         offset_fraction = random_stream.fraction(step, domain=domain)
         position = Decimal(offset_fraction.numerator) / Decimal(offset_fraction.denominator)
         candidate_index, _, _ = _select_interval(probabilities, position)
@@ -310,7 +324,12 @@ class FixedLengthRotationRangeCodec:
 
             for step, observed_token_id in enumerate(token_ids):
                 snapshot = session.next_distribution()
-                probabilities = _decimal_probabilities(snapshot, self.config.probability_quantum)
+                probabilities = _decimal_probabilities(
+                    snapshot,
+                    self.config.probability_quantum,
+                    self.config.probability_mass_bits,
+                    self.config.preserve_probability_support,
+                )
                 width = right - left
                 if width <= 0:
                     raise ArithmeticError("fixed-length RRC interval collapsed to zero")

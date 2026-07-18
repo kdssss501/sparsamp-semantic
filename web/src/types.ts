@@ -21,7 +21,9 @@ export interface CodecSettings {
   block_size: number
   max_tokens: number
   min_source_mass: number
-  probability_quantum: string
+  probability_quantum: string | null
+  probability_mass_bits?: number | null
+  preserve_probability_support?: boolean
   repetitions: number
   finish_mode: 'none' | 'punctuation' | 'fixed'
   finish_max_tokens: number
@@ -45,6 +47,8 @@ export interface Metrics {
   truncation_kl_nats: number
   forward_quantization_kl_nats: number
   quantization_tv_step_sum: number
+  quantization_support_loss_count: number
+  quantization_support_loss_mass_step_sum: number
 }
 
 export interface Operation {

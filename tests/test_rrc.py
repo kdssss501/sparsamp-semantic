@@ -70,6 +70,25 @@ def test_rrc_is_deterministic_for_same_context() -> None:
     assert first.text == second.text
 
 
+def test_integer_mass_verified_rrc_round_trip() -> None:
+    bits = "10110100101101101001011100101100"
+    codec = RotationRangeCodec(
+        RrcConfig(
+            message_bits=len(bits),
+            max_tokens=1000,
+            probability_quantum=None,
+            probability_mass_bits=16,
+        )
+    )
+    provider = MockProvider()
+
+    encoded = codec.encode(provider.start("integer rrc"), bits, KEY)
+    decoded = codec.decode(provider.start("integer rrc"), encoded.token_ids, KEY)
+
+    assert decoded.bits == bits
+    assert encoded.quantization_support_loss_count == 0
+
+
 def test_rrc_wrong_prompt_changes_recovered_payload() -> None:
     codec = RotationRangeCodec(RrcConfig(message_bits=32, max_tokens=100))
     provider = MockProvider()

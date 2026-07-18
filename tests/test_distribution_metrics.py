@@ -42,6 +42,13 @@ def test_forward_kl_is_infinite_when_implemented_support_is_missing() -> None:
     )
 
 
+def test_support_loss_reports_removed_candidate_and_target_mass() -> None:
+    count, mass = _snapshot().support_loss_to((Fraction(1, 2), Fraction(1, 2), 0))
+
+    assert count == 1
+    assert isclose(mass, 0.2)
+
+
 def test_distribution_metrics_validate_shape_and_mass() -> None:
     snapshot = _snapshot()
     with pytest.raises(ValueError, match="align"):

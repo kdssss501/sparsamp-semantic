@@ -126,6 +126,8 @@ def _record_metrics(records: tuple[StepRecord, ...]) -> dict[str, Any]:
     ]
     forward_quantization_kls = [record.forward_quantization_kl_nats for record in records]
     quantization_tvs = [record.quantization_total_variation for record in records]
+    support_loss_counts = [record.quantization_support_loss_count for record in records]
+    support_loss_masses = [record.quantization_support_loss_mass for record in records]
     return {
         "embedded_steps": len(embedded),
         "skipped_steps": len(records) - len(embedded),
@@ -155,6 +157,9 @@ def _record_metrics(records: tuple[StepRecord, ...]) -> dict[str, Any]:
         ),
         "max_quantization_total_variation": max(quantization_tvs, default=0.0),
         "quantization_tv_step_sum": sum(quantization_tvs),
+        "quantization_support_loss_count": sum(support_loss_counts),
+        "quantization_support_loss_mass_step_sum": sum(support_loss_masses),
+        "max_quantization_support_loss_mass": max(support_loss_masses, default=0.0),
         "block_token_counts": {
             str(block_size): count for block_size, count in sorted(block_token_counts.items())
         },
@@ -270,6 +275,10 @@ def _build_codec(
         "max_tokens": spec["token_budget"],
         "min_source_mass": float(settings.get("min_source_mass", 0.0)),
         "probability_quantum": settings.get("probability_quantum", "1e-15"),
+        "probability_mass_bits": settings.get("probability_mass_bits"),
+        "preserve_probability_support": bool(
+            settings.get("preserve_probability_support", True)
+        ),
     }
     variant = spec.get("codec_variant")
     if variant is None:
@@ -305,6 +314,10 @@ def _build_codec(
                 message_bits=total_bits,
                 max_tokens=spec["token_budget"],
                 probability_quantum=settings.get("probability_quantum", "1e-15"),
+                probability_mass_bits=settings.get("probability_mass_bits"),
+                preserve_probability_support=bool(
+                    settings.get("preserve_probability_support", True)
+                ),
                 guard_digits=int(variant.get("guard_digits", 24)),
                 min_precision=int(variant.get("min_precision", 48)),
                 termination_mode=str(variant.get("termination_mode", "verified")),
@@ -317,6 +330,10 @@ def _build_codec(
                 total_tokens=spec["token_budget"],
                 tag_bits=int(variant.get("tag_bits", 128)),
                 probability_quantum=settings.get("probability_quantum", "1e-15"),
+                probability_mass_bits=settings.get("probability_mass_bits"),
+                preserve_probability_support=bool(
+                    settings.get("preserve_probability_support", True)
+                ),
                 guard_digits=int(variant.get("guard_digits", 24)),
                 min_precision=int(variant.get("min_precision", 48)),
                 failure_mode=str(variant.get("failure_mode", "raise")),
@@ -329,6 +346,10 @@ def _build_codec(
                 total_tokens=spec["token_budget"],
                 tag_bits=int(variant.get("tag_bits", 128)),
                 probability_quantum=settings.get("probability_quantum", "1e-15"),
+                probability_mass_bits=settings.get("probability_mass_bits"),
+                preserve_probability_support=bool(
+                    settings.get("preserve_probability_support", True)
+                ),
                 guard_digits=int(variant.get("guard_digits", 24)),
                 min_precision=int(variant.get("min_precision", 48)),
                 failure_mode="cover",

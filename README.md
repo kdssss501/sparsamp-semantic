@@ -163,6 +163,8 @@ tail-fragmentation 方向见
 - 固定长度 Verified-RRC：[docs/fixed_length_rrc.md](docs/fixed_length_rrc.md)
 - Fixed-Length RRC V1 结果：[refine-logs/R020_FIXED_LENGTH_RRC_V1.md](refine-logs/R020_FIXED_LENGTH_RRC_V1.md)
 - Fixed-Length matched-cover 与量化偏差审计：[refine-logs/R021_FIXED_LENGTH_MATCHED_COVER.md](refine-logs/R021_FIXED_LENGTH_MATCHED_COVER.md)
+- 确定性整数概率合同：[docs/integer_probability_contract.md](docs/integer_probability_contract.md)
+- R022 整数质量实验记录：[refine-logs/R022_INTEGER_MASS_V1.md](refine-logs/R022_INTEGER_MASS_V1.md)
 
 本仓库用于授权科研、复现与防御评估。公开数据或部署前请阅读
 [SECURITY.md](SECURITY.md)。

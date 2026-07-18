@@ -37,7 +37,9 @@ class CodecSettings(BaseModel):
     block_size: int = Field(default=32, ge=1, le=1023)
     max_tokens: int = Field(default=2048, ge=1, le=8192)
     min_source_mass: float = Field(default=0.0, ge=0.0, le=1.0)
-    probability_quantum: str = "1e-15"
+    probability_quantum: str | None = "1e-15"
+    probability_mass_bits: int | None = Field(default=None, ge=16, le=52)
+    preserve_probability_support: bool = True
     repetitions: int = Field(default=1, ge=1, le=9)
     finish_mode: Literal["none", "punctuation", "fixed"] = "punctuation"
     finish_max_tokens: int = Field(default=32, ge=0, le=256)
@@ -49,6 +51,12 @@ class CodecSettings(BaseModel):
         if value % 2 == 0:
             raise ValueError("repetitions must be odd")
         return value
+
+    @model_validator(mode="after")
+    def probability_contract_is_unambiguous(self) -> CodecSettings:
+        if self.probability_quantum is not None and self.probability_mass_bits is not None:
+            raise ValueError("probability_quantum and probability_mass_bits are mutually exclusive")
+        return self
 
     @model_validator(mode="after")
     def finishing_budget_is_valid(self) -> CodecSettings:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable
 
+import pytest
 from fastapi.testclient import TestClient
 
 from sparsamp_semantic.api.app import create_app
@@ -132,3 +133,14 @@ def test_codec_settings_reject_invalid_finishing_budget() -> None:
         assert "finish_min_tokens" in str(error)
     else:
         raise AssertionError("invalid finishing budget must be rejected")
+
+
+def test_codec_settings_accept_integer_mass_or_decimal_quantum_but_not_both() -> None:
+    settings = CodecSettings(probability_quantum=None, probability_mass_bits=32)
+    codec, _, _ = ResearchService._codecs(settings)
+
+    assert codec.config.probability_mass_bits == 32
+    assert codec.config.probability_quantum is None
+
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        CodecSettings(probability_quantum="1e-15", probability_mass_bits=32)

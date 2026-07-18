@@ -12,6 +12,7 @@ from .fixed_length_rrc import (
     FixedLengthRrcConfig,
 )
 from .payload import PayloadCodec
+from .probability_contract import IntegerMassAllocation, allocate_integer_mass
 from .rrc import RrcConfig, RotationRangeCodec
 
 __all__ = [
@@ -29,10 +30,12 @@ __all__ = [
     "FixedLengthRotationRangeCodec",
     "FixedLengthRrcConfig",
     "IncompleteEncodeError",
+    "IntegerMassAllocation",
     "PayloadCodec",
     "RrcConfig",
     "RotationRangeCodec",
     "SparSampCodec",
+    "allocate_integer_mass",
     "finish_session",
     "is_sentence_complete",
 ]

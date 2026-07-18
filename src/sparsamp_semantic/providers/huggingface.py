@@ -11,6 +11,12 @@ from ..types import DistributionSnapshot, TokenCandidate
 from .base import Provider, ProviderSession
 
 
+def _mutable_float_logits(logits: Any) -> Any:
+    """Detach logits from inference-tensor restrictions before local filtering."""
+
+    return logits.float().clone()
+
+
 @dataclass(frozen=True)
 class HuggingFaceConfig:
     """Configuration shared by encoder and decoder model sessions."""
@@ -145,7 +151,8 @@ class HuggingFaceSession(ProviderSession):
                 )
         self._past_key_values = output.past_key_values
         self._pending_token = None
-        return output.logits[0, -1].float(), (perf_counter() - started) * 1000
+        logits = _mutable_float_logits(output.logits[0, -1])
+        return logits, (perf_counter() - started) * 1000
 
     def next_distribution(self) -> DistributionSnapshot:
         torch = self._torch

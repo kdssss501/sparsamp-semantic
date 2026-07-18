@@ -9,6 +9,7 @@ from time import perf_counter
 from typing import Hashable, Literal
 
 from .core import DecodeResult, EncodeResult, IncompleteEncodeError, StepRecord
+from .probability_contract import integer_mass_probabilities, validate_probability_contract
 from .prf import HmacRandomStream
 from .providers.base import ProviderSession
 from .types import DistributionSnapshot
@@ -20,9 +21,23 @@ def _positive_mod(value: Decimal, modulus: Decimal) -> Decimal:
 
 
 def _decimal_probabilities(
-    snapshot: DistributionSnapshot, quantum: str | None
+    snapshot: DistributionSnapshot,
+    quantum: str | None,
+    probability_mass_bits: int | None = None,
+    preserve_probability_support: bool = True,
 ) -> tuple[Decimal, ...]:
     probabilities = [Decimal(str(item.probability)) for item in snapshot.candidates]
+    if probability_mass_bits is not None:
+        fractions = integer_mass_probabilities(
+            probabilities,
+            mass_bits=probability_mass_bits,
+            preserve_support=preserve_probability_support,
+        )
+        with localcontext() as context:
+            context.prec = max(80, probability_mass_bits + 8)
+            return tuple(
+                Decimal(value.numerator) / Decimal(value.denominator) for value in fractions
+            )
     if quantum is not None:
         step = Decimal(quantum)
         if step <= 0:
@@ -73,6 +88,8 @@ class RrcConfig:
     message_bits: int
     max_tokens: int = 2048
     probability_quantum: str | None = "1e-15"
+    probability_mass_bits: int | None = None
+    preserve_probability_support: bool = True
     guard_digits: int = 24
     min_precision: int = 48
     termination_mode: Literal["paper", "verified"] = "verified"
@@ -88,13 +105,13 @@ class RrcConfig:
             raise ValueError("min_precision must be at least 16")
         if self.termination_mode not in {"paper", "verified"}:
             raise ValueError("termination_mode must be 'paper' or 'verified'")
-        if self.probability_quantum is not None and Decimal(self.probability_quantum) <= 0:
-            raise ValueError("probability quantum must be positive")
+        validate_probability_contract(self.probability_quantum, self.probability_mass_bits)
 
     @property
     def decimal_precision(self) -> int:
         integer_digits = ceil(self.message_bits * log10(2)) + 1
-        return max(self.min_precision, integer_digits + self.guard_digits)
+        mass_digits = (self.probability_mass_bits or 0) + self.guard_digits
+        return max(self.min_precision, integer_digits + self.guard_digits, mass_digits)
 
 
 class RotationRangeCodec:
@@ -145,8 +162,14 @@ class RotationRangeCodec:
             for step in range(self.config.max_tokens):
                 snapshot = session.next_distribution()
                 probabilities = _decimal_probabilities(
-                    snapshot, self.config.probability_quantum
+                    snapshot,
+                    self.config.probability_quantum,
+                    self.config.probability_mass_bits,
+                    self.config.preserve_probability_support,
                 )
+                forward_kl = snapshot.forward_kl_to_nats(probabilities)
+                quantization_tv = snapshot.total_variation_to(probabilities)
+                support_loss_count, support_loss_mass = snapshot.support_loss_to(probabilities)
                 width = right - left
                 if width <= 0:
                     raise ArithmeticError("range-coding interval collapsed to zero")
@@ -193,12 +216,10 @@ class RotationRangeCodec:
                         low_entropy_streak=int(
                             snapshot.metadata.get("low_entropy_streak", 0)
                         ),
-                        forward_quantization_kl_nats=snapshot.forward_kl_to_nats(
-                            probabilities
-                        ),
-                        quantization_total_variation=snapshot.total_variation_to(
-                            probabilities
-                        ),
+                        forward_quantization_kl_nats=forward_kl,
+                        quantization_total_variation=quantization_tv,
+                        quantization_support_loss_count=support_loss_count,
+                        quantization_support_loss_mass=support_loss_mass,
                     )
                 )
                 if completed:
@@ -244,7 +265,10 @@ class RotationRangeCodec:
             for step, observed_token_id in enumerate(token_ids):
                 snapshot = session.next_distribution()
                 probabilities = _decimal_probabilities(
-                    snapshot, self.config.probability_quantum
+                    snapshot,
+                    self.config.probability_quantum,
+                    self.config.probability_mass_bits,
+                    self.config.preserve_probability_support,
                 )
                 width = right - left
                 if width <= 0:

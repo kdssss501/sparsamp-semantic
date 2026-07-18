@@ -80,6 +80,7 @@ fingerprints, and explicit cost/KL accounting.
 | API method survives measured drift with bounded KL/cost | Robust black-box extension | Equivalent SparSamp reproduction |
 | Public-text recovery fails but token IDs recover | Tokenization is the bottleneck | End-to-end real-channel reliability |
 | Fixed-length stego and matched cover have similar pilot entropy | No stable visible-entropy shift in the measured 4 pairs | Practical undetectability or detector resistance |
+| Integer mass equals Decimal at 10/32 FP32/FP16 steps | Integer-only V1 does not improve cross-precision replay | Precision-hardened PSS |
 
 ## Closest Recent Work
 

@@ -50,6 +50,12 @@ def _result_dict(
             "bits_per_second": result.bits_per_second,
             "entropy_utilization": result.entropy_utilization,
             "truncation_kl_nats": result.truncation_kl_nats,
+            "forward_quantization_kl_nats": result.forward_quantization_kl_nats,
+            "quantization_tv_step_sum": result.quantization_tv_step_sum,
+            "quantization_support_loss_count": result.quantization_support_loss_count,
+            "quantization_support_loss_mass_step_sum": (
+                result.quantization_support_loss_mass_step_sum
+            ),
         },
         "records": [asdict(record) for record in result.records],
     }
@@ -66,7 +72,11 @@ def _common_codec(args: argparse.Namespace) -> tuple[SparSampCodec, PayloadCodec
             block_size=args.block_size,
             max_tokens=args.max_tokens,
             min_source_mass=args.min_source_mass,
-            probability_quantum=args.probability_quantum,
+            probability_quantum=(
+                None if args.probability_mass_bits is not None else args.probability_quantum
+            ),
+            probability_mass_bits=args.probability_mass_bits,
+            preserve_probability_support=not args.allow_probability_support_loss,
         )
     )
     return codec, PayloadCodec(repetitions=args.repetitions)
@@ -202,6 +212,8 @@ def _add_codec_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--max-tokens", type=int, default=2048)
     parser.add_argument("--min-source-mass", type=float, default=0.0)
     parser.add_argument("--probability-quantum", default="1e-15")
+    parser.add_argument("--probability-mass-bits", type=int)
+    parser.add_argument("--allow-probability-support-loss", action="store_true")
     parser.add_argument("--repetitions", type=int, default=1)
 
 

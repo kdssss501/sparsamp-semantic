@@ -114,6 +114,28 @@ class DistributionSnapshot:
             ) / 2
             return float(distance)
 
+    def support_loss_to(self, implemented: Sequence[Any]) -> tuple[int, float]:
+        """Return candidate count and Q-mass removed by an implemented distribution."""
+
+        if len(implemented) != len(self.candidates):
+            raise ValueError("implemented distribution must align with candidates")
+        with localcontext() as context:
+            context.prec = 60
+            target = [Decimal(str(item.probability)) for item in self.candidates]
+            sampled = [_as_decimal(value) for value in implemented]
+            if any(value < 0 for value in sampled):
+                raise ValueError("implemented probabilities must be non-negative")
+            target_total = sum(target, start=Decimal(0))
+            sampled_total = sum(sampled, start=Decimal(0))
+            if target_total <= 0 or sampled_total <= 0:
+                raise ValueError("probability distributions must have positive mass")
+            lost = [
+                target_value / target_total
+                for target_value, sampled_value in zip(target, sampled, strict=True)
+                if target_value > 0 and sampled_value == 0
+            ]
+            return len(lost), float(sum(lost, start=Decimal(0)))
+
     @classmethod
     def from_logprobs(
         cls,

@@ -36,6 +36,28 @@ def test_encoding_is_deterministic_for_same_context() -> None:
     assert first.text == second.text
 
 
+def test_integer_mass_core_round_trip_preserves_support() -> None:
+    codec = SparSampCodec(
+        CodecConfig(
+            block_size=16,
+            max_tokens=1000,
+            probability_quantum=None,
+            probability_mass_bits=16,
+            preserve_probability_support=True,
+        )
+    )
+    provider = MockProvider()
+    key = b"0123456789abcdef0123456789abcdef"
+    bits = "10110100101101101001011100101100"
+
+    encoded = codec.encode(provider.start("integer core"), bits, key)
+    decoded = codec.decode(provider.start("integer core"), encoded.token_ids, key)
+
+    assert decoded.bits[: len(bits)] == bits
+    assert encoded.quantization_support_loss_count == 0
+    assert encoded.forward_quantization_kl_nats >= 0
+
+
 def test_wrong_prompt_fails_or_changes_bits() -> None:
     codec = SparSampCodec(CodecConfig(block_size=8, max_tokens=1000))
     provider = MockProvider()

@@ -7,6 +7,7 @@ import pytest
 from sparsamp_semantic.providers.huggingface import (
     HuggingFaceConfig,
     HuggingFaceSession,
+    _mutable_float_logits,
     select_effective_temperature,
 )
 
@@ -22,6 +23,18 @@ def test_render_preserves_tokenizer_whitespace() -> None:
     session._generated = [1, 2, 3]
 
     assert session.render() == " leading and trailing "
+
+
+def test_fp32_inference_logits_are_cloned_before_inplace_filtering() -> None:
+    torch = pytest.importorskip("torch")
+    with torch.inference_mode():
+        inference_logits = torch.tensor([1.0, 2.0], dtype=torch.float32)
+
+    mutable = _mutable_float_logits(inference_logits)
+    mutable[0] = -torch.inf
+
+    assert torch.isneginf(mutable[0])
+    assert inference_logits[0].item() == 1.0
 
 
 def test_entropy_rescue_activates_after_public_patience() -> None:

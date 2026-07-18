@@ -63,6 +63,16 @@ def test_fixed_length_rrc_is_deterministic_for_same_context_and_key() -> None:
     assert first.embedded_token_count == second.embedded_token_count
 
 
+def test_integer_mass_fixed_length_rrc_round_trip() -> None:
+    codec = _codec(probability_quantum=None, probability_mass_bits=16)
+
+    encoded = codec.encode(MockProvider().start("integer fixed"), PAYLOAD, KEY)
+    decoded = codec.decode(MockProvider().start("integer fixed"), encoded.token_ids, KEY)
+
+    assert decoded.bits == PAYLOAD
+    assert encoded.quantization_support_loss_count == 0
+
+
 @pytest.mark.parametrize(
     ("prompt", "key"),
     [

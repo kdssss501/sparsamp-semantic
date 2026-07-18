@@ -8,6 +8,11 @@ from fractions import Fraction
 from time import perf_counter
 from typing import Hashable
 
+from .probability_contract import (
+    decimal_quantized_probabilities,
+    integer_mass_probabilities,
+    validate_probability_contract,
+)
 from .prf import HmacRandomStream
 from .providers.base import ProviderSession
 from .types import DistributionSnapshot
@@ -21,21 +26,20 @@ def _ceil_fraction(value: Fraction) -> int:
     return -((-value.numerator) // value.denominator)
 
 
-def _probabilities(snapshot: DistributionSnapshot, quantum: str | None) -> tuple[Fraction, ...]:
+def _probabilities(
+    snapshot: DistributionSnapshot,
+    quantum: str | None,
+    probability_mass_bits: int | None = None,
+    preserve_probability_support: bool = True,
+) -> tuple[Fraction, ...]:
     probabilities = [_fraction_from_probability(item.probability) for item in snapshot.candidates]
-    if quantum is not None:
-        step = Fraction(Decimal(quantum))
-        if step <= 0:
-            raise ValueError("probability quantum must be positive")
-        quantized: list[Fraction] = []
-        for probability in probabilities:
-            units = int(probability / step + Fraction(1, 2))
-            quantized.append(max(step, units * step))
-        probabilities = quantized
-    total = sum(probabilities, start=Fraction(0))
-    if total <= 0:
-        raise ValueError("distribution has no probability mass")
-    return tuple(probability / total for probability in probabilities)
+    if probability_mass_bits is not None:
+        return integer_mass_probabilities(
+            probabilities,
+            mass_bits=probability_mass_bits,
+            preserve_support=preserve_probability_support,
+        )
+    return decimal_quantized_probabilities(probabilities, quantum)
 
 
 def _bounds(probabilities: tuple[Fraction, ...], index: int) -> tuple[Fraction, Fraction]:
@@ -60,6 +64,8 @@ class CodecConfig:
     max_tokens: int = 2048
     min_source_mass: float = 0.0
     probability_quantum: str | None = "1e-15"
+    probability_mass_bits: int | None = None
+    preserve_probability_support: bool = True
 
     def __post_init__(self) -> None:
         if self.block_size < 1:
@@ -68,6 +74,7 @@ class CodecConfig:
             raise ValueError("max_tokens must be positive")
         if not 0.0 <= self.min_source_mass <= 1.0:
             raise ValueError("min_source_mass must be in [0, 1]")
+        validate_probability_contract(self.probability_quantum, self.probability_mass_bits)
 
 
 @dataclass(frozen=True)
@@ -91,6 +98,8 @@ class StepRecord:
     low_entropy_streak: int = 0
     forward_quantization_kl_nats: float = 0.0
     quantization_total_variation: float = 0.0
+    quantization_support_loss_count: int = 0
+    quantization_support_loss_mass: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -130,6 +139,16 @@ class EncodeResult:
         """Sum per-step conditional TV values along the realized prefix path."""
 
         return sum(record.quantization_total_variation for record in self.records)
+
+    @property
+    def quantization_support_loss_count(self) -> int:
+        return sum(record.quantization_support_loss_count for record in self.records)
+
+    @property
+    def quantization_support_loss_mass_step_sum(self) -> float:
+        """Sum removed Q-mass along the realized prefix path."""
+
+        return sum(record.quantization_support_loss_mass for record in self.records)
 
 
 @dataclass(frozen=True)
@@ -197,10 +216,24 @@ class SparSampCodec:
 
         for step in range(self.config.max_tokens):
             snapshot = session.next_distribution()
-            probabilities = _probabilities(snapshot, self.config.probability_quantum)
+            probabilities = _probabilities(
+                snapshot,
+                self.config.probability_quantum,
+                self.config.probability_mass_bits,
+                self.config.preserve_probability_support,
+            )
             r = random_stream.fraction(step)
             embedded = snapshot.source_mass >= self.config.min_source_mass
             block_completed = False
+            if embedded:
+                forward_kl = snapshot.forward_kl_to_nats(probabilities)
+                quantization_tv = snapshot.total_variation_to(probabilities)
+                support_loss_count, support_loss_mass = snapshot.support_loss_to(probabilities)
+            else:
+                forward_kl = 0.0
+                quantization_tv = 0.0
+                support_loss_count = 0
+                support_loss_mass = 0.0
 
             if not embedded:
                 if snapshot.native_token_id is not None:
@@ -243,12 +276,10 @@ class SparSampCodec:
                     effective_temperature=snapshot.metadata.get("effective_temperature"),
                     rescue_active=bool(snapshot.metadata.get("rescue_active", False)),
                     low_entropy_streak=int(snapshot.metadata.get("low_entropy_streak", 0)),
-                    forward_quantization_kl_nats=(
-                        snapshot.forward_kl_to_nats(probabilities) if embedded else 0.0
-                    ),
-                    quantization_total_variation=(
-                        snapshot.total_variation_to(probabilities) if embedded else 0.0
-                    ),
+                    forward_quantization_kl_nats=forward_kl,
+                    quantization_total_variation=quantization_tv,
+                    quantization_support_loss_count=support_loss_count,
+                    quantization_support_loss_mass=support_loss_mass,
                 )
             )
 
@@ -294,7 +325,12 @@ class SparSampCodec:
 
         for step, observed_token_id in enumerate(token_ids):
             snapshot = session.next_distribution()
-            probabilities = _probabilities(snapshot, self.config.probability_quantum)
+            probabilities = _probabilities(
+                snapshot,
+                self.config.probability_quantum,
+                self.config.probability_mass_bits,
+                self.config.preserve_probability_support,
+            )
             embedded = snapshot.source_mass >= self.config.min_source_mass
 
             if embedded:

@@ -19,7 +19,7 @@ top-20 APIs with probability drift, erasures, fingerprints, and cost-aware codin
 
 ### 1. FH-SparSamp: Finite-Horizon, Precision-Hardened Sampling
 
-**Status**: Schedule rejected; precision-hardening branch retained
+**Status**: Schedule rejected; integer-only V1 rejected, canonical-order precision branch retained
 **Hypothesis**: A block schedule derived only from public next-token distribution statistics and
 remaining token budget can reduce the long tail of payload completion, while deterministic integer
 mass allocation improves replay across precision modes and reduces low-probability-vanishing
@@ -117,6 +117,11 @@ leaving the already emitted steganographic prefix and recovered payload unchange
 
 The finite-horizon schedule claim is not supported by the current evidence and must not appear as a
 positive contribution.
+
+Integer-mass V1 also failed its first cross-precision gate: GPT-2 FP32/FP16 exact contract agreement
+remained 10/32 for Decimal and every tested 16-32 bit mass. Candidate ordering or support changed in
+18/32 steps. The next precision mechanism must canonicalize candidate order and measure top-p support
+churn before any larger-model scale-up.
 
 Do not combine the DeepSeek API story into the same primary paper unless it produces strong data;
 otherwise it should be a separate systems/security extension.
