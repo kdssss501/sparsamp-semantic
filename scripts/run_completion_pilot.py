@@ -404,6 +404,7 @@ def main() -> int:
         revision=settings.get("revision"),
         top_p=float(settings.get("top_p", 0.95)),
         top_k=settings.get("top_k"),
+        candidate_order=str(settings.get("candidate_order", "probability")),
         temperature=float(settings.get("temperature", 1.0)),
         device=settings.get("device", "auto"),
         dtype=settings.get("dtype", "float16"),

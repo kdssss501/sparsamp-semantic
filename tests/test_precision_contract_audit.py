@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from scripts.audit_precision_contract import compare_snapshots
+from dataclasses import dataclass
+
+from scripts.audit_precision_contract import _top_probability_token_id, compare_snapshots
 
 
 def _snapshot(probabilities: list[float]) -> dict[str, object]:
@@ -9,6 +11,17 @@ def _snapshot(probabilities: list[float]) -> dict[str, object]:
         "probabilities": probabilities,
         "source_mass": 0.95,
     }
+
+
+@dataclass(frozen=True)
+class _RankedCandidate:
+    token_id: int
+    rank: int
+
+
+@dataclass(frozen=True)
+class _RankedSnapshot:
+    candidates: tuple[_RankedCandidate, ...]
 
 
 def test_integer_contract_can_absorb_drift_that_decimal_contract_records() -> None:
@@ -51,3 +64,15 @@ def test_candidate_reordering_prevents_exact_interval_replay() -> None:
     assert result["candidate_jaccard"] == 1.0
     assert not result["candidate_order_equal"]
     assert not result["contracts_exact"]["integer_16"]
+
+
+def test_reference_prefix_uses_probability_rank_not_interval_order() -> None:
+    snapshot = _RankedSnapshot(
+        candidates=(
+            _RankedCandidate(token_id=10, rank=2),
+            _RankedCandidate(token_id=20, rank=0),
+            _RankedCandidate(token_id=30, rank=1),
+        )
+    )
+
+    assert _top_probability_token_id(snapshot) == 20

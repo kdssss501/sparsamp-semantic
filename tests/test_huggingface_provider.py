@@ -8,13 +8,26 @@ from sparsamp_semantic.providers.huggingface import (
     HuggingFaceConfig,
     HuggingFaceSession,
     _mutable_float_logits,
+    order_token_candidates,
     select_effective_temperature,
 )
+from sparsamp_semantic.types import TokenCandidate
 
 
 class _WhitespaceTokenizer:
     def decode(self, *_args: Any, **_kwargs: Any) -> str:
         return " leading and trailing "
+
+
+def _candidate(token_id: int, probability: float, rank: int) -> TokenCandidate:
+    return TokenCandidate(
+        token_id=token_id,
+        text=str(token_id),
+        raw_bytes=str(token_id).encode(),
+        probability=probability,
+        logprob=0.0,
+        rank=rank,
+    )
 
 
 def test_render_preserves_tokenizer_whitespace() -> None:
@@ -81,3 +94,48 @@ def test_entropy_controller_does_not_change_pre_intervention_prf_context() -> No
     adaptive._prompt = "paired prompt"
 
     assert fixed.context_id == adaptive.context_id
+
+
+def test_token_id_order_is_deterministic_and_preserves_token_masses() -> None:
+    candidates = (
+        _candidate(30, 0.5, 0),
+        _candidate(10, 0.3, 1),
+        _candidate(20, 0.2, 2),
+    )
+
+    ordered = order_token_candidates(candidates, "token_id")
+
+    assert [candidate.token_id for candidate in ordered] == [10, 20, 30]
+    assert {candidate.token_id: candidate.probability for candidate in ordered} == {
+        10: 0.3,
+        20: 0.2,
+        30: 0.5,
+    }
+    assert {candidate.token_id: candidate.rank for candidate in ordered} == {
+        10: 1,
+        20: 2,
+        30: 0,
+    }
+
+
+def test_probability_order_remains_the_default_contract() -> None:
+    candidates = (_candidate(30, 0.6, 0), _candidate(10, 0.4, 1))
+
+    assert HuggingFaceConfig().candidate_order == "probability"
+    assert order_token_candidates(candidates, "probability") == candidates
+
+
+def test_candidate_order_changes_prf_context_without_changing_default_context() -> None:
+    legacy = object.__new__(HuggingFaceSession)
+    legacy._config = HuggingFaceConfig()
+    legacy._prompt = "paired prompt"
+    canonical = object.__new__(HuggingFaceSession)
+    canonical._config = HuggingFaceConfig(candidate_order="token_id")
+    canonical._prompt = "paired prompt"
+
+    assert legacy.context_id != canonical.context_id
+
+
+def test_candidate_order_rejects_unknown_contract() -> None:
+    with pytest.raises(ValueError, match="candidate_order"):
+        HuggingFaceConfig(candidate_order="unknown")  # type: ignore[arg-type]

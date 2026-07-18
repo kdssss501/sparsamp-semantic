@@ -35,6 +35,12 @@ def _snapshot_data(snapshot: Any) -> dict[str, Any]:
     }
 
 
+def _top_probability_token_id(snapshot: Any) -> int:
+    """Select the probability-rank leader independently of public interval order."""
+
+    return int(min(snapshot.candidates, key=lambda item: item.rank).token_id)
+
+
 def _collect_reference(
     config: HuggingFaceConfig, prompt: str, token_count: int
 ) -> tuple[list[dict[str, Any]], list[int]]:
@@ -45,7 +51,7 @@ def _collect_reference(
     for _ in range(token_count):
         snapshot = session.next_distribution()
         snapshots.append(_snapshot_data(snapshot))
-        token_id = int(snapshot.candidates[0].token_id)
+        token_id = _top_probability_token_id(snapshot)
         prefix.append(token_id)
         session.append(token_id)
     return snapshots, prefix
@@ -143,6 +149,9 @@ def main() -> int:
     parser.add_argument("--replay-dtype", default="float16")
     parser.add_argument("--top-p", type=float, default=0.95)
     parser.add_argument("--temperature", type=float, default=1.0)
+    parser.add_argument(
+        "--candidate-order", choices=("probability", "token_id"), default="probability"
+    )
     parser.add_argument("--mass-bits", type=int, nargs="+", default=[16, 20, 24, 28, 32])
     parser.add_argument("--allow-support-loss", action="store_true")
     parser.add_argument(
@@ -156,6 +165,7 @@ def main() -> int:
         "model_name": args.model,
         "top_p": args.top_p,
         "temperature": args.temperature,
+        "candidate_order": args.candidate_order,
         "device": args.device,
         "allow_eos": False,
         "adaptive_temperature": False,
@@ -182,8 +192,17 @@ def main() -> int:
         }
         for name in contract_names
     }
+    structural_summary = {
+        "candidate_order_equal_steps": sum(item["candidate_order_equal"] for item in comparisons),
+        "candidate_set_equal_steps": sum(item["candidate_jaccard"] == 1.0 for item in comparisons),
+        "mean_candidate_jaccard": (
+            sum(item["candidate_jaccard"] for item in comparisons) / len(comparisons)
+            if comparisons
+            else 0.0
+        ),
+    }
     payload = {
-        "schema": "sparsamp-precision-contract-audit-v1",
+        "schema": "sparsamp-precision-contract-audit-v2",
         "timestamp": datetime.now(UTC).isoformat(),
         "environment": {"python": platform.python_version(), "platform": platform.platform()},
         "reference": asdict(reference_config),
@@ -194,6 +213,7 @@ def main() -> int:
         "first_missing_prefix_step": first_missing_step,
         "preserve_support": not args.allow_support_loss,
         "summary": summary,
+        "structural_summary": structural_summary,
         "steps": comparisons,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

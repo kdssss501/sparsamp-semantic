@@ -17,6 +17,7 @@ class SamplingConfig(BaseModel):
     load_in_4bit: bool = False
     top_p: float = Field(default=0.95, gt=0.0, le=1.0)
     top_k: int | None = Field(default=None, ge=1)
+    candidate_order: Literal["probability", "token_id"] = "probability"
     temperature: float = Field(default=0.8, gt=0.0, le=5.0)
     seed: int = 42
     adaptive_temperature: bool = False

@@ -20,6 +20,7 @@ const sampling = reactive<SamplingConfig>({
   load_in_4bit: false,
   top_p: 0.95,
   top_k: null,
+  candidate_order: 'probability',
   temperature: 0.8,
   seed: 42,
   adaptive_temperature: false,
@@ -150,6 +151,15 @@ function downloadCover() {
               </el-form-item>
               <el-form-item label="随机种子">
                 <el-input-number v-model="sampling.seed" :min="0" controls-position="right" />
+              </el-form-item>
+              <el-form-item label="候选区间顺序">
+                <el-segmented
+                  v-model="sampling.candidate_order"
+                  :options="[
+                    { label: '概率顺序', value: 'probability' },
+                    { label: 'Token ID', value: 'token_id' },
+                  ]"
+                />
               </el-form-item>
               <el-form-item label="纠错重复数">
                 <el-select v-model="codec.repetitions">

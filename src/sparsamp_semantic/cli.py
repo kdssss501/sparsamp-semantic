@@ -129,6 +129,7 @@ def encode_local(args: argparse.Namespace) -> int:
         revision=args.revision,
         top_p=args.top_p,
         top_k=args.top_k,
+        candidate_order=args.candidate_order,
         temperature=args.temperature,
         device=args.device,
         dtype=args.dtype,
@@ -184,6 +185,7 @@ def native_local(args: argparse.Namespace) -> int:
         revision=args.revision,
         top_p=args.top_p,
         top_k=args.top_k,
+        candidate_order=args.candidate_order,
         temperature=args.temperature,
         device=args.device,
         dtype=args.dtype,
@@ -222,6 +224,9 @@ def _add_model_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--revision")
     parser.add_argument("--top-p", type=float, default=0.95)
     parser.add_argument("--top-k", type=int)
+    parser.add_argument(
+        "--candidate-order", choices=("probability", "token_id"), default="probability"
+    )
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--device", default="auto")
     parser.add_argument("--dtype", default="float16")

@@ -9,6 +9,7 @@ export interface SamplingConfig {
   load_in_4bit: boolean
   top_p: number
   top_k: number | null
+  candidate_order: 'probability' | 'token_id'
   temperature: number
   seed: number
   adaptive_temperature: boolean

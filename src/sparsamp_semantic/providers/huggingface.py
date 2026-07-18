@@ -5,16 +5,31 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from time import perf_counter
-from typing import Any, Hashable
+from typing import Any, Hashable, Literal, Sequence
 
 from ..types import DistributionSnapshot, TokenCandidate
 from .base import Provider, ProviderSession
+
+
+CandidateOrder = Literal["probability", "token_id"]
 
 
 def _mutable_float_logits(logits: Any) -> Any:
     """Detach logits from inference-tensor restrictions before local filtering."""
 
     return logits.float().clone()
+
+
+def order_token_candidates(
+    candidates: Sequence[TokenCandidate], candidate_order: CandidateOrder
+) -> tuple[TokenCandidate, ...]:
+    """Return candidates in the public interval order without changing token masses."""
+
+    if candidate_order == "probability":
+        return tuple(candidates)
+    if candidate_order == "token_id":
+        return tuple(sorted(candidates, key=lambda candidate: int(candidate.token_id)))
+    raise ValueError("candidate_order must be 'probability' or 'token_id'")
 
 
 @dataclass(frozen=True)
@@ -25,6 +40,7 @@ class HuggingFaceConfig:
     revision: str | None = None
     top_p: float = 0.95
     top_k: int | None = None
+    candidate_order: CandidateOrder = "probability"
     temperature: float = 1.0
     device: str = "auto"
     dtype: str = "float16"
@@ -45,6 +61,8 @@ class HuggingFaceConfig:
             raise ValueError("top_p must be in (0, 1]")
         if self.top_k is not None and self.top_k < 1:
             raise ValueError("top_k must be positive")
+        if self.candidate_order not in {"probability", "token_id"}:
+            raise ValueError("candidate_order must be 'probability' or 'token_id'")
         if self.temperature <= 0:
             raise ValueError("temperature must be positive")
         if self.entropy_floor_bits < 0:
@@ -112,20 +130,21 @@ class HuggingFaceSession(ProviderSession):
     def context_id(self) -> bytes:
         # Controller fields are excluded so fixed/adaptive ablations share the PRF
         # stream until the public entropy controller actually changes a distribution.
-        material = "\0".join(
-            [
-                "hf-v1",
-                self._config.model_name,
-                self._config.revision or "default",
-                str(self._config.top_p),
-                str(self._config.top_k),
-                str(self._config.temperature),
-                self._config.dtype,
-                str(self._config.load_in_4bit),
-                self._config.system_prompt,
-                self._prompt,
-            ]
-        )
+        fields = [
+            "hf-v1",
+            self._config.model_name,
+            self._config.revision or "default",
+            str(self._config.top_p),
+            str(self._config.top_k),
+            str(self._config.temperature),
+            self._config.dtype,
+            str(self._config.load_in_4bit),
+            self._config.system_prompt,
+            self._prompt,
+        ]
+        if self._config.candidate_order != "probability":
+            fields.append(f"candidate-order={self._config.candidate_order}")
+        material = "\0".join(fields)
         return hashlib.sha256(material.encode("utf-8")).digest()
 
     @property
@@ -236,9 +255,12 @@ class HuggingFaceSession(ProviderSession):
                 logprob=last.logprob,
                 rank=last.rank,
             )
-        self._last_candidates = {int(candidate.token_id) for candidate in candidates}
+        ordered_candidates = order_token_candidates(candidates, self._config.candidate_order)
+        self._last_candidates = {
+            int(candidate.token_id) for candidate in ordered_candidates
+        }
         return DistributionSnapshot(
-            candidates=tuple(candidates),
+            candidates=ordered_candidates,
             source_mass=source_mass,
             native_token_id=native_token_id,
             model_name=self._config.model_name,
@@ -247,6 +269,7 @@ class HuggingFaceSession(ProviderSession):
             metadata={
                 "top_p": self._config.top_p,
                 "top_k": self._config.top_k,
+                "candidate_order": self._config.candidate_order,
                 "temperature": self._config.temperature,
                 "effective_temperature": effective_temperature,
                 "base_entropy_bits": base_entropy_bits,

@@ -23,6 +23,7 @@ const sampling = reactive<SamplingConfig>({
   load_in_4bit: false,
   top_p: 0.95,
   top_k: null,
+  candidate_order: 'probability',
   temperature: 0.8,
   seed: 42,
   adaptive_temperature: false,
@@ -72,6 +73,8 @@ async function loadArtifact() {
       sampling.load_in_4bit = Boolean(provider.load_in_4bit)
       sampling.top_p = Number(provider.top_p ?? sampling.top_p)
       sampling.top_k = provider.top_k == null ? null : Number(provider.top_k)
+      sampling.candidate_order =
+        (provider.candidate_order as SamplingConfig['candidate_order']) ?? 'probability'
       sampling.temperature = Number(provider.temperature ?? sampling.temperature)
       sampling.seed = Number(provider.seed ?? sampling.seed)
       sampling.adaptive_temperature = Boolean(
@@ -190,6 +193,15 @@ async function decode() {
             <div class="form-row three">
               <el-form-item label="Top-p">
                 <el-input-number v-model="sampling.top_p" :min="0.1" :max="1" :step="0.05" :precision="2" controls-position="right" />
+              </el-form-item>
+              <el-form-item label="候选区间顺序">
+                <el-segmented
+                  v-model="sampling.candidate_order"
+                  :options="[
+                    { label: '概率顺序', value: 'probability' },
+                    { label: 'Token ID', value: 'token_id' },
+                  ]"
+                />
               </el-form-item>
               <el-form-item label="温度">
                 <el-input-number v-model="sampling.temperature" :min="0.1" :max="2" :step="0.1" :precision="1" controls-position="right" />

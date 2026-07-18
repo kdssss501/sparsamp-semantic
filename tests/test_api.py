@@ -95,8 +95,11 @@ def test_repository_rejects_path_escape_and_paginates(tmp_path: Path) -> None:
 
 def test_sampling_model_maps_to_huggingface_model_name(tmp_path: Path) -> None:
     service = ResearchService(ExperimentRepository(tmp_path))
-    provider, config = service._provider(SamplingConfig(model="models/local-qwen"))
+    provider, config = service._provider(
+        SamplingConfig(model="models/local-qwen", candidate_order="token_id")
+    )
     assert config.model_name == "models/local-qwen"
+    assert config.candidate_order == "token_id"
     assert provider.config.model_name == "models/local-qwen"
 
 
