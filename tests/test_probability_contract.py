@@ -7,7 +7,9 @@ import pytest
 from sparsamp_semantic.probability_contract import (
     allocate_integer_mass,
     decimal_quantized_probabilities,
+    support_feasible_mass_bits,
     validate_probability_contract,
+    waterfilled_support_target,
 )
 
 
@@ -60,7 +62,9 @@ def test_probability_contract_validation_rejects_ambiguous_or_invalid_modes() ->
     with pytest.raises(ValueError, match="mutually exclusive"):
         validate_probability_contract("1e-15", 32)
     with pytest.raises(ValueError, match=r"\[16, 52\]"):
-        allocate_integer_mass((0.5, 0.5), mass_bits=8)
+        validate_probability_contract(None, 8)
+    with pytest.raises(ValueError, match=r"\[1, 52\]"):
+        allocate_integer_mass((0.5, 0.5), mass_bits=0)
     with pytest.raises(ValueError, match="non-negative"):
         allocate_integer_mass((0.6, -0.1, 0.5), mass_bits=16)
 
@@ -70,3 +74,48 @@ def test_decimal_contract_remains_normalized_and_positive() -> None:
 
     assert sum(probabilities, start=Fraction(0)) == 1
     assert all(value > 0 for value in probabilities)
+
+
+def test_support_feasible_bits_track_candidate_count_and_headroom() -> None:
+    assert support_feasible_mass_bits(1) == 1
+    assert support_feasible_mass_bits(4) == 2
+    assert support_feasible_mass_bits(5) == 3
+    assert support_feasible_mass_bits(5, headroom_bits=2) == 5
+
+
+def test_low_mass_width_is_available_for_audit_but_must_preserve_support() -> None:
+    allocation = allocate_integer_mass(
+        (Fraction(2, 5), Fraction(3, 10), Fraction(1, 5), Fraction(1, 10)),
+        mass_bits=2,
+        preserve_support=True,
+    )
+    assert allocation.counts == (1, 1, 1, 1)
+
+    with pytest.raises(ValueError, match="too small"):
+        allocate_integer_mass(
+            (Fraction(1, 3), Fraction(1, 3), Fraction(1, 3)),
+            mass_bits=1,
+            preserve_support=True,
+        )
+
+
+def test_waterfill_projection_and_apportionment_reduce_tail_overweighting() -> None:
+    target = (Fraction(3, 5), Fraction(1, 4), Fraction(1, 10), Fraction(1, 20))
+
+    projected = waterfilled_support_target(target, mass_bits=4)
+    base = allocate_integer_mass(
+        target, mass_bits=4, preserve_support=True, support_strategy="base"
+    )
+    waterfill = allocate_integer_mass(
+        target, mass_bits=4, preserve_support=True, support_strategy="waterfill"
+    )
+
+    assert projected == (
+        Fraction(45, 76),
+        Fraction(75, 304),
+        Fraction(15, 152),
+        Fraction(1, 16),
+    )
+    assert base.counts == (8, 4, 2, 2)
+    assert waterfill.counts == (9, 4, 2, 1)
+    assert all(count > 0 for count in waterfill.counts)

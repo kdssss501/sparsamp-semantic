@@ -76,3 +76,27 @@ def test_reference_prefix_uses_probability_rank_not_interval_order() -> None:
     )
 
     assert _top_probability_token_id(snapshot) == 20
+
+
+def test_support_adaptive_contract_can_absorb_drift_and_reports_distortion() -> None:
+    result = compare_snapshots(
+        _snapshot([0.4, 0.3, 0.2, 0.1]),
+        _snapshot([0.41, 0.29, 0.2, 0.1]),
+        mass_bits=(16,),
+        preserve_support=True,
+        support_headroom_bits=(0,),
+        support_strategies=("base", "waterfill"),
+    )
+
+    assert result["adaptive_contracts"]["base_headroom_0"]["exact"]
+    assert result["adaptive_contracts"]["waterfill_headroom_0"]["exact"]
+    assert (
+        result["adaptive_contracts"]["waterfill_headroom_0"]["reference"]["mass_bits"]
+        == 2
+    )
+    assert (
+        result["adaptive_contracts"]["waterfill_headroom_0"]["reference"][
+            "forward_kl_nats"
+        ]
+        > 0
+    )

@@ -9,6 +9,7 @@ import platform
 import sys
 from dataclasses import asdict
 from datetime import UTC, datetime
+from math import log
 from pathlib import Path
 from typing import Any
 
@@ -18,8 +19,10 @@ if str(SOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(SOURCE_ROOT))
 
 from sparsamp_semantic.probability_contract import (  # noqa: E402
+    SupportStrategy,
     allocate_integer_mass,
     decimal_quantized_probabilities,
+    support_feasible_mass_bits,
 )
 from sparsamp_semantic.providers.huggingface import (  # noqa: E402
     HuggingFaceConfig,
@@ -32,6 +35,7 @@ def _snapshot_data(snapshot: Any) -> dict[str, Any]:
         "token_ids": [int(item.token_id) for item in snapshot.candidates],
         "probabilities": [float(item.probability) for item in snapshot.candidates],
         "source_mass": float(snapshot.source_mass),
+        "candidate_count": len(snapshot.candidates),
     }
 
 
@@ -76,7 +80,11 @@ def _collect_replay(
 
 
 def _contract_sequence(
-    snapshot: dict[str, Any], *, mass_bits: int | None, preserve_support: bool
+    snapshot: dict[str, Any],
+    *,
+    mass_bits: int | None,
+    preserve_support: bool,
+    support_strategy: SupportStrategy = "base",
 ) -> tuple[tuple[int, Any], ...]:
     probabilities = snapshot["probabilities"]
     if mass_bits is None:
@@ -86,8 +94,51 @@ def _contract_sequence(
             probabilities,
             mass_bits=mass_bits,
             preserve_support=preserve_support,
+            support_strategy=support_strategy,
         ).counts
     return tuple(zip(snapshot["token_ids"], values, strict=True))
+
+
+def _quantization_metrics(
+    probabilities: list[float], counts: tuple[int, ...]
+) -> dict[str, float]:
+    total_probability = sum(probabilities)
+    total_mass = sum(counts)
+    target = [value / total_probability for value in probabilities]
+    implemented = [value / total_mass for value in counts]
+    return {
+        "forward_kl_nats": sum(
+            expected * log(expected / observed)
+            for expected, observed in zip(target, implemented, strict=True)
+            if expected > 0
+        ),
+        "total_variation": 0.5
+        * sum(
+            abs(expected - observed)
+            for expected, observed in zip(target, implemented, strict=True)
+        ),
+    }
+
+
+def _adaptive_contract(
+    snapshot: dict[str, Any],
+    *,
+    headroom_bits: int,
+    support_strategy: SupportStrategy,
+) -> dict[str, Any]:
+    candidate_count = int(snapshot.get("candidate_count", len(snapshot["token_ids"])))
+    mass_bits = support_feasible_mass_bits(candidate_count, headroom_bits)
+    allocation = allocate_integer_mass(
+        snapshot["probabilities"],
+        mass_bits=mass_bits,
+        preserve_support=True,
+        support_strategy=support_strategy,
+    )
+    return {
+        "sequence": tuple(zip(snapshot["token_ids"], allocation.counts, strict=True)),
+        "mass_bits": mass_bits,
+        **_quantization_metrics(snapshot["probabilities"], allocation.counts),
+    }
 
 
 def compare_snapshots(
@@ -96,6 +147,8 @@ def compare_snapshots(
     *,
     mass_bits: tuple[int, ...],
     preserve_support: bool,
+    support_headroom_bits: tuple[int, ...] = (),
+    support_strategies: tuple[SupportStrategy, ...] = ("base", "waterfill"),
 ) -> dict[str, Any]:
     """Compare one shared-prefix next-token distribution under two precisions."""
 
@@ -119,12 +172,48 @@ def compare_snapshots(
         contracts[f"integer_{bits}"] = _contract_sequence(
             reference, mass_bits=bits, preserve_support=preserve_support
         ) == _contract_sequence(replay, mass_bits=bits, preserve_support=preserve_support)
+    adaptive_contracts: dict[str, Any] = {}
+    for strategy in support_strategies:
+        for headroom in support_headroom_bits:
+            reference_contract = _adaptive_contract(
+                reference,
+                headroom_bits=headroom,
+                support_strategy=strategy,
+            )
+            replay_contract = _adaptive_contract(
+                replay,
+                headroom_bits=headroom,
+                support_strategy=strategy,
+            )
+            adaptive_contracts[f"{strategy}_headroom_{headroom}"] = {
+                "exact": (
+                    reference_contract["mass_bits"] == replay_contract["mass_bits"]
+                    and reference_contract["sequence"] == replay_contract["sequence"]
+                ),
+                "reference": {
+                    name: value
+                    for name, value in reference_contract.items()
+                    if name != "sequence"
+                },
+                "replay": {
+                    name: value
+                    for name, value in replay_contract.items()
+                    if name != "sequence"
+                },
+            }
     return {
         "candidate_order_equal": reference["token_ids"] == replay["token_ids"],
         "candidate_jaccard": len(intersection) / len(union) if union else 1.0,
+        "reference_candidate_count": int(
+            reference.get("candidate_count", len(reference["token_ids"]))
+        ),
+        "replay_candidate_count": int(
+            replay.get("candidate_count", len(replay["token_ids"]))
+        ),
         "max_common_probability_delta": max(common_deltas, default=0.0),
         "source_mass_delta": abs(reference["source_mass"] - replay["source_mass"]),
         "contracts_exact": contracts,
+        "adaptive_contracts": adaptive_contracts,
     }
 
 
@@ -153,6 +242,13 @@ def main() -> int:
         "--candidate-order", choices=("probability", "token_id"), default="probability"
     )
     parser.add_argument("--mass-bits", type=int, nargs="+", default=[16, 20, 24, 28, 32])
+    parser.add_argument("--support-headroom-bits", type=int, nargs="+", default=[])
+    parser.add_argument(
+        "--support-strategies",
+        choices=("base", "waterfill"),
+        nargs="+",
+        default=["base", "waterfill"],
+    )
     parser.add_argument("--allow-support-loss", action="store_true")
     parser.add_argument(
         "--output", type=Path, default=Path("outputs/R022_gpt2_precision_contract.json")
@@ -160,6 +256,10 @@ def main() -> int:
     args = parser.parse_args()
     if args.tokens < 1:
         raise ValueError("tokens must be positive")
+    if any(value < 0 for value in args.support_headroom_bits):
+        raise ValueError("support headroom bits must be non-negative")
+    if args.allow_support_loss and args.support_headroom_bits:
+        raise ValueError("support-adaptive contracts require support preservation")
 
     common = {
         "model_name": args.model,
@@ -181,6 +281,8 @@ def main() -> int:
             observed,
             mass_bits=tuple(args.mass_bits),
             preserve_support=not args.allow_support_loss,
+            support_headroom_bits=tuple(args.support_headroom_bits),
+            support_strategies=tuple(args.support_strategies),
         )
         for expected, observed in zip(reference, replay, strict=False)
     ]
@@ -192,6 +294,50 @@ def main() -> int:
         }
         for name in contract_names
     }
+    adaptive_names = [
+        f"{strategy}_headroom_{headroom}"
+        for strategy in args.support_strategies
+        for headroom in args.support_headroom_bits
+    ]
+    adaptive_summary = {}
+    for name in adaptive_names:
+        values = [item["adaptive_contracts"][name] for item in comparisons]
+        references = [value["reference"] for value in values]
+        adaptive_summary[name] = {
+            "exact_steps": sum(value["exact"] for value in values),
+            "same_support_exact_steps": sum(
+                value["exact"] and item["candidate_jaccard"] == 1.0
+                for value, item in zip(values, comparisons, strict=True)
+            ),
+            "compared_steps": len(values),
+            "reference_mass_bits_mean": (
+                sum(value["mass_bits"] for value in references) / len(references)
+                if references
+                else 0.0
+            ),
+            "reference_mass_bits_min": min(
+                (value["mass_bits"] for value in references), default=None
+            ),
+            "reference_mass_bits_max": max(
+                (value["mass_bits"] for value in references), default=None
+            ),
+            "reference_forward_kl_nats_mean": (
+                sum(value["forward_kl_nats"] for value in references) / len(references)
+                if references
+                else 0.0
+            ),
+            "reference_forward_kl_nats_max": max(
+                (value["forward_kl_nats"] for value in references), default=0.0
+            ),
+            "reference_total_variation_mean": (
+                sum(value["total_variation"] for value in references) / len(references)
+                if references
+                else 0.0
+            ),
+            "reference_total_variation_max": max(
+                (value["total_variation"] for value in references), default=0.0
+            ),
+        }
     structural_summary = {
         "candidate_order_equal_steps": sum(item["candidate_order_equal"] for item in comparisons),
         "candidate_set_equal_steps": sum(item["candidate_jaccard"] == 1.0 for item in comparisons),
@@ -200,9 +346,20 @@ def main() -> int:
             if comparisons
             else 0.0
         ),
+        "reference_candidate_count_mean": (
+            sum(item["reference_candidate_count"] for item in comparisons) / len(comparisons)
+            if comparisons
+            else 0.0
+        ),
+        "reference_candidate_count_min": min(
+            (item["reference_candidate_count"] for item in comparisons), default=None
+        ),
+        "reference_candidate_count_max": max(
+            (item["reference_candidate_count"] for item in comparisons), default=None
+        ),
     }
     payload = {
-        "schema": "sparsamp-precision-contract-audit-v2",
+        "schema": "sparsamp-precision-contract-audit-v3",
         "timestamp": datetime.now(UTC).isoformat(),
         "environment": {"python": platform.python_version(), "platform": platform.platform()},
         "reference": asdict(reference_config),
@@ -213,6 +370,7 @@ def main() -> int:
         "first_missing_prefix_step": first_missing_step,
         "preserve_support": not args.allow_support_loss,
         "summary": summary,
+        "adaptive_summary": adaptive_summary,
         "structural_summary": structural_summary,
         "steps": comparisons,
     }
