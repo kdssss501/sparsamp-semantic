@@ -168,6 +168,7 @@ tail-fragmentation 方向见
 - R026 认证微帧与局部擦除：[refine-logs/R026_AUTHENTICATED_MICROFRAMES.md](refine-logs/R026_AUTHENTICATED_MICROFRAMES.md)
 - R027 Top-p 前相对 logit 量化：[refine-logs/R027_LOGIT_QUANTIZATION.md](refine-logs/R027_LOGIT_QUANTIZATION.md)
 - R028 稀疏区间格点 Guard：[refine-logs/R028_INTERVAL_GUARD.md](refine-logs/R028_INTERVAL_GUARD.md)
+- R029 Byte-Sliced RS 阶段结果：[refine-logs/R029_BYTE_SLICED_RS.md](refine-logs/R029_BYTE_SLICED_RS.md)
 
 本仓库用于授权科研、复现与防御评估。公开数据或部署前请阅读
 [SECURITY.md](SECURITY.md)。

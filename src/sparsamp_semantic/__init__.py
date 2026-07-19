@@ -19,6 +19,13 @@ from .microframe import (
     MicroframeEncodeResult,
     MicroframeRecord,
 )
+from .byte_sliced import (
+    ByteFrameRecord,
+    ByteSlicedCodec,
+    ByteSlicedConfig,
+    ByteSlicedDecodeResult,
+    ByteSlicedEncodeResult,
+)
 from .probability_contract import IntegerMassAllocation, allocate_integer_mass
 from .rrc import RrcConfig, RotationRangeCodec
 
@@ -44,6 +51,11 @@ __all__ = [
     "MicroframeDecodeResult",
     "MicroframeEncodeResult",
     "MicroframeRecord",
+    "ByteFrameRecord",
+    "ByteSlicedCodec",
+    "ByteSlicedConfig",
+    "ByteSlicedDecodeResult",
+    "ByteSlicedEncodeResult",
     "RrcConfig",
     "RotationRangeCodec",
     "SparSampCodec",
