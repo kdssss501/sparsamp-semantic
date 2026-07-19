@@ -2,7 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from scripts.audit_precision_contract import _top_probability_token_id, compare_snapshots
+import pytest
+
+from scripts.audit_precision_contract import (
+    _top_probability_token_id,
+    compare_snapshots,
+    interval_lattice_feasible,
+    max_internal_cdf_delta,
+)
 
 
 def _snapshot(probabilities: list[float]) -> dict[str, object]:
@@ -117,3 +124,21 @@ def test_quantized_bin_agreement_is_reported_for_common_candidates() -> None:
 
     assert result["quantized_bin_sequence_equal"] is False
     assert result["common_quantized_bin_agreement"] == 0.75
+
+
+def test_internal_cdf_delta_requires_aligned_support() -> None:
+    assert max_internal_cdf_delta(
+        [10, 20, 30], [0.4, 0.3, 0.3], [10, 20, 30], [0.39, 0.31, 0.3]
+    ) == pytest.approx(0.01)
+    assert (
+        max_internal_cdf_delta(
+            [10, 20, 30], [0.4, 0.3, 0.3], [10, 99, 30], [0.4, 0.3, 0.3]
+        )
+        is None
+    )
+
+
+def test_interval_lattice_feasibility_uses_block_dependent_threshold() -> None:
+    assert interval_lattice_feasible(0.001, 8)
+    assert not interval_lattice_feasible(0.002, 8)
+    assert not interval_lattice_feasible(None, 8)

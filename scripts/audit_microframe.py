@@ -31,6 +31,7 @@ def main() -> int:
     parser.add_argument("--symbol-bytes", type=int, default=1)
     parser.add_argument("--auth-tag-bits", type=int, default=8)
     parser.add_argument("--parity-bytes", type=int, default=0)
+    parser.add_argument("--cdf-uncertainty-bound", type=float, default=0.0)
     parser.add_argument("--prompt", default="Explain why reproducible experiments matter.")
     parser.add_argument("--output", type=Path, default=Path("outputs/R026_microframe_mock.json"))
     args = parser.parse_args()
@@ -41,6 +42,7 @@ def main() -> int:
         symbol_bytes=args.symbol_bytes,
         auth_tag_bits=args.auth_tag_bits,
         parity_bytes=args.parity_bytes,
+        cdf_uncertainty_bound=args.cdf_uncertainty_bound,
     )
     def build_provider(dtype: str):
         if args.provider == "mock":
@@ -83,6 +85,9 @@ def main() -> int:
         "encoded": {
             "token_count": len(encoded.token_ids),
             "frame_count": encoded.frame_count,
+            "guard_aborted_windows": sum(
+                record.guard_aborted for record in encoded.records
+            ),
             "bits_per_token": encoded.bits_per_token,
             "codeword_bits_per_token": encoded.codeword_bits_per_token,
             "records": [asdict(record) for record in encoded.records],

@@ -135,6 +135,36 @@ def _quantization_metrics(
     }
 
 
+def max_internal_cdf_delta(
+    reference_token_ids: list[int],
+    reference_probabilities: list[float],
+    replay_token_ids: list[int],
+    replay_probabilities: list[float],
+) -> float | None:
+    """Return the largest aligned internal CDF drift, or None on support mismatch."""
+
+    if reference_token_ids != replay_token_ids:
+        return None
+    reference_cdf = 0.0
+    replay_cdf = 0.0
+    maximum = 0.0
+    for reference_probability, replay_probability in zip(
+        reference_probabilities[:-1], replay_probabilities[:-1], strict=True
+    ):
+        reference_cdf += reference_probability
+        replay_cdf += replay_probability
+        maximum = max(maximum, abs(reference_cdf - replay_cdf))
+    return maximum
+
+
+def interval_lattice_feasible(max_cdf_delta: float | None, block_size: int) -> bool:
+    """Check the necessary initial-lattice condition for a guarded sparse block."""
+
+    if block_size < 1:
+        raise ValueError("block_size must be positive")
+    return max_cdf_delta is not None and max_cdf_delta < 2 ** (-(block_size + 1))
+
+
 def _adaptive_contract(
     snapshot: dict[str, Any],
     *,
@@ -192,6 +222,12 @@ def compare_snapshots(
         if reference_bins is not None and replay_bins is not None
         else []
     )
+    cdf_delta = max_internal_cdf_delta(
+        reference["token_ids"],
+        reference["probabilities"],
+        replay["token_ids"],
+        replay["probabilities"],
+    )
     contracts = {
         "decimal_1e-15": _contract_sequence(
             reference, mass_bits=None, preserve_support=preserve_support
@@ -242,6 +278,7 @@ def compare_snapshots(
         ),
         "max_common_probability_delta": max(common_deltas, default=0.0),
         "source_mass_delta": abs(reference["source_mass"] - replay["source_mass"]),
+        "max_internal_cdf_delta": cdf_delta,
         "quantized_bin_sequence_equal": (
             reference["token_ids"] == replay["token_ids"]
             and reference.get("logit_bins") == replay.get("logit_bins")
@@ -295,6 +332,7 @@ def main() -> int:
     )
     parser.add_argument("--mass-bits", type=int, nargs="+", default=[16, 20, 24, 28, 32])
     parser.add_argument("--support-headroom-bits", type=int, nargs="+", default=[])
+    parser.add_argument("--guard-block-sizes", type=int, nargs="+", default=[])
     parser.add_argument(
         "--support-strategies",
         choices=("base", "waterfill"),
@@ -310,6 +348,8 @@ def main() -> int:
         raise ValueError("tokens must be positive")
     if any(value < 0 for value in args.support_headroom_bits):
         raise ValueError("support headroom bits must be non-negative")
+    if any(value < 1 for value in args.guard_block_sizes):
+        raise ValueError("guard block sizes must be positive")
     if args.allow_support_loss and args.support_headroom_bits:
         raise ValueError("support-adaptive contracts require support preservation")
 
@@ -449,9 +489,28 @@ def main() -> int:
             (item["reference_max_logit_quantization_error"] for item in comparisons),
             default=0.0,
         ),
+        "max_internal_cdf_delta_max": max(
+            (
+                item["max_internal_cdf_delta"]
+                for item in comparisons
+                if item["max_internal_cdf_delta"] is not None
+            ),
+            default=None,
+        ),
+    }
+    guard_feasibility = {
+        str(block_size): {
+            "feasible_steps": sum(
+                interval_lattice_feasible(item["max_internal_cdf_delta"], block_size)
+                for item in comparisons
+            ),
+            "compared_steps": len(comparisons),
+            "initial_cdf_error_threshold": 2 ** (-(block_size + 1)),
+        }
+        for block_size in args.guard_block_sizes
     }
     payload = {
-        "schema": "sparsamp-precision-contract-audit-v4",
+        "schema": "sparsamp-precision-contract-audit-v5",
         "timestamp": datetime.now(UTC).isoformat(),
         "environment": {"python": platform.python_version(), "platform": platform.platform()},
         "reference": asdict(reference_config),
@@ -464,6 +523,7 @@ def main() -> int:
         "summary": summary,
         "adaptive_summary": adaptive_summary,
         "structural_summary": structural_summary,
+        "guard_feasibility": guard_feasibility,
         "steps": comparisons,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

@@ -62,6 +62,14 @@ def _xor_bytes(left: bytes, right: bytes) -> bytes:
     return bytes(a ^ b for a, b in zip(left, right, strict=True))
 
 
+def _distance_to_integer(value: Fraction) -> Fraction:
+    """Return the exact distance from a rational value to the nearest integer."""
+
+    lower = value.numerator // value.denominator
+    fraction = value - lower
+    return min(fraction, 1 - fraction)
+
+
 @dataclass(frozen=True)
 class MicroframeConfig:
     """Parameters for independent authenticated token windows."""
@@ -75,6 +83,7 @@ class MicroframeConfig:
     probability_mass_headroom_bits: int | None = None
     probability_support_strategy: SupportStrategy = "base"
     preserve_probability_support: bool = True
+    cdf_uncertainty_bound: float = 0.0
 
     def __post_init__(self) -> None:
         if self.window_tokens < 1:
@@ -87,6 +96,8 @@ class MicroframeConfig:
             raise ValueError("parity_bytes must be non-negative")
         if self.parity_bytes > 255:
             raise ValueError("parity_bytes must be at most 255 for Reed-Solomon")
+        if not 0.0 <= self.cdf_uncertainty_bound <= 1.0:
+            raise ValueError("cdf_uncertainty_bound must be in [0, 1]")
         from .probability_contract import validate_probability_contract
 
         validate_probability_contract(
@@ -112,6 +123,9 @@ class MicroframeRecord:
     singleton_step: int | None
     forward_quantization_kl_nats: float
     quantization_total_variation: float
+    guard_aborted: bool = False
+    minimum_interval_margin_units: float | None = None
+    required_interval_margin_units: float | None = None
 
 
 @dataclass(frozen=True)
@@ -233,6 +247,9 @@ class MicroframeCodec:
             kl_sum = 0.0
             tv_sum = 0.0
             reason: str | None = None
+            guard_aborted = False
+            minimum_margin: Fraction | None = None
+            maximum_required_margin: Fraction | None = None
             for local_step in range(self.config.window_tokens):
                 snapshot = session.next_distribution()
                 probabilities = _probabilities(
@@ -259,6 +276,35 @@ class MicroframeCodec:
                         candidate_index = _select(probabilities, sample)
                         token_id = snapshot.candidates[candidate_index].token_id
                         lower, upper = _bounds(probabilities, candidate_index)
+                        lower_lattice = (lower - r) * n_m
+                        upper_lattice = (upper - r) * n_m
+                        margin = min(
+                            _distance_to_integer(lower_lattice),
+                            _distance_to_integer(upper_lattice),
+                        )
+                        required_margin = Fraction(
+                            str(self.config.cdf_uncertainty_bound)
+                        ) * n_m
+                        minimum_margin = (
+                            margin if minimum_margin is None else min(minimum_margin, margin)
+                        )
+                        maximum_required_margin = (
+                            required_margin
+                            if maximum_required_margin is None
+                            else max(maximum_required_margin, required_margin)
+                        )
+                        if (
+                            self.config.cdf_uncertainty_bound > 0
+                            and margin <= required_margin
+                        ):
+                            embedded = False
+                            guard_aborted = True
+                            reason = "interval_guard_aborted"
+                            token_id = snapshot.native_token_id
+                            if token_id is None:
+                                token_id = snapshot.candidates[_select(probabilities, r)].token_id
+                            session.append(token_id)
+                            continue
                         temp0 = _ceil_fraction((lower - r) * n_m)
                         temp1 = _ceil_fraction((upper - r) * n_m)
                         if k_m + r * n_m >= n_m:
@@ -289,6 +335,15 @@ class MicroframeCodec:
                     singleton_step=singleton_step,
                     forward_quantization_kl_nats=kl_sum,
                     quantization_total_variation=tv_sum,
+                    guard_aborted=guard_aborted,
+                    minimum_interval_margin_units=(
+                        float(minimum_margin) if minimum_margin is not None else None
+                    ),
+                    required_interval_margin_units=(
+                        float(maximum_required_margin)
+                        if maximum_required_margin is not None
+                        else None
+                    ),
                 )
             )
         return MicroframeEncodeResult(

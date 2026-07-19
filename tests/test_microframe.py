@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from sparsamp_semantic.microframe import MicroframeCodec, MicroframeConfig
+from fractions import Fraction
+
+from sparsamp_semantic.microframe import (
+    MicroframeCodec,
+    MicroframeConfig,
+    _distance_to_integer,
+)
 from sparsamp_semantic.providers.mock import MockProvider
 
 
@@ -76,3 +82,29 @@ def test_reed_solomon_recovers_one_authenticated_window_erasure() -> None:
     assert decoded.success
     assert decoded.payload_bytes == b"AB"
     assert decoded.erasure_count >= 1
+
+
+def test_exact_distance_to_integer_handles_negative_boundaries() -> None:
+    assert _distance_to_integer(Fraction(5, 4)) == Fraction(1, 4)
+    assert _distance_to_integer(Fraction(-5, 4)) == Fraction(1, 4)
+    assert _distance_to_integer(Fraction(3, 2)) == Fraction(1, 2)
+
+
+def test_encoder_guard_aborts_unsafe_windows_without_changing_fixed_length() -> None:
+    codec = MicroframeCodec(
+        MicroframeConfig(
+            window_tokens=12,
+            symbol_bytes=1,
+            auth_tag_bits=8,
+            cdf_uncertainty_bound=1e-3,
+        )
+    )
+    provider = MockProvider()
+
+    encoded = codec.encode(provider.start("r028 guarded"), b"AB", KEY)
+    decoded = codec.decode(provider.start("r028 guarded"), encoded.token_ids, KEY)
+
+    assert len(encoded.token_ids) == 24
+    assert all(record.guard_aborted for record in encoded.records)
+    assert all(record.erasure_reason == "interval_guard_aborted" for record in encoded.records)
+    assert not decoded.success

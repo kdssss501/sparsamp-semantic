@@ -167,6 +167,7 @@ tail-fragmentation 方向见
 - R022 整数质量实验记录：[refine-logs/R022_INTEGER_MASS_V1.md](refine-logs/R022_INTEGER_MASS_V1.md)
 - R026 认证微帧与局部擦除：[refine-logs/R026_AUTHENTICATED_MICROFRAMES.md](refine-logs/R026_AUTHENTICATED_MICROFRAMES.md)
 - R027 Top-p 前相对 logit 量化：[refine-logs/R027_LOGIT_QUANTIZATION.md](refine-logs/R027_LOGIT_QUANTIZATION.md)
+- R028 稀疏区间格点 Guard：[refine-logs/R028_INTERVAL_GUARD.md](refine-logs/R028_INTERVAL_GUARD.md)
 
 本仓库用于授权科研、复现与防御评估。公开数据或部署前请阅读
 [SECURITY.md](SECURITY.md)。
