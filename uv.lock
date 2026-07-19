@@ -1013,6 +1013,15 @@ wheels = [
 ]
 
 [[package]]
+name = "reedsolo"
+version = "1.7.0"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/f7/61/a67338cbecf370d464e71b10e9a31355f909d6937c3a8d6b17dd5d5beb5e/reedsolo-1.7.0.tar.gz", hash = "sha256:c1359f02742751afe0f1c0de9f0772cc113835aa2855d2db420ea24393c87732", size = 59723, upload-time = "2023-01-17T05:10:19.733Z" }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/09/19/1bb346c0e581557c88946d2bb979b2bee8992e72314cfb418b5440e383db/reedsolo-1.7.0-py3-none-any.whl", hash = "sha256:2b6a3e402a1ee3e1eea3f932f81e6c0b7bbc615588074dca1dbbcdeb055002bd", size = 32360, upload-time = "2023-01-17T05:10:17.652Z" },
+]
+
+[[package]]
 name = "regex"
 version = "2026.7.10"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
@@ -1253,6 +1262,7 @@ local = [
 repro = [
     { name = "openpyxl" },
     { name = "pandas" },
+    { name = "reedsolo" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }, marker = "python_full_version < '3.12'" },
     { name = "scipy", version = "1.18.0", source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "tqdm" },
@@ -1272,6 +1282,7 @@ requires-dist = [
     { name = "openpyxl", marker = "extra == 'repro'", specifier = ">=3.1,<4" },
     { name = "pandas", marker = "extra == 'repro'", specifier = ">=2.2,<4" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3,<10" },
+    { name = "reedsolo", marker = "extra == 'repro'", specifier = ">=1.7,<2" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9,<1" },
     { name = "safetensors", marker = "extra == 'local'", specifier = ">=0.5,<1" },
     { name = "scipy", marker = "extra == 'repro'", specifier = ">=1.12,<2" },

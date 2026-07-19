@@ -31,6 +31,7 @@ web = [
 repro = [
   "openpyxl>=3.1,<4",
   "pandas>=2.2,<4",
+  "reedsolo>=1.7,<2",
   "scipy>=1.12,<2",
   "tqdm>=4.66,<5",
 ]
@@ -50,7 +51,7 @@ packages = ["src/sparsamp_semantic"]
 [tool.pytest.ini_options]
 addopts = "-q"
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = [".", "src"]
 
 [tool.uv]
 package = false
