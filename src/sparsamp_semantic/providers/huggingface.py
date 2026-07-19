@@ -21,6 +21,47 @@ def _mutable_float_logits(logits: Any) -> Any:
     return logits.float().clone()
 
 
+def quantize_relative_logits(logits: Any, quantum: float | None) -> tuple[Any, Any | None, float]:
+    """Quantize shift-invariant logits to integer bins on a public grid."""
+
+    if quantum is None:
+        return logits, None, 0.0
+    if quantum <= 0:
+        raise ValueError("logit_quantum must be positive")
+    torch = __import__("torch")
+    finite = torch.isfinite(logits)
+    if not bool(finite.any()):
+        raise ValueError("at least one finite logit is required")
+    relative = logits - logits[finite].max()
+    bins = torch.zeros_like(logits, dtype=torch.int64)
+    bins[finite] = torch.floor(relative[finite] / quantum + 0.5).to(torch.int64)
+    quantized = torch.full_like(logits, -torch.inf, dtype=torch.float32)
+    quantized[finite] = bins[finite].to(torch.float32) * quantum
+    max_error = float(torch.max(torch.abs(relative[finite] - quantized[finite])).item())
+    return quantized, bins, max_error
+
+
+def rank_probabilities(probabilities: Any, *, stable_token_ties: bool) -> tuple[Any, Any]:
+    """Rank probabilities, using token IDs to break quantized ties."""
+
+    torch = __import__("torch")
+    if not stable_token_ties:
+        return torch.sort(probabilities, descending=True)
+    indices = torch.argsort(probabilities, descending=True, stable=True)
+    return probabilities[indices], indices
+
+
+def normalize_retained_probabilities(probabilities: Any) -> Any:
+    """Normalize retained mass in float64 without assigning error to one token."""
+
+    torch = __import__("torch")
+    values = probabilities.to(torch.float64)
+    total = values.sum()
+    if not bool(torch.isfinite(total)) or float(total.item()) <= 0:
+        raise ValueError("retained probabilities must have positive finite mass")
+    return values / total
+
+
 def order_token_candidates(
     candidates: Sequence[TokenCandidate], candidate_order: CandidateOrder
 ) -> tuple[TokenCandidate, ...]:
@@ -41,6 +82,7 @@ class HuggingFaceConfig:
     revision: str | None = None
     top_p: float = 0.95
     top_k: int | None = None
+    logit_quantum: float | None = None
     candidate_order: CandidateOrder = "probability"
     temperature: float = 1.0
     device: str = "auto"
@@ -63,6 +105,8 @@ class HuggingFaceConfig:
             raise ValueError("top_p must be in (0, 1]")
         if self.top_k is not None and self.top_k < 1:
             raise ValueError("top_k must be positive")
+        if self.logit_quantum is not None and self.logit_quantum <= 0:
+            raise ValueError("logit_quantum must be positive")
         if self.candidate_order not in {"probability", "token_id"}:
             raise ValueError("candidate_order must be 'probability' or 'token_id'")
         if self.precision_context not in {"strict", "portable"}:
@@ -152,6 +196,8 @@ class HuggingFaceSession(ProviderSession):
         ]
         if self._config.candidate_order != "probability":
             fields.append(f"candidate-order={self._config.candidate_order}")
+        if self._config.logit_quantum is not None:
+            fields.append(f"logit-quantum={self._config.logit_quantum}")
         material = "\0".join(fields)
         return hashlib.sha256(material.encode("utf-8")).digest()
 
@@ -197,7 +243,37 @@ class HuggingFaceSession(ProviderSession):
             for token_id in blocked:
                 logits[token_id] = -torch.inf
 
-        base_probabilities = torch.softmax(logits / self._config.temperature, dim=-1)
+        raw_base_log_probabilities = torch.log_softmax(
+            logits / self._config.temperature, dim=-1
+        )
+        raw_base_probabilities = torch.exp(raw_base_log_probabilities)
+        logits, logit_bins, max_logit_quantization_error = quantize_relative_logits(
+            logits, self._config.logit_quantum
+        )
+        base_log_probabilities = torch.log_softmax(
+            logits / self._config.temperature, dim=-1
+        )
+        base_probabilities = torch.exp(base_log_probabilities)
+        if logit_bins is None:
+            logit_quantization_kl_nats = 0.0
+            logit_quantization_tv = 0.0
+        else:
+            positive = raw_base_probabilities > 0
+            logit_quantization_kl_nats = max(
+                0.0,
+                float(
+                    (
+                        raw_base_probabilities[positive]
+                        * (
+                            raw_base_log_probabilities[positive]
+                            - base_log_probabilities[positive]
+                        )
+                    ).sum().item()
+                ),
+            )
+            logit_quantization_tv = float(
+                (0.5 * torch.abs(raw_base_probabilities - base_probabilities).sum()).item()
+            )
         positive = base_probabilities > 0
         base_entropy_bits = float(
             -(
@@ -215,7 +291,10 @@ class HuggingFaceSession(ProviderSession):
             if rescue_active
             else base_probabilities
         )
-        sorted_probabilities, sorted_indices = torch.sort(probabilities, descending=True)
+        sorted_probabilities, sorted_indices = rank_probabilities(
+            probabilities,
+            stable_token_ties=self._config.logit_quantum is not None,
+        )
 
         if self._config.top_k is not None:
             sorted_probabilities = sorted_probabilities[: self._config.top_k]
@@ -227,7 +306,7 @@ class HuggingFaceSession(ProviderSession):
         retained_probabilities = sorted_probabilities[keep]
         retained_indices = sorted_indices[keep]
         source_mass = float(retained_probabilities.sum().item())
-        retained_probabilities = retained_probabilities / retained_probabilities.sum()
+        retained_probabilities = normalize_retained_probabilities(retained_probabilities)
 
         native_position = int(
             torch.multinomial(retained_probabilities, 1, generator=self._generator).item()
@@ -252,18 +331,15 @@ class HuggingFaceSession(ProviderSession):
                     rank=rank,
                 )
             )
-        total = sum(candidate.probability for candidate in candidates)
-        if total != 1.0:
-            last = candidates[-1]
-            candidates[-1] = TokenCandidate(
-                token_id=last.token_id,
-                text=last.text,
-                raw_bytes=last.raw_bytes,
-                probability=last.probability + (1.0 - total),
-                logprob=last.logprob,
-                rank=last.rank,
-            )
         ordered_candidates = order_token_candidates(candidates, self._config.candidate_order)
+        retained_logit_bins = (
+            {
+                int(token_id.item()): int(logit_bins[int(token_id.item())].item())
+                for token_id in retained_indices
+            }
+            if logit_bins is not None
+            else None
+        )
         self._last_candidates = {
             int(candidate.token_id) for candidate in ordered_candidates
         }
@@ -277,6 +353,11 @@ class HuggingFaceSession(ProviderSession):
             metadata={
                 "top_p": self._config.top_p,
                 "top_k": self._config.top_k,
+                "logit_quantum": self._config.logit_quantum,
+                "quantized_logit_bins": retained_logit_bins,
+                "max_logit_quantization_error": max_logit_quantization_error,
+                "logit_quantization_kl_nats": logit_quantization_kl_nats,
+                "logit_quantization_total_variation": logit_quantization_tv,
                 "candidate_order": self._config.candidate_order,
                 "temperature": self._config.temperature,
                 "effective_temperature": effective_temperature,

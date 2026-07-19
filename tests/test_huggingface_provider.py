@@ -8,7 +8,10 @@ from sparsamp_semantic.providers.huggingface import (
     HuggingFaceConfig,
     HuggingFaceSession,
     _mutable_float_logits,
+    normalize_retained_probabilities,
     order_token_candidates,
+    quantize_relative_logits,
+    rank_probabilities,
     select_effective_temperature,
 )
 from sparsamp_semantic.types import TokenCandidate
@@ -161,3 +164,64 @@ def test_strict_precision_context_separates_dtypes() -> None:
     fp16._prompt = "strict prompt"
 
     assert fp32.context_id != fp16.context_id
+
+
+def test_relative_logit_quantization_is_shift_invariant_and_bounded() -> None:
+    torch = pytest.importorskip("torch")
+    logits = torch.tensor([3.0, 2.991, 2.97, -torch.inf])
+    shifted = logits + 17.0
+
+    quantized, bins, max_error = quantize_relative_logits(logits, 1 / 64)
+    shifted_quantized, shifted_bins, shifted_error = quantize_relative_logits(
+        shifted, 1 / 64
+    )
+
+    assert torch.equal(bins, shifted_bins)
+    assert torch.equal(quantized, shifted_quantized)
+    assert max_error <= 1 / 128 + 1e-7
+    assert shifted_error <= 1 / 128 + 1e-7
+
+
+def test_quantized_probability_ties_are_broken_by_token_id() -> None:
+    torch = pytest.importorskip("torch")
+    probabilities = torch.tensor([0.2, 0.4, 0.4, 0.0])
+
+    ranked, token_ids = rank_probabilities(probabilities, stable_token_ties=True)
+
+    assert token_ids.tolist()[:3] == [1, 2, 0]
+    assert ranked.tolist()[:3] == pytest.approx([0.4, 0.4, 0.2])
+
+
+def test_logit_quantum_changes_context_but_remains_portable_across_dtype() -> None:
+    baseline = object.__new__(HuggingFaceSession)
+    baseline._config = HuggingFaceConfig(precision_context="portable")
+    baseline._prompt = "quantized prompt"
+    fp32 = object.__new__(HuggingFaceSession)
+    fp32._config = HuggingFaceConfig(
+        dtype="float32", precision_context="portable", logit_quantum=1 / 64
+    )
+    fp32._prompt = "quantized prompt"
+    fp16 = object.__new__(HuggingFaceSession)
+    fp16._config = HuggingFaceConfig(
+        dtype="float16", precision_context="portable", logit_quantum=1 / 64
+    )
+    fp16._prompt = "quantized prompt"
+
+    assert baseline.context_id != fp32.context_id
+    assert fp32.context_id == fp16.context_id
+
+
+def test_logit_quantum_must_be_positive() -> None:
+    with pytest.raises(ValueError, match="logit_quantum"):
+        HuggingFaceConfig(logit_quantum=0.0)
+
+
+def test_retained_probability_normalization_preserves_tiny_positive_mass() -> None:
+    torch = pytest.importorskip("torch")
+    probabilities = torch.tensor([1.0, 1e-9, 1e-12], dtype=torch.float32)
+
+    normalized = normalize_retained_probabilities(probabilities)
+
+    assert normalized.dtype == torch.float64
+    assert all(value > 0 for value in normalized.tolist())
+    assert sum(normalized.tolist()) == pytest.approx(1.0, abs=1e-15)

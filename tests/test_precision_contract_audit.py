@@ -100,3 +100,20 @@ def test_support_adaptive_contract_can_absorb_drift_and_reports_distortion() -> 
         ]
         > 0
     )
+
+
+def test_quantized_bin_agreement_is_reported_for_common_candidates() -> None:
+    reference = _snapshot([0.4, 0.3, 0.2, 0.1])
+    replay = _snapshot([0.4, 0.3, 0.2, 0.1])
+    reference["logit_bins"] = [0, -1, -2, -3]
+    replay["logit_bins"] = [0, -1, -2, -4]
+
+    result = compare_snapshots(
+        reference,
+        replay,
+        mass_bits=(16,),
+        preserve_support=True,
+    )
+
+    assert result["quantized_bin_sequence_equal"] is False
+    assert result["common_quantized_bin_agreement"] == 0.75

@@ -31,11 +31,26 @@ from sparsamp_semantic.providers.huggingface import (  # noqa: E402
 
 
 def _snapshot_data(snapshot: Any) -> dict[str, Any]:
+    bins_by_token = snapshot.metadata.get("quantized_logit_bins")
     return {
         "token_ids": [int(item.token_id) for item in snapshot.candidates],
         "probabilities": [float(item.probability) for item in snapshot.candidates],
+        "logit_bins": (
+            [int(bins_by_token[int(item.token_id)]) for item in snapshot.candidates]
+            if bins_by_token is not None
+            else None
+        ),
         "source_mass": float(snapshot.source_mass),
         "candidate_count": len(snapshot.candidates),
+        "logit_quantization_kl_nats": float(
+            snapshot.metadata.get("logit_quantization_kl_nats", 0.0)
+        ),
+        "logit_quantization_total_variation": float(
+            snapshot.metadata.get("logit_quantization_total_variation", 0.0)
+        ),
+        "max_logit_quantization_error": float(
+            snapshot.metadata.get("max_logit_quantization_error", 0.0)
+        ),
     }
 
 
@@ -162,6 +177,21 @@ def compare_snapshots(
         abs(ref_probabilities[token_id] - replay_probabilities[token_id])
         for token_id in intersection
     ]
+    reference_bins = (
+        dict(zip(reference["token_ids"], reference["logit_bins"], strict=True))
+        if reference.get("logit_bins") is not None
+        else None
+    )
+    replay_bins = (
+        dict(zip(replay["token_ids"], replay["logit_bins"], strict=True))
+        if replay.get("logit_bins") is not None
+        else None
+    )
+    common_bin_matches = (
+        [reference_bins[token_id] == replay_bins[token_id] for token_id in intersection]
+        if reference_bins is not None and replay_bins is not None
+        else []
+    )
     contracts = {
         "decimal_1e-15": _contract_sequence(
             reference, mass_bits=None, preserve_support=preserve_support
@@ -212,6 +242,26 @@ def compare_snapshots(
         ),
         "max_common_probability_delta": max(common_deltas, default=0.0),
         "source_mass_delta": abs(reference["source_mass"] - replay["source_mass"]),
+        "quantized_bin_sequence_equal": (
+            reference["token_ids"] == replay["token_ids"]
+            and reference.get("logit_bins") == replay.get("logit_bins")
+            if reference_bins is not None and replay_bins is not None
+            else None
+        ),
+        "common_quantized_bin_agreement": (
+            sum(common_bin_matches) / len(common_bin_matches)
+            if common_bin_matches
+            else None
+        ),
+        "reference_logit_quantization_kl_nats": float(
+            reference.get("logit_quantization_kl_nats", 0.0)
+        ),
+        "reference_logit_quantization_total_variation": float(
+            reference.get("logit_quantization_total_variation", 0.0)
+        ),
+        "reference_max_logit_quantization_error": float(
+            reference.get("max_logit_quantization_error", 0.0)
+        ),
         "contracts_exact": contracts,
         "adaptive_contracts": adaptive_contracts,
     }
@@ -237,6 +287,8 @@ def main() -> int:
     parser.add_argument("--reference-dtype", default="float32")
     parser.add_argument("--replay-dtype", default="float16")
     parser.add_argument("--top-p", type=float, default=0.95)
+    parser.add_argument("--top-k", type=int)
+    parser.add_argument("--logit-quantum", type=float)
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument(
         "--candidate-order", choices=("probability", "token_id"), default="probability"
@@ -264,6 +316,8 @@ def main() -> int:
     common = {
         "model_name": args.model,
         "top_p": args.top_p,
+        "top_k": args.top_k,
+        "logit_quantum": args.logit_quantum,
         "temperature": args.temperature,
         "candidate_order": args.candidate_order,
         "device": args.device,
@@ -357,9 +411,47 @@ def main() -> int:
         "reference_candidate_count_max": max(
             (item["reference_candidate_count"] for item in comparisons), default=None
         ),
+        "quantized_bin_sequence_equal_steps": sum(
+            item["quantized_bin_sequence_equal"] is True for item in comparisons
+        ),
+        "mean_common_quantized_bin_agreement": (
+            sum(
+                item["common_quantized_bin_agreement"]
+                for item in comparisons
+                if item["common_quantized_bin_agreement"] is not None
+            )
+            / sum(
+                item["common_quantized_bin_agreement"] is not None
+                for item in comparisons
+            )
+            if any(
+                item["common_quantized_bin_agreement"] is not None
+                for item in comparisons
+            )
+            else None
+        ),
+        "reference_logit_quantization_kl_nats_mean": (
+            sum(item["reference_logit_quantization_kl_nats"] for item in comparisons)
+            / len(comparisons)
+            if comparisons
+            else 0.0
+        ),
+        "reference_logit_quantization_total_variation_mean": (
+            sum(
+                item["reference_logit_quantization_total_variation"]
+                for item in comparisons
+            )
+            / len(comparisons)
+            if comparisons
+            else 0.0
+        ),
+        "reference_max_logit_quantization_error_max": max(
+            (item["reference_max_logit_quantization_error"] for item in comparisons),
+            default=0.0,
+        ),
     }
     payload = {
-        "schema": "sparsamp-precision-contract-audit-v3",
+        "schema": "sparsamp-precision-contract-audit-v4",
         "timestamp": datetime.now(UTC).isoformat(),
         "environment": {"python": platform.python_version(), "platform": platform.platform()},
         "reference": asdict(reference_config),
