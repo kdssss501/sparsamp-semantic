@@ -9,7 +9,7 @@ import platform
 import sys
 from dataclasses import asdict
 from datetime import UTC, datetime
-from math import log
+from math import log, log2
 from pathlib import Path
 from typing import Any
 
@@ -33,9 +33,15 @@ from sparsamp_semantic.providers.huggingface import (  # noqa: E402
 def _snapshot_data(snapshot: Any) -> dict[str, Any]:
     bins_by_token = snapshot.metadata.get("quantized_logit_bins")
     counts_by_token = snapshot.metadata.get("bin_mass_counts")
+    probabilities = [float(item.probability) for item in snapshot.candidates]
     return {
         "token_ids": [int(item.token_id) for item in snapshot.candidates],
-        "probabilities": [float(item.probability) for item in snapshot.candidates],
+        "probabilities": probabilities,
+        "entropy_bits": -sum(
+            probability * log2(probability)
+            for probability in probabilities
+            if probability > 0
+        ),
         "logit_bins": (
             [int(bins_by_token[int(item.token_id)]) for item in snapshot.candidates]
             if bins_by_token is not None
@@ -473,6 +479,26 @@ def main() -> int:
         ),
         "reference_candidate_count_max": max(
             (item["reference_candidate_count"] for item in comparisons), default=None
+        ),
+        "reference_entropy_bits_mean": (
+            sum(float(snapshot["entropy_bits"]) for snapshot in reference)
+            / len(reference)
+            if reference
+            else 0.0
+        ),
+        "reference_entropy_bits_min": min(
+            (float(snapshot["entropy_bits"]) for snapshot in reference), default=None
+        ),
+        "reference_entropy_bits_max": max(
+            (float(snapshot["entropy_bits"]) for snapshot in reference), default=None
+        ),
+        "reference_source_mass_mean": (
+            sum(float(snapshot["source_mass"]) for snapshot in reference) / len(reference)
+            if reference
+            else 0.0
+        ),
+        "reference_source_mass_min": min(
+            (float(snapshot["source_mass"]) for snapshot in reference), default=None
         ),
         "quantized_bin_sequence_equal_steps": sum(
             item["quantized_bin_sequence_equal"] is True for item in comparisons
