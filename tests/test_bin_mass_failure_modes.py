@@ -101,6 +101,7 @@ def diagnostic_row(**overrides: object) -> dict[str, object]:
             "full_support_agreement": False,
             "full_count_agreement": False,
             "trace_fraction": 0.75,
+            "max_count_total_variation": 0.25,
         },
     }
     values.update(overrides)
@@ -144,6 +145,11 @@ def test_summary_reports_right_censored_singleton_completion() -> None:
     assert result["singleton_completion_cdf"][6] == 0.0
     assert result["singleton_completion_cdf"][7] == 0.5
     assert result["median_first_count_divergence_step"] == 4
+    assert result["count_divergence_by_first_symbol_resolution_trials"] == 1
+    assert result["support_divergence_by_first_symbol_resolution_trials"] == 0
+    assert result["cross_successes_with_observed_rejection"] == 0
+    assert result["observed_rejection_conditioning_trials"] == 1
+    assert result["mean_max_count_total_variation"] == 0.25
 
 
 def test_checkpoint_requires_exact_source_hash_and_rejects_duplicates(tmp_path) -> None:

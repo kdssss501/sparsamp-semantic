@@ -189,6 +189,19 @@ def _singleton_cdf(records: list[dict[str, Any]], window_tokens: int) -> list[fl
     ]
 
 
+def _diverges_by_first_symbol_resolution(
+    row: dict[str, Any], divergence_field: str
+) -> bool:
+    divergence = row.get("contract_trace", {}).get(divergence_field)
+    records = row.get("same_precision_records", [])
+    if divergence is None or not records:
+        return False
+    first = records[0]
+    if bool(first.get("completed")) and first.get("singleton_step") is not None:
+        return int(divergence) <= int(first["singleton_step"])
+    return int(divergence) < int(row["window_tokens"])
+
+
 def summarize(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
     for variant in sorted({str(row["variant"]) for row in rows}):
@@ -215,6 +228,16 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
             row
             for row in selected
             if bool(row.get("contract_trace", {}).get("full_count_agreement"))
+        ]
+        rejected_rows = [
+            row
+            for row in selected
+            if row.get("contract_trace", {}).get("first_replay_rejection_step") is not None
+        ]
+        non_rejected_rows = [
+            row
+            for row in selected
+            if row.get("contract_trace", {}).get("first_replay_rejection_step") is None
         ]
         window_tokens = int(selected[0]["window_tokens"]) if selected else 0
         result[variant] = {
@@ -253,6 +276,22 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
                 row.get("contract_trace", {}).get("first_replay_rejection_step") is not None
                 for row in selected
             ),
+            "cross_successes_with_observed_rejection": sum(
+                bool(row.get("cross_precision_success")) for row in rejected_rows
+            ),
+            "observed_rejection_conditioning_trials": len(rejected_rows),
+            "cross_successes_without_observed_rejection": sum(
+                bool(row.get("cross_precision_success")) for row in non_rejected_rows
+            ),
+            "no_observed_rejection_conditioning_trials": len(non_rejected_rows),
+            "count_divergence_by_first_symbol_resolution_trials": sum(
+                _diverges_by_first_symbol_resolution(row, "first_count_divergence_step")
+                for row in selected
+            ),
+            "support_divergence_by_first_symbol_resolution_trials": sum(
+                _diverges_by_first_symbol_resolution(row, "first_support_divergence_step")
+                for row in selected
+            ),
             "median_first_support_divergence_step": (
                 median(support_divergences) if support_divergences else None
             ),
@@ -265,6 +304,19 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
             )
             if selected
             else 0.0,
+            "mean_max_count_total_variation": mean(
+                float(row.get("contract_trace", {}).get("max_count_total_variation", 0.0))
+                for row in selected
+            )
+            if selected
+            else 0.0,
+            "max_count_total_variation": max(
+                (
+                    float(row.get("contract_trace", {}).get("max_count_total_variation", 0.0))
+                    for row in selected
+                ),
+                default=0.0,
+            ),
             "cross_successes_conditioned_on_full_count_agreement": sum(
                 bool(row.get("cross_precision_success")) for row in full_count_rows
             ),
