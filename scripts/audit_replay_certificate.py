@@ -10,6 +10,7 @@ import platform
 import sys
 from dataclasses import asdict
 from datetime import UTC, datetime
+from math import log
 from pathlib import Path
 from statistics import mean
 from time import perf_counter
@@ -124,8 +125,52 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
                 if completed
                 else None
             ),
+            "mean_contract_source_mass": (
+                mean(float(row["mean_contract_source_mass"]) for row in completed)
+                if completed and all("mean_contract_source_mass" in row for row in completed)
+                else None
+            ),
+            "mean_contract_truncation_kl_nats": (
+                mean(
+                    float(row["mean_contract_truncation_kl_nats"])
+                    for row in completed
+                )
+                if completed
+                and all("mean_contract_truncation_kl_nats" in row for row in completed)
+                else None
+            ),
         }
     return result
+
+
+def result_signature(rows: list[dict[str, Any]]) -> str:
+    deterministic = []
+    for row in sorted(rows, key=trial_key):
+        deterministic.append(
+            {
+                "trial_key": list(trial_key(row)),
+                "reference_token_sha256": row.get("reference_token_sha256"),
+                "corrections": row.get("corrections"),
+                "corrected_exact": row.get("corrected_exact"),
+                "uncorrected_exact": row.get("uncorrected_exact"),
+                "uncorrected_common_prefix_tokens": row.get(
+                    "uncorrected_common_prefix_tokens"
+                ),
+                "uncorrected_positional_agreement": row.get(
+                    "uncorrected_positional_agreement"
+                ),
+                "reference_tokens_in_envelope": row.get(
+                    "reference_tokens_in_envelope"
+                ),
+                "shared_contract_exact_steps": row.get("shared_contract_exact_steps"),
+                "sparse_payload_bytes": row.get("sparse_payload_bytes"),
+                "full_trace_payload_bytes": row.get("full_trace_payload_bytes"),
+            }
+        )
+    payload = json.dumps(
+        deterministic, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def experiment_config(args: Any) -> dict[str, Any]:
@@ -161,6 +206,7 @@ def build_report(args: Any, rows: list[dict[str, Any]], phase: str) -> dict[str,
         "experiment_config": config,
         "experiment_signature": config_signature(config),
         "progress": {"completed_trials": len(rows), "expected_trials": expected},
+        "result_signature": result_signature(rows),
         "summary": summarize(rows),
         "rows": rows,
     }
@@ -220,12 +266,20 @@ def generate_reference(
     for step in range(args.tokens):
         snapshot = session.next_distribution()
         decision = contract_decision(snapshot, step, context, contract_config, policy=policy)
+        contract_candidates = sorted(
+            snapshot.candidates, key=lambda candidate: int(candidate.rank)
+        )[: args.contract_top_k]
+        contract_source_mass = snapshot.source_mass * sum(
+            candidate.probability for candidate in contract_candidates
+        )
         token_ids.append(decision.token_id)
         contracts.append(
             {
                 "token_ids": list(decision.token_ids),
                 "counts": list(decision.counts),
                 "source_mass": snapshot.source_mass,
+                "contract_source_mass": contract_source_mass,
+                "contract_truncation_kl_nats": -log(contract_source_mass),
                 "quantization_kl_nats": snapshot.metadata.get(
                     "logit_quantization_kl_nats"
                 ),
@@ -247,6 +301,12 @@ def generate_reference(
         "reference_contracts": contracts,
         "reference_seconds": perf_counter() - started,
         "mean_reference_source_mass": mean(item["source_mass"] for item in contracts),
+        "mean_contract_source_mass": mean(
+            item["contract_source_mass"] for item in contracts
+        ),
+        "mean_contract_truncation_kl_nats": mean(
+            item["contract_truncation_kl_nats"] for item in contracts
+        ),
         "mean_reference_quantization_kl_nats": mean(
             float(item["quantization_kl_nats"]) for item in contracts
         ),
