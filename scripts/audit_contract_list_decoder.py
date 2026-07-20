@@ -1,4 +1,4 @@
-"""R036-D4 online Contract-List decoding audit over saved R036 token streams."""
+"""Online Contract-List decoding audit over saved R036 token streams."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ from sparsamp_semantic.providers.huggingface import (  # noqa: E402
     HuggingFaceProvider,
 )
 
-SCHEMA = "sparsamp-r036d4-contract-list-decoder-v1"
+SCHEMA = "sparsamp-r036-contract-list-decoder-v2"
 
 
 def recover_payload_candidates(
@@ -78,6 +78,7 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
             "enumeration_limit_exceeded": sum(bool(row.get("enumeration_limit_exceeded")) for row in selected),
             "mean_max_window_candidates": mean(int(row.get("max_window_candidates", 0)) for row in selected) if selected else 0.0,
             "mean_peak_active_states": mean(int(row.get("peak_active_states", 0)) for row in selected) if selected else 0.0,
+            "total_merged_states": sum(int(row.get("merged_states", 0)) for row in selected),
             "total_pruned_states": sum(int(row.get("pruned_states", 0)) for row in selected),
         }
     return result
@@ -90,6 +91,7 @@ def experiment_config(args: Any, source: dict[str, Any]) -> dict[str, Any]:
         "source_sha256": file_sha256(args.input), "source_signature": source["experiment_signature"],
         "model": base["model"], "reference_top_k": base["top_k"], "replay_dtype": base["replay_dtype"],
         "top_k": args.top_k, "bin_radius": args.bin_radius, "beam_width": args.beam_width,
+        "symbol_quota": args.symbol_quota,
         "enumeration_limit": args.enumeration_limit, "trial_keys": base["trial_keys"],
     }
 
@@ -139,6 +141,10 @@ def main() -> int:
     parser.add_argument("--top-k", type=int, default=4)
     parser.add_argument("--bin-radius", type=int, default=1)
     parser.add_argument("--beam-width", type=int, default=4096)
+    parser.add_argument(
+        "--symbol-quota", type=int, default=0,
+        help="minimum retained states per possible initial byte; zero uses global beam pruning",
+    )
     parser.add_argument("--enumeration-limit", type=int, default=1000000)
     parser.add_argument("--fresh", action="store_true")
     args = parser.parse_args()
@@ -165,7 +171,7 @@ def main() -> int:
                     window_tokens=int(source_row["window_tokens"]), top_k=args.top_k,
                     bin_radius=args.bin_radius, logit_quantum=float(base["logit_quantum"]),
                     bin_mass_bits=int(base["bin_mass_bits"]), temperature=float(base["temperature"]),
-                    beam_width=args.beam_width,
+                    beam_width=args.beam_width, symbol_quota=args.symbol_quota,
                 ))
                 decoded = decoder.decode(
                     provider.start(prompt), [int(value) for value in source_row["token_ids"]],
@@ -190,6 +196,7 @@ def main() -> int:
                     "unique_payload_success": len(payloads) == 1 and hashlib.sha256(next(iter(payloads))).hexdigest() == expected_payload_sha,
                     "max_window_candidates": max((len(window.candidates) for window in decoded.windows), default=0),
                     "peak_active_states": max((window.peak_active_states for window in decoded.windows), default=0),
+                    "merged_states": sum(window.merged_states for window in decoded.windows),
                     "pruned_states": sum(window.pruned_states for window in decoded.windows),
                 })
             except Exception as error:  # noqa: BLE001

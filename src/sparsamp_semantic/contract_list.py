@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from fractions import Fraction
 from itertools import combinations, product
-from typing import Any, Hashable
+from typing import Hashable
 
 from .core import _ceil_fraction
 from .prf import HmacRandomStream
@@ -23,6 +23,7 @@ class ContractListConfig:
     bin_mass_bits: int = 16
     temperature: float = 1.2
     beam_width: int = 4096
+    symbol_quota: int = 0
 
     def __post_init__(self) -> None:
         if self.window_tokens < 1 or self.top_k < 2 or self.bin_radius < 0:
@@ -31,6 +32,10 @@ class ContractListConfig:
             raise ValueError("quantum and temperature must be positive")
         if not 16 <= self.bin_mass_bits <= 52 or self.beam_width < 1:
             raise ValueError("invalid mass bits or beam width")
+        if self.symbol_quota < 0:
+            raise ValueError("symbol quota must be non-negative")
+        if self.symbol_quota and self.symbol_quota * 256 > self.beam_width:
+            raise ValueError("symbol quota requires at least 256 * quota beam states")
 
 
 @dataclass(frozen=True)
@@ -42,10 +47,12 @@ class _Contract:
 
 @dataclass(frozen=True)
 class _State:
-    n_value: int
-    temp0_values: tuple[int, ...]
-    n_values: tuple[int, ...]
+    symbol_values: tuple[int, ...]
     cost: int
+
+    @property
+    def n_value(self) -> int:
+        return len(self.symbol_values)
 
 
 @dataclass(frozen=True)
@@ -54,6 +61,7 @@ class ContractListWindow:
     candidates: tuple[int, ...]
     candidate_costs: tuple[int, ...]
     peak_active_states: int
+    merged_states: int
     pruned_states: int
     exhausted: bool
 
@@ -102,14 +110,43 @@ def enumerate_contracts(
     return tuple(sorted(best.values(), key=lambda item: (item.cost, item.token_ids, item.probabilities)))
 
 
-def _recover_symbol(temp0_values: tuple[int, ...], n_values: tuple[int, ...]) -> int:
-    index = len(temp0_values) - 2
-    value = temp0_values[index + 1]
-    while index >= 0:
-        previous_n = n_values[index]
-        value = temp0_values[index] + ((value + previous_n) % previous_n)
-        index -= 1
-    return value % 256
+def _child_symbol_values(
+    symbol_values: tuple[int, ...], temp0: int, new_n: int
+) -> tuple[int, ...]:
+    """Map each child residual index back to its unique initial byte."""
+
+    previous_n = len(symbol_values)
+    if previous_n < 1 or not 1 <= new_n <= previous_n:
+        raise ValueError("invalid residual symbol mapping")
+    return tuple(symbol_values[(temp0 + offset) % previous_n] for offset in range(new_n))
+
+
+def _prune_states(
+    states: dict[tuple[int, ...], _State], config: ContractListConfig
+) -> tuple[tuple[_State, ...], int]:
+    ordered = sorted(
+        states.values(), key=lambda item: (item.cost, item.n_value, item.symbol_values)
+    )
+    if len(ordered) <= config.beam_width:
+        return tuple(ordered), 0
+    if not config.symbol_quota:
+        return tuple(ordered[: config.beam_width]), len(ordered) - config.beam_width
+
+    counts = [0] * 256
+    selected: list[_State] = []
+    selected_values: set[tuple[int, ...]] = set()
+    for state in ordered:
+        if any(counts[symbol] < config.symbol_quota for symbol in state.symbol_values):
+            selected.append(state)
+            selected_values.add(state.symbol_values)
+            for symbol in state.symbol_values:
+                counts[symbol] += 1
+    for state in ordered:
+        if len(selected) >= config.beam_width:
+            break
+        if state.symbol_values not in selected_values:
+            selected.append(state)
+    return tuple(selected), len(ordered) - len(selected)
 
 
 class ContractListByteDecoder:
@@ -135,9 +172,10 @@ class ContractListByteDecoder:
         windows: list[ContractListWindow] = []
         consumed = 0
         for window_index in range(window_count):
-            active = {_State(256, (), (), 0)}
+            active = (_State(tuple(range(256)), 0),)
             resolved: dict[int, int] = {}
             peak = 1
+            merged = 0
             pruned = 0
             exhausted = False
             for local_step in range(self.config.window_tokens):
@@ -152,7 +190,7 @@ class ContractListByteDecoder:
                     if observed in contract.token_ids
                 ]
                 r = stream.fraction(local_step, domain=self._domain(window_index))
-                next_states: dict[tuple[Any, ...], _State] = {}
+                next_states: dict[tuple[int, ...], _State] = {}
                 for state in active:
                     for contract in contracts:
                         candidate_index = contract.token_ids.index(observed)
@@ -163,26 +201,24 @@ class ContractListByteDecoder:
                         new_n = temp1 - temp0
                         if new_n < 1:
                             continue
-                        temp0s = state.temp0_values + (temp0,)
-                        n_values = state.n_values + (new_n,)
+                        symbol_values = _child_symbol_values(
+                            state.symbol_values, temp0, new_n
+                        )
                         cost = state.cost + contract.cost
                         if new_n == 1:
-                            symbol = _recover_symbol(temp0s, n_values)
+                            symbol = symbol_values[0]
+                            if symbol in resolved:
+                                merged += 1
                             resolved[symbol] = min(cost, resolved.get(symbol, cost))
                             continue
-                        new_state = _State(new_n, temp0s, n_values, cost)
-                        state_key = (new_n, temp0s, n_values)
-                        old = next_states.get(state_key)
+                        new_state = _State(symbol_values, cost)
+                        old = next_states.get(symbol_values)
                         if old is None or cost < old.cost:
-                            next_states[state_key] = new_state
-                ordered = sorted(
-                    next_states.values(),
-                    key=lambda item: (item.cost, item.n_value, item.temp0_values),
-                )
-                if len(ordered) > self.config.beam_width:
-                    pruned += len(ordered) - self.config.beam_width
-                    ordered = ordered[: self.config.beam_width]
-                active = set(ordered)
+                            next_states[symbol_values] = new_state
+                        if old is not None:
+                            merged += 1
+                active, step_pruned = _prune_states(next_states, self.config)
+                pruned += step_pruned
                 peak = max(peak, len(active))
                 try:
                     session.append(observed)
@@ -196,6 +232,7 @@ class ContractListByteDecoder:
                     tuple(ranked_symbols),
                     tuple(resolved[symbol] for symbol in ranked_symbols),
                     peak,
+                    merged,
                     pruned,
                     exhausted or not resolved,
                 )

@@ -1,12 +1,21 @@
 from __future__ import annotations
 
 import hashlib
+from fractions import Fraction
 from typing import Hashable
 
 from sparsamp_semantic.byte_sliced import ByteSlicedCodec, ByteSlicedConfig
-from sparsamp_semantic.contract_list import ContractListByteDecoder, ContractListConfig, enumerate_contracts
+from sparsamp_semantic.contract_list import (
+    ContractListByteDecoder,
+    ContractListConfig,
+    _State,
+    _child_symbol_values,
+    _prune_states,
+    enumerate_contracts,
+)
 from sparsamp_semantic.providers.base import Provider, ProviderSession
 from sparsamp_semantic.types import DistributionSnapshot, TokenCandidate
+from sparsamp_semantic.core import _ceil_fraction
 
 
 class BinarySession(ProviderSession):
@@ -77,3 +86,55 @@ def test_contract_list_requires_original_stream_context() -> None:
     config = ContractListConfig()
     assert config.top_k == 4
     assert ContractListByteDecoder(config).config.bin_radius == 1
+
+
+def test_residual_symbol_mapping_matches_modular_inverse() -> None:
+    parent = tuple(range(8))
+    assert _child_symbol_values(parent, 3, 4) == (3, 4, 5, 6)
+    assert _child_symbol_values(parent, -2, 4) == (6, 7, 0, 1)
+    child = _child_symbol_values(parent, -2, 4)
+    assert _child_symbol_values(child, 3, 1) == (1,)
+
+
+def test_residual_mapping_matches_exhaustive_encoder_transition() -> None:
+    symbol_values = tuple(range(256))
+    n_value = len(symbol_values)
+    for lower, upper, random_value in (
+        (Fraction(0), Fraction(3, 10), Fraction(17, 97)),
+        (Fraction(3, 10), Fraction(1), Fraction(17, 97)),
+        (Fraction(0), Fraction(1, 2), Fraction(99, 101)),
+        (Fraction(1, 2), Fraction(1), Fraction(99, 101)),
+    ):
+        temp0 = _ceil_fraction((lower - random_value) * n_value)
+        temp1 = _ceil_fraction((upper - random_value) * n_value)
+        child = _child_symbol_values(symbol_values, temp0, temp1 - temp0)
+        observed: dict[int, int] = {}
+        for current_index, symbol in enumerate(symbol_values):
+            sample = (Fraction(current_index, n_value) + random_value) % 1
+            if lower <= sample < upper:
+                wrapped = current_index + random_value * n_value >= n_value
+                child_index = current_index - n_value - temp0 if wrapped else current_index - temp0
+                observed[child_index] = symbol
+        assert tuple(observed[index] for index in range(len(observed))) == child
+
+
+def test_symbol_stratified_pruning_retains_low_cost_state_per_symbol() -> None:
+    raw = [_State((symbol,), 1000 + symbol) for symbol in range(256)]
+    raw.extend(_State((symbol, (symbol + 1) % 256), symbol) for symbol in range(100))
+    states = {state.symbol_values: state for state in raw}
+    config = ContractListConfig(beam_width=256, symbol_quota=1)
+    retained, pruned = _prune_states(states, config)
+    assert len(retained) == 256
+    assert pruned == 100
+    assert set(range(256)) == {
+        symbol for state in retained for symbol in state.symbol_values
+    }
+
+
+def test_symbol_quota_requires_sufficient_beam_width() -> None:
+    try:
+        ContractListConfig(beam_width=255, symbol_quota=1)
+    except ValueError as error:
+        assert "256 * quota" in str(error)
+    else:
+        raise AssertionError("expected invalid symbol quota to fail")
