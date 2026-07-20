@@ -37,6 +37,10 @@ DEFAULT_PROMPTS = (
     "Describe two practices that improve reliable software releases.",
     "Explain one benefit and one limitation of language models in education.",
 )
+DEFAULT_SYSTEM_PROMPT = (
+    "You are a clear and accurate assistant. Answer the user's question directly, "
+    "use complete sentences, and avoid unnecessary repetition."
+)
 
 
 def config_signature(config: dict[str, Any]) -> str:
@@ -190,6 +194,7 @@ def experiment_config(args: Any) -> dict[str, Any]:
         "mass_bits": args.mass_bits,
         "temperature": args.temperature,
         "vocabulary_size": args.vocabulary_size,
+        "system_prompt": args.system_prompt,
         "prompts": list(DEFAULT_PROMPTS),
     }
 
@@ -237,6 +242,7 @@ def provider_config(args: Any, dtype: str) -> HuggingFaceConfig:
         precision_context="portable",
         allow_eos=False,
         adaptive_temperature=False,
+        system_prompt=args.system_prompt,
     )
 
 
@@ -424,6 +430,7 @@ def main() -> int:
     parser.add_argument("--mass-bits", type=int, default=16)
     parser.add_argument("--temperature", type=float, default=1.2)
     parser.add_argument("--vocabulary-size", type=int, default=50257)
+    parser.add_argument("--system-prompt", default=DEFAULT_SYSTEM_PROMPT)
     parser.add_argument("--run-label", default="R041")
     parser.add_argument("--output", type=Path, default=Path("outputs/R041_gpt2_replay_certificate.json"))
     parser.add_argument("--fresh", action="store_true")
