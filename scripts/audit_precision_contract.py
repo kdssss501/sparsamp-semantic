@@ -32,12 +32,18 @@ from sparsamp_semantic.providers.huggingface import (  # noqa: E402
 
 def _snapshot_data(snapshot: Any) -> dict[str, Any]:
     bins_by_token = snapshot.metadata.get("quantized_logit_bins")
+    counts_by_token = snapshot.metadata.get("bin_mass_counts")
     return {
         "token_ids": [int(item.token_id) for item in snapshot.candidates],
         "probabilities": [float(item.probability) for item in snapshot.candidates],
         "logit_bins": (
             [int(bins_by_token[int(item.token_id)]) for item in snapshot.candidates]
             if bins_by_token is not None
+            else None
+        ),
+        "bin_mass_counts": (
+            [int(counts_by_token[int(item.token_id)]) for item in snapshot.candidates]
+            if counts_by_token is not None
             else None
         ),
         "source_mass": float(snapshot.source_mass),
@@ -50,6 +56,10 @@ def _snapshot_data(snapshot: Any) -> dict[str, Any]:
         ),
         "max_logit_quantization_error": float(
             snapshot.metadata.get("max_logit_quantization_error", 0.0)
+        ),
+        "bin_mass_kl_nats": float(snapshot.metadata.get("bin_mass_kl_nats", 0.0)),
+        "bin_mass_total_variation": float(
+            snapshot.metadata.get("bin_mass_total_variation", 0.0)
         ),
     }
 
@@ -285,6 +295,13 @@ def compare_snapshots(
             if reference_bins is not None and replay_bins is not None
             else None
         ),
+        "bin_mass_count_sequence_equal": (
+            reference["token_ids"] == replay["token_ids"]
+            and reference.get("bin_mass_counts") == replay.get("bin_mass_counts")
+            if reference.get("bin_mass_counts") is not None
+            and replay.get("bin_mass_counts") is not None
+            else None
+        ),
         "common_quantized_bin_agreement": (
             sum(common_bin_matches) / len(common_bin_matches)
             if common_bin_matches
@@ -298,6 +315,10 @@ def compare_snapshots(
         ),
         "reference_max_logit_quantization_error": float(
             reference.get("max_logit_quantization_error", 0.0)
+        ),
+        "reference_bin_mass_kl_nats": float(reference.get("bin_mass_kl_nats", 0.0)),
+        "reference_bin_mass_total_variation": float(
+            reference.get("bin_mass_total_variation", 0.0)
         ),
         "contracts_exact": contracts,
         "adaptive_contracts": adaptive_contracts,
@@ -326,6 +347,7 @@ def main() -> int:
     parser.add_argument("--top-p", type=float, default=0.95)
     parser.add_argument("--top-k", type=int)
     parser.add_argument("--logit-quantum", type=float)
+    parser.add_argument("--bin-mass-bits", type=int)
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument(
         "--candidate-order", choices=("probability", "token_id"), default="probability"
@@ -358,6 +380,7 @@ def main() -> int:
         "top_p": args.top_p,
         "top_k": args.top_k,
         "logit_quantum": args.logit_quantum,
+        "bin_mass_bits": args.bin_mass_bits,
         "temperature": args.temperature,
         "candidate_order": args.candidate_order,
         "device": args.device,
@@ -454,6 +477,9 @@ def main() -> int:
         "quantized_bin_sequence_equal_steps": sum(
             item["quantized_bin_sequence_equal"] is True for item in comparisons
         ),
+        "bin_mass_count_sequence_equal_steps": sum(
+            item["bin_mass_count_sequence_equal"] is True for item in comparisons
+        ),
         "mean_common_quantized_bin_agreement": (
             sum(
                 item["common_quantized_bin_agreement"]
@@ -489,6 +515,18 @@ def main() -> int:
             (item["reference_max_logit_quantization_error"] for item in comparisons),
             default=0.0,
         ),
+        "reference_bin_mass_kl_nats_mean": (
+            sum(item["reference_bin_mass_kl_nats"] for item in comparisons)
+            / len(comparisons)
+            if comparisons
+            else 0.0
+        ),
+        "reference_bin_mass_total_variation_mean": (
+            sum(item["reference_bin_mass_total_variation"] for item in comparisons)
+            / len(comparisons)
+            if comparisons
+            else 0.0
+        ),
         "max_internal_cdf_delta_max": max(
             (
                 item["max_internal_cdf_delta"]
@@ -510,7 +548,7 @@ def main() -> int:
         for block_size in args.guard_block_sizes
     }
     payload = {
-        "schema": "sparsamp-precision-contract-audit-v5",
+        "schema": "sparsamp-precision-contract-audit-v6",
         "timestamp": datetime.now(UTC).isoformat(),
         "environment": {"python": platform.python_version(), "platform": platform.platform()},
         "reference": asdict(reference_config),

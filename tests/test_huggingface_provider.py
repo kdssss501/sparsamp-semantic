@@ -216,6 +216,34 @@ def test_logit_quantum_must_be_positive() -> None:
         HuggingFaceConfig(logit_quantum=0.0)
 
 
+def test_bin_mass_contract_requires_discrete_fixed_support() -> None:
+    with pytest.raises(ValueError, match="logit_quantum"):
+        HuggingFaceConfig(top_p=1.0, top_k=64, bin_mass_bits=16)
+    with pytest.raises(ValueError, match="fixed top_k"):
+        HuggingFaceConfig(top_p=1.0, logit_quantum=0.25, bin_mass_bits=16)
+    with pytest.raises(ValueError, match="top_p=1.0"):
+        HuggingFaceConfig(top_k=64, logit_quantum=0.25, bin_mass_bits=16)
+
+
+def test_bin_mass_contract_changes_portable_prf_context() -> None:
+    regular = object.__new__(HuggingFaceSession)
+    regular._config = HuggingFaceConfig(
+        top_p=1.0, top_k=64, logit_quantum=0.25, precision_context="portable"
+    )
+    regular._prompt = "contract prompt"
+    discrete = object.__new__(HuggingFaceSession)
+    discrete._config = HuggingFaceConfig(
+        top_p=1.0,
+        top_k=64,
+        logit_quantum=0.25,
+        bin_mass_bits=16,
+        precision_context="portable",
+    )
+    discrete._prompt = "contract prompt"
+
+    assert regular.context_id != discrete.context_id
+
+
 def test_retained_probability_normalization_preserves_tiny_positive_mass() -> None:
     torch = pytest.importorskip("torch")
     probabilities = torch.tensor([1.0, 1e-9, 1e-12], dtype=torch.float32)

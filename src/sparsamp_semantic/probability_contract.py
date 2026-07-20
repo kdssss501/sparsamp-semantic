@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import ROUND_FLOOR, Decimal, localcontext
 from fractions import Fraction
 from typing import Any, Literal, Sequence
 
@@ -192,6 +192,68 @@ def integer_mass_probabilities(
         preserve_support=preserve_support,
         support_strategy=support_strategy,
     ).probabilities
+
+
+def allocate_logit_bin_mass(
+    token_ids: Sequence[int],
+    logit_bins: Sequence[int],
+    *,
+    quantum: float,
+    temperature: float,
+    mass_bits: int,
+) -> IntegerMassAllocation:
+    """Map shared integer logit bins to deterministic power-of-two counts.
+
+    Decimal exponentiation removes endpoint floating-point softmax from the
+    probability contract. One count is reserved for every retained token; the
+    remaining mass follows deterministic largest-remainder apportionment with
+    token ID as the public tie breaker.
+    """
+
+    if not token_ids or len(token_ids) != len(logit_bins):
+        raise ValueError("token IDs and logit bins must have equal positive length")
+    if len(set(token_ids)) != len(token_ids):
+        raise ValueError("token IDs must be unique")
+    if quantum <= 0:
+        raise ValueError("logit quantum must be positive")
+    if temperature <= 0:
+        raise ValueError("temperature must be positive")
+    if not 1 <= mass_bits <= 52:
+        raise ValueError("probability mass bits must lie in [1, 52]")
+    total_mass = 1 << mass_bits
+    if len(token_ids) > total_mass:
+        raise ValueError("total integer mass is too small to preserve candidate support")
+
+    with localcontext() as context:
+        context.prec = 80
+        decimal_quantum = Decimal(str(quantum))
+        decimal_temperature = Decimal(str(temperature))
+        maximum_bin = max(logit_bins)
+        weights = [
+            ((Decimal(value - maximum_bin) * decimal_quantum) / decimal_temperature).exp()
+            for value in logit_bins
+        ]
+        weight_sum = sum(weights, start=Decimal(0))
+        remaining = total_mass - len(token_ids)
+        quotas = [weight * remaining / weight_sum for weight in weights]
+        floors = [
+            int(quota.to_integral_value(rounding=ROUND_FLOOR)) for quota in quotas
+        ]
+        counts = [1 + value for value in floors]
+        residual = total_mass - sum(counts)
+        remainders = [quota - floor for quota, floor in zip(quotas, floors, strict=True)]
+        order = sorted(
+            range(len(token_ids)),
+            key=lambda index: (-remainders[index], int(token_ids[index])),
+        )
+        for index in order[:residual]:
+            counts[index] += 1
+
+    return IntegerMassAllocation(
+        counts=tuple(counts),
+        total_mass=total_mass,
+        preserve_support=True,
+    )
 
 
 def decimal_quantized_probabilities(

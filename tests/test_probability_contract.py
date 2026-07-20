@@ -6,11 +6,59 @@ import pytest
 
 from sparsamp_semantic.probability_contract import (
     allocate_integer_mass,
+    allocate_logit_bin_mass,
     decimal_quantized_probabilities,
     support_feasible_mass_bits,
     validate_probability_contract,
     waterfilled_support_target,
 )
+
+
+def test_logit_bin_mass_is_exact_positive_and_monotone() -> None:
+    allocation = allocate_logit_bin_mass(
+        (10, 20, 30),
+        (0, -1, -4),
+        quantum=0.25,
+        temperature=1.0,
+        mass_bits=16,
+    )
+
+    assert sum(allocation.counts) == 1 << 16
+    assert all(count > 0 for count in allocation.counts)
+    assert allocation.counts[0] > allocation.counts[1] > allocation.counts[2]
+
+
+def test_logit_bin_mass_uses_token_id_for_order_independent_ties() -> None:
+    first = allocate_logit_bin_mass(
+        (30, 10, 20),
+        (0, 0, 0),
+        quantum=0.25,
+        temperature=1.0,
+        mass_bits=16,
+    )
+    second = allocate_logit_bin_mass(
+        (10, 20, 30),
+        (0, 0, 0),
+        quantum=0.25,
+        temperature=1.0,
+        mass_bits=16,
+    )
+
+    first_by_token = dict(zip((30, 10, 20), first.counts, strict=True))
+    second_by_token = dict(zip((10, 20, 30), second.counts, strict=True))
+    assert first_by_token == second_by_token
+    assert first_by_token[10] >= first_by_token[20] >= first_by_token[30]
+
+
+def test_logit_bin_mass_rejects_invalid_contracts() -> None:
+    with pytest.raises(ValueError, match="equal positive length"):
+        allocate_logit_bin_mass(
+            (10, 20), (0,), quantum=0.25, temperature=1.0, mass_bits=16
+        )
+    with pytest.raises(ValueError, match="unique"):
+        allocate_logit_bin_mass(
+            (10, 10), (0, -1), quantum=0.25, temperature=1.0, mass_bits=16
+        )
 
 
 def test_largest_remainder_is_exact_and_breaks_ties_by_candidate_order() -> None:

@@ -126,6 +126,30 @@ def test_quantized_bin_agreement_is_reported_for_common_candidates() -> None:
     assert result["common_quantized_bin_agreement"] == 0.75
 
 
+def test_bin_mass_count_contract_is_reported_exactly() -> None:
+    reference = _snapshot([0.4, 0.3, 0.2, 0.1])
+    replay = _snapshot([0.4, 0.3, 0.2, 0.1])
+    reference["bin_mass_counts"] = [26, 20, 12, 6]
+    replay["bin_mass_counts"] = [26, 20, 12, 6]
+
+    exact = compare_snapshots(
+        reference,
+        replay,
+        mass_bits=(16,),
+        preserve_support=True,
+    )
+    replay["bin_mass_counts"] = [25, 21, 12, 6]
+    changed = compare_snapshots(
+        reference,
+        replay,
+        mass_bits=(16,),
+        preserve_support=True,
+    )
+
+    assert exact["bin_mass_count_sequence_equal"] is True
+    assert changed["bin_mass_count_sequence_equal"] is False
+
+
 def test_internal_cdf_delta_requires_aligned_support() -> None:
     assert max_internal_cdf_delta(
         [10, 20, 30], [0.4, 0.3, 0.3], [10, 20, 30], [0.39, 0.31, 0.3]

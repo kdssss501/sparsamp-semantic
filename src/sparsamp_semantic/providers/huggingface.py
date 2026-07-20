@@ -8,6 +8,7 @@ from time import perf_counter
 from typing import Any, Hashable, Literal, Sequence
 
 from ..types import DistributionSnapshot, TokenCandidate
+from ..probability_contract import allocate_logit_bin_mass
 from .base import Provider, ProviderSession
 
 
@@ -83,6 +84,7 @@ class HuggingFaceConfig:
     top_p: float = 0.95
     top_k: int | None = None
     logit_quantum: float | None = None
+    bin_mass_bits: int | None = None
     candidate_order: CandidateOrder = "probability"
     temperature: float = 1.0
     device: str = "auto"
@@ -107,6 +109,17 @@ class HuggingFaceConfig:
             raise ValueError("top_k must be positive")
         if self.logit_quantum is not None and self.logit_quantum <= 0:
             raise ValueError("logit_quantum must be positive")
+        if self.bin_mass_bits is not None:
+            if not 16 <= self.bin_mass_bits <= 52:
+                raise ValueError("bin_mass_bits must lie in [16, 52]")
+            if self.logit_quantum is None:
+                raise ValueError("bin_mass_bits requires logit_quantum")
+            if self.top_k is None:
+                raise ValueError("bin_mass_bits requires fixed top_k")
+            if self.top_p != 1.0:
+                raise ValueError("bin_mass_bits requires top_p=1.0")
+            if self.adaptive_temperature:
+                raise ValueError("bin_mass_bits does not support adaptive_temperature")
         if self.candidate_order not in {"probability", "token_id"}:
             raise ValueError("candidate_order must be 'probability' or 'token_id'")
         if self.precision_context not in {"strict", "portable"}:
@@ -198,6 +211,8 @@ class HuggingFaceSession(ProviderSession):
             fields.append(f"candidate-order={self._config.candidate_order}")
         if self._config.logit_quantum is not None:
             fields.append(f"logit-quantum={self._config.logit_quantum}")
+        if self._config.bin_mass_bits is not None:
+            fields.append(f"bin-mass-bits={self._config.bin_mass_bits}")
         material = "\0".join(fields)
         return hashlib.sha256(material.encode("utf-8")).digest()
 
@@ -307,6 +322,45 @@ class HuggingFaceSession(ProviderSession):
         retained_indices = sorted_indices[keep]
         source_mass = float(retained_probabilities.sum().item())
         retained_probabilities = normalize_retained_probabilities(retained_probabilities)
+        retained_logit_bins = (
+            {
+                int(token_id.item()): int(logit_bins[int(token_id.item())].item())
+                for token_id in retained_indices
+            }
+            if logit_bins is not None
+            else None
+        )
+        bin_mass_counts: dict[int, int] | None = None
+        bin_mass_kl_nats = 0.0
+        bin_mass_total_variation = 0.0
+        if self._config.bin_mass_bits is not None:
+            if retained_logit_bins is None:
+                raise RuntimeError("bin mass contract requires quantized logit bins")
+            retained_token_ids = [int(value.item()) for value in retained_indices]
+            allocation = allocate_logit_bin_mass(
+                retained_token_ids,
+                [retained_logit_bins[token_id] for token_id in retained_token_ids],
+                quantum=self._config.logit_quantum,
+                temperature=effective_temperature,
+                mass_bits=self._config.bin_mass_bits,
+            )
+            target_probabilities = retained_probabilities
+            retained_probabilities = torch.tensor(
+                allocation.counts, dtype=torch.float64, device=self._device
+            ) / allocation.total_mass
+            bin_mass_counts = dict(zip(retained_token_ids, allocation.counts, strict=True))
+            bin_mass_kl_nats = max(
+                0.0,
+                float(
+                    (
+                        target_probabilities
+                        * torch.log(target_probabilities / retained_probabilities)
+                    ).sum().item()
+                ),
+            )
+            bin_mass_total_variation = float(
+                (0.5 * torch.abs(target_probabilities - retained_probabilities).sum()).item()
+            )
 
         native_position = int(
             torch.multinomial(retained_probabilities, 1, generator=self._generator).item()
@@ -332,14 +386,6 @@ class HuggingFaceSession(ProviderSession):
                 )
             )
         ordered_candidates = order_token_candidates(candidates, self._config.candidate_order)
-        retained_logit_bins = (
-            {
-                int(token_id.item()): int(logit_bins[int(token_id.item())].item())
-                for token_id in retained_indices
-            }
-            if logit_bins is not None
-            else None
-        )
         self._last_candidates = {
             int(candidate.token_id) for candidate in ordered_candidates
         }
@@ -355,6 +401,10 @@ class HuggingFaceSession(ProviderSession):
                 "top_k": self._config.top_k,
                 "logit_quantum": self._config.logit_quantum,
                 "quantized_logit_bins": retained_logit_bins,
+                "bin_mass_bits": self._config.bin_mass_bits,
+                "bin_mass_counts": bin_mass_counts,
+                "bin_mass_kl_nats": bin_mass_kl_nats,
+                "bin_mass_total_variation": bin_mass_total_variation,
                 "max_logit_quantization_error": max_logit_quantization_error,
                 "logit_quantization_kl_nats": logit_quantization_kl_nats,
                 "logit_quantization_total_variation": logit_quantization_tv,
