@@ -1,0 +1,462 @@
+{
+  "schema": "precision-replay-ablation-analysis-v1",
+  "selected_seed": 0,
+  "bootstrap_repetitions": 10000,
+  "bootstrap_seed": 20260720,
+  "sources": {
+    "forward_top2": {
+      "path": "outputs\\R044_qwen_replay_scale.json",
+      "sha256": "6a6eaa292e8ac490b38932969879323cc44088361ceabd20b51466a836fc3110"
+    },
+    "forward_top4": {
+      "path": "outputs\\R045_qwen_contract_k4.json",
+      "sha256": "106d47424ed54c188053acc2709a1c80955ec8b113631d1242cd4fc5273b1b17"
+    },
+    "reverse_top2": {
+      "path": "outputs\\R046_qwen_reverse_precision.json",
+      "sha256": "0db87168911af7e1c65274df5c5e680f1e648f20e14d5555e50b9fbbfca755fb"
+    }
+  },
+  "variants": {
+    "forward_top2": {
+      "run_label": "R044",
+      "result_signature": "c9ca57129a664a4114d7c186527c176c5e898596c1549e62724d88679a30c62d",
+      "reference_dtype": "float16",
+      "replay_dtype": "bfloat16",
+      "contract_top_k": 2,
+      "trials": 20,
+      "tokens": 1500,
+      "corrected_exact": 20,
+      "corrected_exact_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "sentence_complete": 20,
+      "sentence_complete_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "reference_tokens_per_second": 11.526479922181988,
+      "replay_tokens_per_second": 2.5910437502557944,
+      "top4_coverage": 0.9993333333333333,
+      "top8_coverage": 1.0,
+      "metrics": {
+        "correction_rate": {
+          "value": 0.02,
+          "ci95": [
+            0.012153615659913753,
+            0.028727866042523656
+          ]
+        },
+        "contract_source_mass": {
+          "value": 0.7335440213815764,
+          "ci95": [
+            0.7097980573971122,
+            0.759122440128056
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "value": 0.383661466419403,
+          "ci95": [
+            0.33972576131176285,
+            0.42630984452541776
+          ]
+        },
+        "quantization_kl_nats": {
+          "value": 0.00256698169951994,
+          "ci95": [
+            0.00238187604054128,
+            0.0027457431069070693
+          ]
+        },
+        "quantization_tv": {
+          "value": 0.02257538480703482,
+          "ci95": [
+            0.02112380946337456,
+            0.023908968961234754
+          ]
+        },
+        "contract_exact_rate": {
+          "value": 0.8446666666666667,
+          "ci95": [
+            0.8290189853312815,
+            0.8597403473128354
+          ]
+        },
+        "record_ratio": {
+          "value": 0.02666666666666667,
+          "ci95": [
+            0.016375781081663435,
+            0.03781228899392303
+          ]
+        },
+        "sentence_complete_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "value": 0.25,
+          "ci95": [
+            0.1,
+            0.45
+          ]
+        }
+      }
+    },
+    "forward_top4": {
+      "run_label": "R045-K4",
+      "result_signature": "78219da2795f0beaa0a2a38ff10713f749256dd3e0b56440a5eaa6c3818f3e64",
+      "reference_dtype": "float16",
+      "replay_dtype": "bfloat16",
+      "contract_top_k": 4,
+      "trials": 20,
+      "tokens": 1623,
+      "corrected_exact": 20,
+      "corrected_exact_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "sentence_complete": 16,
+      "sentence_complete_wilson95": [
+        0.5839825677481064,
+        0.919342337420202
+      ],
+      "reference_tokens_per_second": 13.642576785861094,
+      "replay_tokens_per_second": 4.185117591109548,
+      "top4_coverage": 0.9950708564386938,
+      "top8_coverage": 1.0,
+      "metrics": {
+        "correction_rate": {
+          "value": 0.024029574861367836,
+          "ci95": [
+            0.01954971779668623,
+            0.028483019044938548
+          ]
+        },
+        "contract_source_mass": {
+          "value": 0.8446235597717205,
+          "ci95": [
+            0.8236217158728936,
+            0.862592568036936
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "value": 0.19780144165589647,
+          "ci95": [
+            0.17198029899595224,
+            0.22825539134836398
+          ]
+        },
+        "quantization_kl_nats": {
+          "value": 0.0024685986413091315,
+          "ci95": [
+            0.0022644529928711144,
+            0.00267848002955094
+          ]
+        },
+        "quantization_tv": {
+          "value": 0.021900923728073587,
+          "ci95": [
+            0.02044497898839871,
+            0.023409399682692206
+          ]
+        },
+        "contract_exact_rate": {
+          "value": 0.5933456561922366,
+          "ci95": [
+            0.5746084105026311,
+            0.6123399999023486
+          ]
+        },
+        "record_ratio": {
+          "value": 0.03203943314849045,
+          "ci95": [
+            0.02620576051540527,
+            0.03800287801287471
+          ]
+        },
+        "sentence_complete_rate": {
+          "value": 0.8,
+          "ci95": [
+            0.6,
+            0.95
+          ]
+        },
+        "corrected_exact_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "value": 0.05,
+          "ci95": [
+            0.0,
+            0.15
+          ]
+        }
+      }
+    },
+    "reverse_top2": {
+      "run_label": "R046-REVERSE",
+      "result_signature": "3f7389ea15417322e2f6ef46416ef3113e1cb9d12272e7b82f74dbf1c4f05c66",
+      "reference_dtype": "bfloat16",
+      "replay_dtype": "float16",
+      "contract_top_k": 2,
+      "trials": 20,
+      "tokens": 1561,
+      "corrected_exact": 20,
+      "corrected_exact_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "sentence_complete": 19,
+      "sentence_complete_wilson95": [
+        0.763868806553258,
+        0.9911185511992047
+      ],
+      "reference_tokens_per_second": 12.462465793415895,
+      "replay_tokens_per_second": 4.0535608256693765,
+      "top4_coverage": 0.9987187700192185,
+      "top8_coverage": 1.0,
+      "metrics": {
+        "correction_rate": {
+          "value": 0.02114029468289558,
+          "ci95": [
+            0.013788348990026936,
+            0.029013539651837523
+          ]
+        },
+        "contract_source_mass": {
+          "value": 0.7321686674937682,
+          "ci95": [
+            0.702071926338841,
+            0.764558636480247
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "value": 0.38656343134927157,
+          "ci95": [
+            0.33290752915014804,
+            0.43902982339468805
+          ]
+        },
+        "quantization_kl_nats": {
+          "value": 0.002662513894260206,
+          "ci95": [
+            0.0023755350639359262,
+            0.002935080430342884
+          ]
+        },
+        "quantization_tv": {
+          "value": 0.02423311495523164,
+          "ci95": [
+            0.02197126470757731,
+            0.026346790102864538
+          ]
+        },
+        "contract_exact_rate": {
+          "value": 0.8424087123638693,
+          "ci95": [
+            0.8239389860800879,
+            0.8615003420975467
+          ]
+        },
+        "record_ratio": {
+          "value": 0.028187059577194105,
+          "ci95": [
+            0.017968545604281735,
+            0.038685277067257
+          ]
+        },
+        "sentence_complete_rate": {
+          "value": 0.95,
+          "ci95": [
+            0.85,
+            1.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "value": 0.25,
+          "ci95": [
+            0.1,
+            0.45
+          ]
+        }
+      }
+    }
+  },
+  "comparisons": {
+    "top4_minus_top2": {
+      "matched_trials": 20,
+      "matching_reference_trajectories": 0,
+      "deltas": {
+        "correction_rate": {
+          "candidate_minus_baseline": 0.004029574861367836,
+          "paired_cluster_ci95": [
+            -0.005553292007317165,
+            0.013439856444606267
+          ]
+        },
+        "contract_source_mass": {
+          "candidate_minus_baseline": 0.11107953839014417,
+          "paired_cluster_ci95": [
+            0.09228807948377517,
+            0.13089762888365558
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "candidate_minus_baseline": -0.18586002476350655,
+          "paired_cluster_ci95": [
+            -0.22065740520885388,
+            -0.1522232165121524
+          ]
+        },
+        "quantization_kl_nats": {
+          "candidate_minus_baseline": -9.838305821080863e-05,
+          "paired_cluster_ci95": [
+            -0.00027724174933716335,
+            6.903403743397214e-05
+          ]
+        },
+        "quantization_tv": {
+          "candidate_minus_baseline": -0.0006744610789612346,
+          "paired_cluster_ci95": [
+            -0.0019362164121232224,
+            0.0005272306987049412
+          ]
+        },
+        "contract_exact_rate": {
+          "candidate_minus_baseline": -0.2513210104744301,
+          "paired_cluster_ci95": [
+            -0.2773513027264696,
+            -0.22677403114011835
+          ]
+        },
+        "record_ratio": {
+          "candidate_minus_baseline": 0.00537276648182378,
+          "paired_cluster_ci95": [
+            -0.0078229484247743,
+            0.01807190722943501
+          ]
+        },
+        "sentence_complete_rate": {
+          "candidate_minus_baseline": -0.19999999999999996,
+          "paired_cluster_ci95": [
+            -0.4,
+            -0.050000000000000044
+          ]
+        },
+        "corrected_exact_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "candidate_minus_baseline": -0.2,
+          "paired_cluster_ci95": [
+            -0.4,
+            0.0
+          ]
+        }
+      }
+    },
+    "reverse_minus_forward_top2": {
+      "matched_trials": 20,
+      "matching_reference_trajectories": 5,
+      "deltas": {
+        "correction_rate": {
+          "candidate_minus_baseline": 0.0011402946828955804,
+          "paired_cluster_ci95": [
+            -0.008774841902170715,
+            0.0108045874261947
+          ]
+        },
+        "contract_source_mass": {
+          "candidate_minus_baseline": -0.001375353887808184,
+          "paired_cluster_ci95": [
+            -0.018208024028594713,
+            0.015163654144857201
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "candidate_minus_baseline": 0.00290196492986855,
+          "paired_cluster_ci95": [
+            -0.0267999495233104,
+            0.03269703986203078
+          ]
+        },
+        "quantization_kl_nats": {
+          "candidate_minus_baseline": 9.553219474026575e-05,
+          "paired_cluster_ci95": [
+            -6.471722367589142e-05,
+            0.0002703869256338495
+          ]
+        },
+        "quantization_tv": {
+          "candidate_minus_baseline": 0.001657730148196819,
+          "paired_cluster_ci95": [
+            0.0003501088305475932,
+            0.0030187054774985242
+          ]
+        },
+        "contract_exact_rate": {
+          "candidate_minus_baseline": -0.0022579543027974047,
+          "paired_cluster_ci95": [
+            -0.016420081680820535,
+            0.012457679047003066
+          ]
+        },
+        "record_ratio": {
+          "candidate_minus_baseline": 0.001520392910527437,
+          "paired_cluster_ci95": [
+            -0.01178288544266695,
+            0.014746849122058949
+          ]
+        },
+        "sentence_complete_rate": {
+          "candidate_minus_baseline": -0.050000000000000044,
+          "paired_cluster_ci95": [
+            -0.15000000000000002,
+            0.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  },
+  "analysis_signature": "ed69c9654ab0b7443a16f682380c8db9b8250bb2a8ab0235e589c2ce8808d749"
+}
