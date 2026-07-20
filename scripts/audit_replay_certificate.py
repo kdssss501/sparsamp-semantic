@@ -23,6 +23,7 @@ from sparsamp_semantic.providers.huggingface import (  # noqa: E402
     HuggingFaceConfig,
     HuggingFaceProvider,
 )
+from sparsamp_semantic.finishing import is_sentence_complete  # noqa: E402
 from sparsamp_semantic.replay_certificate import (  # noqa: E402
     ReplayContractConfig,
     build_manifest,
@@ -143,6 +144,12 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
                 and all("mean_contract_truncation_kl_nats" in row for row in completed)
                 else None
             ),
+            "sentence_complete_successes": sum(
+                bool(row.get("sentence_complete")) for row in completed
+            ),
+            "mean_token_count": (
+                mean(int(row["token_count"]) for row in completed) if completed else None
+            ),
         }
     return result
 
@@ -154,6 +161,8 @@ def result_signature(rows: list[dict[str, Any]]) -> str:
             {
                 "trial_key": list(trial_key(row)),
                 "reference_token_sha256": row.get("reference_token_sha256"),
+                "token_count": row.get("token_count"),
+                "sentence_complete": row.get("sentence_complete"),
                 "corrections": row.get("corrections"),
                 "corrected_exact": row.get("corrected_exact"),
                 "uncorrected_exact": row.get("uncorrected_exact"),
@@ -186,6 +195,7 @@ def experiment_config(args: Any) -> dict[str, Any]:
         "reference_dtype": args.reference_dtype,
         "replay_dtype": args.replay_dtype,
         "tokens": args.tokens,
+        "sentence_stop_min_tokens": args.sentence_stop_min_tokens,
         "seeds": args.seeds,
         "policies": args.policies,
         "envelope_top_k": args.envelope_top_k,
@@ -269,6 +279,7 @@ def generate_reference(
     token_ids: list[int] = []
     contracts: list[dict[str, Any]] = []
     started = perf_counter()
+    stopped_on_sentence = False
     for step in range(args.tokens):
         snapshot = session.next_distribution()
         decision = contract_decision(snapshot, step, context, contract_config, policy=policy)
@@ -296,6 +307,14 @@ def generate_reference(
             }
         )
         session.append(decision.token_id)
+        if (
+            args.sentence_stop_min_tokens > 0
+            and step + 1 >= args.sentence_stop_min_tokens
+            and is_sentence_complete(session.render())
+        ):
+            stopped_on_sentence = True
+            break
+    reference_text = session.render()
     return {
         "reference_completed": True,
         "token_count": len(token_ids),
@@ -303,7 +322,9 @@ def generate_reference(
         "reference_token_sha256": hashlib.sha256(
             b"".join(token.to_bytes(4, "big") for token in token_ids)
         ).hexdigest(),
-        "reference_text": session.render(),
+        "reference_text": reference_text,
+        "sentence_complete": is_sentence_complete(reference_text),
+        "stopped_on_sentence": stopped_on_sentence,
         "reference_contracts": contracts,
         "reference_seconds": perf_counter() - started,
         "mean_reference_source_mass": mean(item["source_mass"] for item in contracts),
@@ -329,6 +350,7 @@ def run_replay(
 ) -> None:
     prompt = str(row["prompt"])
     reference = [int(token) for token in row["reference_token_ids"]]
+    token_count = len(reference)
     contract_config = replay_config(args, int(row["seed"]))
     context = decision_context(args.model, prompt, contract_config)
 
@@ -364,7 +386,7 @@ def run_replay(
     manifest = build_manifest(tuple(reference), tuple(local_shared_choices))
     corrected = provider.start(prompt)
     corrected_tokens: list[int] = []
-    for step in range(args.tokens):
+    for step in range(token_count):
         snapshot = corrected.next_distribution()
         decision = contract_decision(
             snapshot, step, context, contract_config, policy=str(row["policy"])
@@ -375,7 +397,7 @@ def run_replay(
 
     uncorrected = provider.start(prompt)
     uncorrected_tokens: list[int] = []
-    for step in range(args.tokens):
+    for step in range(token_count):
         snapshot = uncorrected.next_distribution()
         decision = contract_decision(
             snapshot, step, context, contract_config, policy=str(row["policy"])
@@ -391,7 +413,7 @@ def run_replay(
             "replay_completed": True,
             "corrections": [asdict(item) for item in manifest.corrections],
             "correction_count": len(manifest.corrections),
-            "correction_rate": len(manifest.corrections) / args.tokens,
+            "correction_rate": len(manifest.corrections) / token_count,
             "corrected_exact": corrected_tokens == reference,
             "corrected_text": corrected.render(),
             "uncorrected_exact": uncorrected_tokens == reference,
@@ -401,12 +423,12 @@ def run_replay(
             "uncorrected_positional_agreement": sum(
                 left == right for left, right in zip(reference, uncorrected_tokens, strict=True)
             )
-            / args.tokens,
+            / token_count,
             "uncorrected_text": uncorrected.render(),
             "reference_tokens_in_envelope": reference_in_envelope,
             "mean_reference_rank_in_replay": mean(reference_ranks),
             "shared_contract_exact_steps": contract_exact,
-            "shared_contract_exact_rate": contract_exact / args.tokens,
+            "shared_contract_exact_rate": contract_exact / token_count,
             "sparse_payload_bytes": sparse_bytes,
             "full_trace_payload_bytes": full_bytes,
             "sparse_to_full_payload_ratio": sparse_bytes / full_bytes,
@@ -422,6 +444,12 @@ def main() -> int:
     parser.add_argument("--reference-dtype", default="float32")
     parser.add_argument("--replay-dtype", default="float16")
     parser.add_argument("--tokens", type=int, default=64)
+    parser.add_argument(
+        "--sentence-stop-min-tokens",
+        type=int,
+        default=0,
+        help="after this many tokens, stop at the first complete sentence; zero disables",
+    )
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1])
     parser.add_argument("--policies", nargs="+", default=["seeded", "greedy"])
     parser.add_argument("--envelope-top-k", type=int, default=16)
@@ -437,6 +465,8 @@ def main() -> int:
     args = parser.parse_args()
     if args.tokens < 1 or len(args.seeds) != len(set(args.seeds)):
         raise ValueError("tokens must be positive and seeds unique")
+    if not 0 <= args.sentence_stop_min_tokens <= args.tokens:
+        raise ValueError("sentence stop minimum must lie between zero and max tokens")
     if set(args.policies) - {"seeded", "greedy"}:
         raise ValueError("policies must be seeded or greedy")
     if len(args.policies) != len(set(args.policies)):

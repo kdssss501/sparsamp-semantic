@@ -21,6 +21,7 @@ def test_replay_summary_keeps_corrected_and_uncorrected_results_separate() -> No
             "shared_contract_exact_rate": 0.9,
             "mean_contract_source_mass": 0.5,
             "mean_contract_truncation_kl_nats": 0.7,
+            "sentence_complete": True,
         }
     ]
     result = summarize(rows)["seeded"]
@@ -28,6 +29,8 @@ def test_replay_summary_keeps_corrected_and_uncorrected_results_separate() -> No
     assert result["uncorrected_exact_successes"] == 0
     assert result["mean_correction_rate"] == 0.1
     assert result["mean_contract_source_mass"] == 0.5
+    assert result["sentence_complete_successes"] == 1
+    assert result["mean_token_count"] == 10
 
 
 def test_result_signature_excludes_runtime_only_fields() -> None:
