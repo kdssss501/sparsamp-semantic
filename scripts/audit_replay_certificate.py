@@ -49,6 +49,18 @@ def config_signature(config: dict[str, Any]) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def load_prompts(path: Path | None) -> tuple[str, ...]:
+    if path is None:
+        return DEFAULT_PROMPTS
+    values = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(values, list) or not values:
+        raise ValueError("prompt file must contain a non-empty JSON list")
+    prompts = tuple(str(value).strip() for value in values)
+    if any(not prompt for prompt in prompts) or len(prompts) != len(set(prompts)):
+        raise ValueError("prompts must be non-empty and unique")
+    return prompts
+
+
 def write_report(path: Path, report: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -115,6 +127,23 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
                 if completed
                 else None
             ),
+            "reference_token_top4_coverage": (
+                sum(int(row["reference_tokens_in_top4"]) for row in completed)
+                / sum(int(row["token_count"]) for row in completed)
+                if completed
+                else None
+            ),
+            "reference_token_top8_coverage": (
+                sum(int(row["reference_tokens_in_top8"]) for row in completed)
+                / sum(int(row["token_count"]) for row in completed)
+                if completed
+                else None
+            ),
+            "max_reference_rank_in_replay": (
+                max(int(row["max_reference_rank_in_replay"]) for row in completed)
+                if completed
+                else None
+            ),
             "mean_sparse_to_full_payload_ratio": (
                 mean(float(row["sparse_to_full_payload_ratio"]) for row in completed)
                 if completed
@@ -175,6 +204,11 @@ def result_signature(rows: list[dict[str, Any]]) -> str:
                 "reference_tokens_in_envelope": row.get(
                     "reference_tokens_in_envelope"
                 ),
+                "reference_tokens_in_top4": row.get("reference_tokens_in_top4"),
+                "reference_tokens_in_top8": row.get("reference_tokens_in_top8"),
+                "max_reference_rank_in_replay": row.get(
+                    "max_reference_rank_in_replay"
+                ),
                 "shared_contract_exact_steps": row.get("shared_contract_exact_steps"),
                 "sparse_payload_bytes": row.get("sparse_payload_bytes"),
                 "full_trace_payload_bytes": row.get("full_trace_payload_bytes"),
@@ -205,13 +239,14 @@ def experiment_config(args: Any) -> dict[str, Any]:
         "temperature": args.temperature,
         "vocabulary_size": args.vocabulary_size,
         "system_prompt": args.system_prompt,
-        "prompts": list(DEFAULT_PROMPTS),
+        "prompts_file": str(args.prompts_file) if args.prompts_file else None,
+        "prompts": list(args.prompt_values),
     }
 
 
 def build_report(args: Any, rows: list[dict[str, Any]], phase: str) -> dict[str, Any]:
     config = experiment_config(args)
-    expected = len(DEFAULT_PROMPTS) * len(args.seeds) * len(args.policies)
+    expected = len(args.prompt_values) * len(args.seeds) * len(args.policies)
     return {
         "schema": SCHEMA,
         "run_label": args.run_label,
@@ -358,6 +393,8 @@ def run_replay(
     local_shared_choices: list[int] = []
     contract_exact = 0
     reference_in_envelope = 0
+    reference_in_top4 = 0
+    reference_in_top8 = 0
     reference_ranks: list[int] = []
     started = perf_counter()
     for step, reference_token in enumerate(reference):
@@ -380,7 +417,10 @@ def run_replay(
             row["replay_seconds"] = perf_counter() - started
             return
         reference_in_envelope += 1
-        reference_ranks.append(ranked[reference_token])
+        reference_rank = ranked[reference_token]
+        reference_ranks.append(reference_rank)
+        reference_in_top4 += int(reference_rank < 4)
+        reference_in_top8 += int(reference_rank < 8)
         shared.append(reference_token)
 
     manifest = build_manifest(tuple(reference), tuple(local_shared_choices))
@@ -426,7 +466,10 @@ def run_replay(
             / token_count,
             "uncorrected_text": uncorrected.render(),
             "reference_tokens_in_envelope": reference_in_envelope,
+            "reference_tokens_in_top4": reference_in_top4,
+            "reference_tokens_in_top8": reference_in_top8,
             "mean_reference_rank_in_replay": mean(reference_ranks),
+            "max_reference_rank_in_replay": max(reference_ranks),
             "shared_contract_exact_steps": contract_exact,
             "shared_contract_exact_rate": contract_exact / token_count,
             "sparse_payload_bytes": sparse_bytes,
@@ -459,10 +502,12 @@ def main() -> int:
     parser.add_argument("--temperature", type=float, default=1.2)
     parser.add_argument("--vocabulary-size", type=int, default=50257)
     parser.add_argument("--system-prompt", default=DEFAULT_SYSTEM_PROMPT)
+    parser.add_argument("--prompts-file", type=Path, default=None)
     parser.add_argument("--run-label", default="R041")
     parser.add_argument("--output", type=Path, default=Path("outputs/R041_gpt2_replay_certificate.json"))
     parser.add_argument("--fresh", action="store_true")
     args = parser.parse_args()
+    args.prompt_values = load_prompts(args.prompts_file)
     if args.tokens < 1 or len(args.seeds) != len(set(args.seeds)):
         raise ValueError("tokens must be positive and seeds unique")
     if not 0 <= args.sentence_stop_min_tokens <= args.tokens:
@@ -482,7 +527,7 @@ def main() -> int:
 
     pending_reference = [
         (prompt_index, prompt, seed, policy)
-        for prompt_index, prompt in enumerate(DEFAULT_PROMPTS)
+        for prompt_index, prompt in enumerate(args.prompt_values)
         for seed in args.seeds
         for policy in args.policies
         if not bool(by_key.get((prompt_index, seed, policy), {}).get("reference_completed"))
