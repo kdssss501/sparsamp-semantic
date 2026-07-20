@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
+import pytest
+
 from scripts.audit_byte_sliced_aead import (
     KEY,
     authenticated_message,
     bit_errors,
+    build_report,
+    experiment_config,
+    load_checkpoint_rows,
     message_frame,
     raw_symbol_errors,
+    trial_key,
     variant_name,
+    write_report,
 )
 from sparsamp_semantic.byte_sliced import ByteSlicedCodec, ByteSlicedConfig
 from sparsamp_semantic.providers.mock import MockProvider
@@ -51,3 +60,54 @@ def test_mock_byte_sliced_frame_authenticates_end_to_end() -> None:
 
     assert decoded.payload_bytes == frame
     assert authenticated_message(decoded.payload_bytes, message) == (True, None)
+
+
+def test_checkpoint_resume_requires_exact_experiment_config(tmp_path) -> None:
+    args = SimpleNamespace(
+        run_label="R031",
+        model="models/gpt2",
+        device="cuda",
+        reference_dtype="float32",
+        replay_dtype="float16",
+        top_p=0.95,
+        window_tokens=8,
+    )
+    variants = [(16, 0.0625)]
+    row = {
+        "prompt_index": 0,
+        "message_index": 0,
+        "parity_bytes": 16,
+        "logit_quantum": 0.0625,
+    }
+    output = tmp_path / "checkpoint.json"
+    write_report(output, build_report(args, variants, [row], "reference_partial"))
+
+    signature = experiment_config(args, variants)
+    assert load_checkpoint_rows(output, signature) == [row]
+    assert trial_key(row) == (0, 0, 16, 0.0625)
+    with pytest.raises(ValueError, match="does not match"):
+        load_checkpoint_rows(output, {**signature, "top_p": 0.8})
+
+
+def test_checkpoint_rejects_duplicate_trials(tmp_path) -> None:
+    args = SimpleNamespace(
+        run_label="R031",
+        model="models/gpt2",
+        device="cuda",
+        reference_dtype="float32",
+        replay_dtype="float16",
+        top_p=0.95,
+        window_tokens=8,
+    )
+    variants = [(16, 0.0625)]
+    row = {
+        "prompt_index": 0,
+        "message_index": 0,
+        "parity_bytes": 16,
+        "logit_quantum": 0.0625,
+    }
+    output = tmp_path / "duplicates.json"
+    write_report(output, build_report(args, variants, [row, dict(row)], "reference_partial"))
+
+    with pytest.raises(ValueError, match="duplicate"):
+        load_checkpoint_rows(output, experiment_config(args, variants))

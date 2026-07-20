@@ -54,4 +54,6 @@ RS 的可纠正条件为
   判断 parity 16 或 32 的成败。
 - 已修改审计脚本：每完成一个 reference/replay trial 都原子写入 checkpoint，
   `phase` 分别为 `reference_partial`、`replay_partial` 或 `completed`。
-- 根据实验协议不自动重跑；需要新的运行确认和更长 timeout。
+- checkpoint 包含完整实验配置签名；再次运行相同命令会自动跳过已完成的
+  reference/replay trial。参数不一致时拒绝合并；只有显式 `--fresh` 才从零开始。
+- 用户已确认授权以更长 timeout 重跑，并要求每次保留上次进度。

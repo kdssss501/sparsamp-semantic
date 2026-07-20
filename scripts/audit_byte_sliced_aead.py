@@ -92,6 +92,17 @@ def normalized_quantum(value: float | None) -> float | None:
     return None if value == 0 else value
 
 
+def trial_key(row: dict[str, Any]) -> tuple[int, int, int, float | None]:
+    """Return the stable identity of one prompt/message/variant trial."""
+
+    return (
+        int(row["prompt_index"]),
+        int(row["message_index"]),
+        int(row["parity_bytes"]),
+        normalized_quantum(row.get("logit_quantum")),
+    )
+
+
 def summarize(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
     for variant in sorted({str(row["variant"]) for row in rows}):
@@ -171,6 +182,7 @@ def build_report(
         "environment": {"python": platform.python_version(), "platform": platform.platform()},
         "reference_dtype": args.reference_dtype,
         "replay_dtype": args.replay_dtype,
+        "experiment_config": experiment_config(args, variants),
         "prompt_count": len(DEFAULT_PROMPTS),
         "message_count": len(DEFAULT_MESSAGES),
         "variants": [variant_name(parity, quantum) for parity, quantum in variants],
@@ -188,6 +200,44 @@ def write_report(path: Path, report: dict[str, Any]) -> None:
     temporary.replace(path)
 
 
+def experiment_config(
+    args: Any, variants: list[tuple[int, float | None]]
+) -> dict[str, Any]:
+    """Return the fields that must match before checkpoint rows can be reused."""
+
+    return {
+        "model": str(args.model),
+        "device": str(args.device),
+        "reference_dtype": str(args.reference_dtype),
+        "replay_dtype": str(args.replay_dtype),
+        "top_p": float(args.top_p),
+        "window_tokens": int(args.window_tokens),
+        "variants": [variant_name(parity, quantum) for parity, quantum in variants],
+    }
+
+
+def load_checkpoint_rows(
+    path: Path, expected_config: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Load compatible completed rows and reject mixed experiment settings."""
+
+    if not path.exists():
+        return []
+    report = json.loads(path.read_text(encoding="utf-8"))
+    if report.get("experiment_config") != expected_config:
+        raise ValueError(
+            "checkpoint experiment_config does not match this command; "
+            "use another output path or pass --fresh"
+        )
+    rows = report.get("rows")
+    if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
+        raise ValueError("checkpoint rows must be a list of objects")
+    keys = [trial_key(row) for row in rows]
+    if len(keys) != len(set(keys)):
+        raise ValueError("checkpoint contains duplicate trial identities")
+    return rows
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default="models/gpt2")
@@ -199,6 +249,11 @@ def main() -> int:
     parser.add_argument("--parity-bytes", type=int, nargs="+", default=[2])
     parser.add_argument("--logit-quantum", type=float, nargs="+", default=[None])
     parser.add_argument("--run-label", default="R030")
+    parser.add_argument(
+        "--fresh",
+        action="store_true",
+        help="ignore a compatible checkpoint and start the output from zero trials",
+    )
     parser.add_argument(
         "--output", type=Path, default=Path("outputs/R030_gpt2_aead_byte_sliced.json")
     )
@@ -212,10 +267,24 @@ def main() -> int:
         "allow_eos": False,
         "adaptive_temperature": False,
     }
-    rows: list[dict[str, Any]] = []
     quantum_values = [normalized_quantum(value) for value in args.logit_quantum]
     variants = [(parity, quantum) for quantum in quantum_values for parity in args.parity_bytes]
+    config_signature = experiment_config(args, variants)
+    rows: list[dict[str, Any]] = (
+        [] if args.fresh else load_checkpoint_rows(args.output, config_signature)
+    )
+    if args.fresh:
+        write_report(args.output, build_report(args, variants, rows, "initialized"))
+    reference_keys = {trial_key(row) for row in rows}
     for quantum in quantum_values:
+        pending_reference = any(
+            (prompt_index, message_index, parity, quantum) not in reference_keys
+            for prompt_index in range(len(DEFAULT_PROMPTS))
+            for message_index in range(len(DEFAULT_MESSAGES))
+            for parity in args.parity_bytes
+        )
+        if not pending_reference:
+            continue
         reference_provider = HuggingFaceProvider(
             HuggingFaceConfig(dtype=args.reference_dtype, logit_quantum=quantum, **common)
         )
@@ -223,6 +292,9 @@ def main() -> int:
             for message_index, message in enumerate(DEFAULT_MESSAGES):
                 frame = message_frame(message, prompt_index, message_index)
                 for parity in args.parity_bytes:
+                    key = (prompt_index, message_index, parity, quantum)
+                    if key in reference_keys:
+                        continue
                     config = ByteSlicedConfig(window_tokens=args.window_tokens, parity_bytes=parity)
                     codec = ByteSlicedCodec(config)
                     row: dict[str, Any] = {
@@ -245,12 +317,15 @@ def main() -> int:
                         "bit_errors": len(frame) * 8,
                         "cross_precision_erasures": 0,
                         "cross_precision_raw_symbol_errors": 0,
+                        "cross_precision_processed": False,
                     }
                     try:
                         encoded = codec.encode(reference_provider.start(prompt), frame, KEY)
                     except Exception as error:  # noqa: BLE001 - preserve exact experiment failure
                         row["encode_error"] = {"type": type(error).__name__, "message": str(error)}
+                        row["cross_precision_processed"] = True
                         rows.append(row)
+                        reference_keys.add(key)
                         write_report(
                             args.output,
                             build_report(args, variants, rows, "reference_partial"),
@@ -281,6 +356,7 @@ def main() -> int:
                             f"{type(error).__name__}: {error}"
                         )
                     rows.append(row)
+                    reference_keys.add(key)
                     write_report(
                         args.output,
                         build_report(args, variants, rows, "reference_partial"),
@@ -289,11 +365,23 @@ def main() -> int:
         release_cuda()
 
     for quantum in quantum_values:
+        pending_replay = any(
+            row["logit_quantum"] == quantum
+            and bool(row["encode_success"])
+            and not bool(row.get("cross_precision_processed"))
+            for row in rows
+        )
+        if not pending_replay:
+            continue
         replay_provider = HuggingFaceProvider(
             HuggingFaceConfig(dtype=args.replay_dtype, logit_quantum=quantum, **common)
         )
         for row in rows:
-            if row["logit_quantum"] != quantum or not row["encode_success"]:
+            if (
+                row["logit_quantum"] != quantum
+                or not row["encode_success"]
+                or row.get("cross_precision_processed")
+            ):
                 continue
             codec = ByteSlicedCodec(ByteSlicedConfig(**row["codec"]))
             frame = message_frame(str(row["message"]), int(row["prompt_index"]), int(row["message_index"]))
@@ -322,6 +410,7 @@ def main() -> int:
             except Exception as error:  # noqa: BLE001
                 row["decode_error"] = f"{type(error).__name__}: {error}"
                 row["cross_precision_raw_symbol_errors"] = len(expected_codeword)
+            row["cross_precision_processed"] = True
             write_report(
                 args.output,
                 build_report(args, variants, rows, "replay_partial"),
