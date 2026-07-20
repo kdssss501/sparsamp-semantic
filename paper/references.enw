@@ -1,0 +1,103 @@
+%0 Unpublished Work
+%A Yuan, Jiayi
+%A Li, Hao
+%A Ding, Xinheng
+%A Xie, Wenya
+%A Li, Yu-Jhe
+%A Zhao, Wentian
+%A Wan, Kun
+%A Shi, Jing
+%A Hu, Xia
+%A Liu, Zirui
+%T Understanding and Mitigating Numerical Sources of Nondeterminism in LLM Inference
+%D 2025
+%M arXiv:2506.09501
+%U https://arxiv.org/abs/2506.09501
+
+%0 Unpublished Work
+%A Karvonen, Adam
+%A Reuter, Daniel
+%A Rinberg, Roy
+%A Marks, Luke
+%A Garriga-Alonso, Adria
+%A Warr, Keri
+%T DiFR: Inference Verification Despite Nondeterminism
+%D 2025
+%M arXiv:2511.20621
+%U https://arxiv.org/abs/2511.20621
+
+%0 Conference Proceedings
+%A Wang, Yaofei
+%A Pei, Gang
+%A Chen, Kejiang
+%A Ding, Jinyang
+%A Pan, Chao
+%A Pang, Weilong
+%A Hu, Donghui
+%A Zhang, Weiming
+%T SparSamp: Efficient Provably Secure Steganography Based on Sparse Sampling
+%B 34th USENIX Security Symposium (USENIX Security 25)
+%D 2025
+%P 6817-6835
+%I USENIX Association
+%U https://www.usenix.org/conference/usenixsecurity25/presentation/wang-yaofei
+
+%0 Conference Proceedings
+%A Yan, Ruiyi
+%A Murawaki, Yugo
+%T Efficient Provably Secure Linguistic Steganography via Range Coding
+%B Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)
+%D 2026
+%P 890-907
+%I Association for Computational Linguistics
+%R 10.18653/v1/2026.acl-long.39
+%U https://aclanthology.org/2026.acl-long.39/
+
+%0 Conference Proceedings
+%A Cao, Wenzhao
+%A Wang, Yaofei
+%A Hu, Donghui
+%T Breaking the "Provable Security": Detecting Finite-Precision Artifacts in LLM-based Steganography via Low-Probability Vanishing
+%B Findings of the Association for Computational Linguistics: ACL 2026
+%D 2026
+%P 20262-20274
+%I Association for Computational Linguistics
+%R 10.18653/v1/2026.findings-acl.1013
+%U https://aclanthology.org/2026.findings-acl.1013/
+
+%0 Unpublished Work
+%A Qwen Team
+%T Qwen2.5 Technical Report
+%D 2024
+%M arXiv:2412.15115
+%U https://arxiv.org/abs/2412.15115
+
+%0 Unpublished Work
+%A Pang, Kaiyi
+%A Bai, Minhao
+%T Provably Secure Steganography Based on List Decoding
+%D 2026
+%M arXiv:2604.21394
+%U https://arxiv.org/abs/2604.21394
+
+%0 Unpublished Work
+%A Bar-Lev, Daniella
+%A Farnoud, Farzad
+%A Gabrys, Ryan
+%T An Additive Approximation Scheme for Generating Dyadic Codings for the Outputs of an LLM
+%D 2026
+%M arXiv:2605.05837
+%U https://arxiv.org/abs/2605.05837
+
+%0 Unpublished Work
+%A Wang, Yaofei
+%A Wang, Rui
+%A Pang, Weilong
+%A Han, JiaLiang
+%A Qi, Yuan
+%A Hu, Donghui
+%A Chen, Kejiang
+%T ReTokSync: Self-Synchronizing Tokenization Disambiguation for Generative Linguistic Steganography
+%D 2026
+%M arXiv:2604.25486
+%U https://arxiv.org/abs/2604.25486
