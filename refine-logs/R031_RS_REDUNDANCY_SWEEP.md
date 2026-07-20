@@ -57,3 +57,45 @@ RS 的可纠正条件为
 - checkpoint 包含完整实验配置签名；再次运行相同命令会自动跳过已完成的
   reference/replay trial。参数不一致时拒绝合并；只有显式 `--fresh` 才从零开始。
 - 用户已确认授权以更长 timeout 重跑，并要求每次保留上次进度。
+
+## Parity=16 实测结果（2026-07-20）
+
+输出：`outputs/R031_gpt2_aead_rs16.json`，`phase=completed`，文件包含完整
+6 条 reference 与 6 条 replay trial。
+
+| 指标 | 结果 |
+|---|---:|
+| 编码成功 | 6/6 |
+| 同精度 frame / message 成功 | 6/6, 6/6 |
+| FP32→FP16 frame / message 成功 | 0/6, 0/6 |
+| 平均 frame bytes | 50 |
+| 平均 payload bits/token | 0.75735 |
+| 平均 codeword bits/token | 1.0 |
+| 平均擦除 `s` | 21.83 |
+| 平均 raw symbol errors | 38.17 |
+
+逐条 oracle 诊断（`e = raw_errors - s`）如下：
+
+| prompt/message | codeword bytes | `s` | `e` | `2e+s` | parity |
+|---|---:|---:|---:|---:|---:|
+| 0/0 | 64 | 36 | 9 | 54 | 16 |
+| 0/1 | 68 | 23 | 20 | 63 | 16 |
+| 1/0 | 64 | 22 | 20 | 62 | 16 |
+| 1/1 | 68 | 13 | 16 | 45 | 16 |
+| 2/0 | 64 | 17 | 13 | 43 | 16 |
+| 2/1 | 68 | 20 | 20 | 60 | 16 |
+
+`2e+s` 依赖已知正确 codeword，只能用于离线诊断，不能作为实际 decoder
+的可用信息。所有 trial 的需求均显著高于 parity=16，失败不是边界偶然波动。
+
+相较 R030 的 `q=1/16, parity=2`，平均擦除由 17.67 增至 21.83，平均
+raw symbol errors 由 29.33 增至 38.17；随 codeword 变长，错误数量同步增长。
+净容量从约 0.9615 降到 0.7574 payload bit/token，仍未换来任何完整消息成功。
+
+## 阶段判定
+
+R031 判定为 **RS-only NO-GO（parity=16）**：增加固定外码冗余不能解决
+FP32/FP16 概率合同破坏。`parity=32` 可以作为 reviewer-facing 的确认实验，
+但按当前最小 `2e+s=43` 仍不足，且新增窗口会继续引入错误，因此不再作为
+最高优先级。下一阶段应研究窗口级重同步、可观测可靠性判定或编码/解码共享
+的离散概率合同，而不是继续无界增加 RS parity。
