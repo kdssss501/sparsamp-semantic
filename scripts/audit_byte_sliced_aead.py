@@ -155,6 +155,39 @@ def release_cuda() -> None:
         pass
 
 
+def build_report(
+    args: Any,
+    variants: list[tuple[int, float | None]],
+    rows: list[dict[str, Any]],
+    phase: str,
+) -> dict[str, Any]:
+    """Build a complete or checkpoint report without exposing key material."""
+
+    return {
+        "schema": f"sparsamp-{args.run_label.lower()}-aead-byte-sliced-pilot-v1",
+        "run_label": args.run_label,
+        "phase": phase,
+        "timestamp": datetime.now(UTC).isoformat(),
+        "environment": {"python": platform.python_version(), "platform": platform.platform()},
+        "reference_dtype": args.reference_dtype,
+        "replay_dtype": args.replay_dtype,
+        "prompt_count": len(DEFAULT_PROMPTS),
+        "message_count": len(DEFAULT_MESSAGES),
+        "variants": [variant_name(parity, quantum) for parity, quantum in variants],
+        "summary": summarize(rows) if phase == "completed" else {},
+        "rows": rows,
+    }
+
+
+def write_report(path: Path, report: dict[str, Any]) -> None:
+    """Atomically persist a report so timeouts retain completed trials."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    temporary.replace(path)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default="models/gpt2")
@@ -165,6 +198,7 @@ def main() -> int:
     parser.add_argument("--window-tokens", type=int, default=8)
     parser.add_argument("--parity-bytes", type=int, nargs="+", default=[2])
     parser.add_argument("--logit-quantum", type=float, nargs="+", default=[None])
+    parser.add_argument("--run-label", default="R030")
     parser.add_argument(
         "--output", type=Path, default=Path("outputs/R030_gpt2_aead_byte_sliced.json")
     )
@@ -217,6 +251,10 @@ def main() -> int:
                     except Exception as error:  # noqa: BLE001 - preserve exact experiment failure
                         row["encode_error"] = {"type": type(error).__name__, "message": str(error)}
                         rows.append(row)
+                        write_report(
+                            args.output,
+                            build_report(args, variants, rows, "reference_partial"),
+                        )
                         continue
                     row.update(
                         {
@@ -243,6 +281,10 @@ def main() -> int:
                             f"{type(error).__name__}: {error}"
                         )
                     rows.append(row)
+                    write_report(
+                        args.output,
+                        build_report(args, variants, rows, "reference_partial"),
+                    )
         del reference_provider
         release_cuda()
 
@@ -280,22 +322,14 @@ def main() -> int:
             except Exception as error:  # noqa: BLE001
                 row["decode_error"] = f"{type(error).__name__}: {error}"
                 row["cross_precision_raw_symbol_errors"] = len(expected_codeword)
+            write_report(
+                args.output,
+                build_report(args, variants, rows, "replay_partial"),
+            )
         del replay_provider
         release_cuda()
-    report = {
-        "schema": "sparsamp-r030-aead-byte-sliced-pilot-v1",
-        "timestamp": datetime.now(UTC).isoformat(),
-        "environment": {"python": platform.python_version(), "platform": platform.platform()},
-        "reference_dtype": args.reference_dtype,
-        "replay_dtype": args.replay_dtype,
-        "prompt_count": len(DEFAULT_PROMPTS),
-        "message_count": len(DEFAULT_MESSAGES),
-        "variants": [variant_name(parity, quantum) for parity, quantum in variants],
-        "summary": summarize(rows),
-        "rows": rows,
-    }
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    report = build_report(args, variants, rows, "completed")
+    write_report(args.output, report)
     print(json.dumps(report["summary"], ensure_ascii=False, indent=2))
     return 0
 
