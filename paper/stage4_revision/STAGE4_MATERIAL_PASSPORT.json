@@ -1,0 +1,47 @@
+{
+  "schema": "stage4-revision-passport-v1",
+  "stage": "4",
+  "status": "PASS_WITH_RESIDUALS",
+  "manuscript": {
+    "path": "paper/MANUSCRIPT_DRAFT.md",
+    "version": "v0.3",
+    "sha256": "5510cf05dbfa6732f53e93be128eceb045537c62a64684bc867d80e5c25bf3a8"
+  },
+  "new_evidence": [
+    {
+      "id": "R050",
+      "path": "docs/reproducibility/R050_INTEGER_APPORTIONMENT.json",
+      "sha256": "ccdb2fced2119adec6bb272b73bc944aeca2636715b3dbb73d8ef99765fb2453",
+      "status": "ANALYZED"
+    },
+    {
+      "id": "R051",
+      "path": "docs/reproducibility/R051_REPLAY_BASELINES.json",
+      "sha256": "514ed85e279ab703fc38b2309dfd043e8f194d53cac9079cd6983239bc778a67",
+      "status": "ANALYZED"
+    },
+    {
+      "id": "R052",
+      "path": "docs/reproducibility/R052_UNQUANTIZED_DELTA_ANALYSIS.json",
+      "sha256": "68c993d67c69ced9b579bbee7ad371173f51755228647d858e1c1b7dfe315e1d",
+      "status": "ANALYZED"
+    }
+  ],
+  "gates": {
+    "ruff": "PASS",
+    "pytest": "PASS",
+    "manuscript_integrity": {
+      "passed": 39,
+      "failed": 0,
+      "status": "PASS_WITH_AUTHOR_INPUT"
+    }
+  },
+  "residuals": [
+    "Independent physical-GPU replay is not available.",
+    "Full q/T/B/k sensitivity is incomplete.",
+    "Human semantic evaluation is not available.",
+    "Author metadata and immutable archive DOI are pending."
+  ],
+  "next_stage": "3-prime-focused-re-review",
+  "requires_author_confirmation": true
+}

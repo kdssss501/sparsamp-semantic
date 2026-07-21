@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import ROUND_FLOOR, Decimal, localcontext
 from fractions import Fraction
+from math import inf, log
 from typing import Any, Literal, Sequence
 
 
@@ -111,6 +112,77 @@ class IntegerMassAllocation:
     @property
     def probabilities(self) -> tuple[Fraction, ...]:
         return tuple(Fraction(count, self.total_mass) for count in self.counts)
+
+
+@dataclass(frozen=True)
+class IntegerMassAudit:
+    """Exact distance and floating-point KL summaries for one allocation."""
+
+    total_variation: Fraction
+    max_absolute_error: Fraction
+    target_to_implemented_kl_nats: float
+    implemented_to_target_kl_nats: float
+
+
+def _kl_nats(source: Sequence[Fraction], target: Sequence[Fraction]) -> float:
+    total = 0.0
+    for source_value, target_value in zip(source, target, strict=True):
+        if source_value == 0:
+            continue
+        if target_value == 0:
+            return inf
+        source_float = float(source_value)
+        total += source_float * log(source_float / float(target_value))
+    return total
+
+
+def audit_integer_mass(
+    probabilities: Sequence[Any], allocation: IntegerMassAllocation
+) -> IntegerMassAudit:
+    """Compare a normalized target with the allocation's implemented law."""
+
+    target = _normalized(probabilities)
+    implemented = allocation.probabilities
+    if len(target) != len(implemented):
+        raise ValueError("target and allocation must have equal length")
+    errors = tuple(
+        abs(target_value - implemented_value)
+        for target_value, implemented_value in zip(target, implemented, strict=True)
+    )
+    return IntegerMassAudit(
+        total_variation=sum(errors, start=Fraction(0)) / 2,
+        max_absolute_error=max(errors, default=Fraction(0)),
+        target_to_implemented_kl_nats=_kl_nats(target, implemented),
+        implemented_to_target_kl_nats=_kl_nats(implemented, target),
+    )
+
+
+def support_preserving_tv_upper_bound(
+    candidate_count: int, *, mass_bits: int
+) -> Fraction:
+    """Return a distribution-free TV bound for the legacy base allocation.
+
+    For k positive candidates and M=2**mass_bits, the implementation reserves
+    one count per candidate and apportions the remaining M-k counts by largest
+    remainder. Each positive coordinate error is strictly below 2/M. Because
+    at most k-1 coordinates can be positive when errors sum to zero, TV is
+    strictly below 2(k-1)/M. The returned rational is a conservative upper
+    bound; k=1 is exact.
+
+    No analogous distribution-free KL bound is finite without a public lower
+    bound on every target probability.
+    """
+
+    if candidate_count < 1:
+        raise ValueError("candidate_count must be positive")
+    if not 1 <= mass_bits <= 52:
+        raise ValueError("probability mass bits must lie in [1, 52]")
+    total_mass = 1 << mass_bits
+    if candidate_count > total_mass:
+        raise ValueError("total integer mass is too small to preserve candidate support")
+    if candidate_count == 1:
+        return Fraction(0)
+    return Fraction(2 * (candidate_count - 1), total_mass)
 
 
 def allocate_integer_mass(

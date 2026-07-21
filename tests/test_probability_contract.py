@@ -7,7 +7,9 @@ import pytest
 from sparsamp_semantic.probability_contract import (
     allocate_integer_mass,
     allocate_logit_bin_mass,
+    audit_integer_mass,
     decimal_quantized_probabilities,
+    support_preserving_tv_upper_bound,
     support_feasible_mass_bits,
     validate_probability_contract,
     waterfilled_support_target,
@@ -169,3 +171,38 @@ def test_waterfill_projection_and_apportionment_reduce_tail_overweighting() -> N
     assert base.counts == (8, 4, 2, 2)
     assert waterfill.counts == (9, 4, 2, 1)
     assert all(count > 0 for count in waterfill.counts)
+
+
+def test_integer_mass_audit_reports_exact_tv_and_finite_kl() -> None:
+    target = (Fraction(2, 5), Fraction(3, 10), Fraction(1, 5), Fraction(1, 10))
+    allocation = allocate_integer_mass(target, mass_bits=4, preserve_support=True)
+
+    audit = audit_integer_mass(target, allocation)
+
+    assert audit.total_variation == Fraction(3, 80)
+    assert audit.max_absolute_error == Fraction(1, 40)
+    assert audit.target_to_implemented_kl_nats > 0
+    assert audit.implemented_to_target_kl_nats > 0
+
+
+def test_integer_mass_audit_reports_infinite_kl_when_support_is_removed() -> None:
+    target = (Fraction(9_999_999_999, 10_000_000_000), Fraction(1, 10_000_000_000))
+    allocation = allocate_integer_mass(target, mass_bits=16, preserve_support=False)
+
+    audit = audit_integer_mass(target, allocation)
+
+    assert audit.target_to_implemented_kl_nats == float("inf")
+
+
+def test_support_preserving_tv_bound_covers_base_allocations() -> None:
+    target = (Fraction(3, 5), Fraction(1, 4), Fraction(1, 10), Fraction(1, 20))
+    allocation = allocate_integer_mass(
+        target, mass_bits=4, preserve_support=True, support_strategy="base"
+    )
+
+    audit = audit_integer_mass(target, allocation)
+    bound = support_preserving_tv_upper_bound(len(target), mass_bits=4)
+
+    assert audit.total_variation < bound
+    assert support_preserving_tv_upper_bound(1, mass_bits=16) == 0
+    assert support_preserving_tv_upper_bound(2, mass_bits=16) == Fraction(1, 32768)

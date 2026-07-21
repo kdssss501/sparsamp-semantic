@@ -6,6 +6,7 @@ from sparsamp_semantic.replay_certificate import (
     contract_decision,
     decision_context,
     manifest_payload_sizes,
+    public_replay_fraction,
 )
 from sparsamp_semantic.types import DistributionSnapshot, TokenCandidate
 
@@ -29,6 +30,17 @@ def test_seeded_contract_decision_is_exactly_reproducible() -> None:
     assert first == second
     assert first.token_id in {10, 20}
     assert sum(first.counts) == 1 << 16
+
+
+def test_public_replay_fraction_is_stable_and_step_specific() -> None:
+    context = b"fixed-context"
+
+    assert public_replay_fraction(3, context, 7) == public_replay_fraction(
+        3, context, 7
+    )
+    assert public_replay_fraction(3, context, 7) != public_replay_fraction(
+        4, context, 7
+    )
 
 
 def test_contract_uses_ranked_top_k_then_public_token_order() -> None:

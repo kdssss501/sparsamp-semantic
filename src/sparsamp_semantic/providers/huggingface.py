@@ -96,6 +96,7 @@ class HuggingFaceConfig:
         "不要提及采样、编码或隐藏消息。"
     )
     allow_eos: bool = False
+    allow_forced_prefix_tokens: bool = False
     seed: int = 42
     adaptive_temperature: bool = False
     entropy_floor_bits: float = 0.75
@@ -420,13 +421,17 @@ class HuggingFaceSession(ProviderSession):
                 "rescue_active": rescue_active,
                 "dtype": self._config.dtype,
                 "load_in_4bit": self._config.load_in_4bit,
+                "allow_forced_prefix_tokens": self._config.allow_forced_prefix_tokens,
             },
         )
 
     def append(self, token_id: Hashable) -> None:
         if not isinstance(token_id, int):
             raise TypeError("Hugging Face token IDs must be integers")
-        if token_id not in self._last_candidates:
+        if (
+            token_id not in self._last_candidates
+            and not self._config.allow_forced_prefix_tokens
+        ):
             raise ValueError(f"token {token_id} is not in the current retained distribution")
         self._generated.append(token_id)
         self._pending_token = token_id

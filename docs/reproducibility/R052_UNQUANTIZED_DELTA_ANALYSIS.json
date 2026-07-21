@@ -1,0 +1,60 @@
+{
+  "bootstrap_repetitions": 10000,
+  "bootstrap_seed": 20260721,
+  "matched_reference_tokens": 1500,
+  "matched_trials": 20,
+  "schema": "unquantized-target-delta-analysis-v1",
+  "source": {
+    "sprc": {
+      "path": "outputs\\R047_local_target.json",
+      "sha256": "3b0a154455968c15427a66405ab4c7fdbe6203eb017a27a127ee722ec56a6ea0"
+    },
+    "unquantized": {
+      "path": "outputs\\R052_unquantized_delta.json",
+      "sha256": "f3fa225acd686cfcc81062b68633625fc136e22fb0eec64c976aab3f4f5a1a52"
+    }
+  },
+  "sprc": {
+    "bits_per_token": 6.1226666666666665,
+    "mean_correction_rate": 0.020543404469434312,
+    "referenced_package_bytes": 1148
+  },
+  "variants": {
+    "top_16": {
+      "bits_per_token": 12.645333333333333,
+      "correction_rate_delta_vs_sprc": 0.23399532349947505,
+      "exact_recovery": 20,
+      "mean_correction_rate": 0.25453872796890936,
+      "minimum_available_support": 5,
+      "package_byte_delta_vs_sprc": 1223,
+      "paired_prompt_ci95": [
+        0.21149264107323545,
+        0.25937674920714804
+      ],
+      "reference_outside_support_steps": 0,
+      "referenced_package_bytes": 2371,
+      "sprc_mean_correction_rate": 0.020543404469434312,
+      "support_shortfall_steps": 1,
+      "tokens": 1500,
+      "trials": 20
+    },
+    "top_2": {
+      "bits_per_token": 6.4,
+      "correction_rate_delta_vs_sprc": 0.011234360649887296,
+      "exact_recovery": 20,
+      "mean_correction_rate": 0.03177776511932161,
+      "minimum_available_support": 2,
+      "package_byte_delta_vs_sprc": 52,
+      "paired_prompt_ci95": [
+        0.0017081099710993558,
+        0.020147460854790966
+      ],
+      "reference_outside_support_steps": 0,
+      "referenced_package_bytes": 1200,
+      "sprc_mean_correction_rate": 0.020543404469434312,
+      "support_shortfall_steps": 0,
+      "tokens": 1500,
+      "trials": 20
+    }
+  }
+}

@@ -20,6 +20,9 @@ In stochastic autoregressive language generation, we show that a canonical integ
 | C9 | Certificates generalize to unseen hardware, kernels or model revisions. | R047 source-machine target smoke reproduced 20/20, but used the same RTX 3060 Laptop GPU and software installation. | Needs evidence | The external bundle and runner are ready; run the frozen top-two protocol on a genuinely independent GPU/CUDA stack. |
 | C11 | The external replay package can reconstruct the frozen seed-0 subset without copying a target manifest. | R047 reference-only bundle plus fresh target construction reproduced 20/20 corrected and 5/20 uncorrected trajectories; full model-directory SHA-256 was verified before replay. | Supported as a source-machine packaging smoke | This validates package separation and checkpoint/resume, not cross-system portability. |
 | C10 | Public surface text can be re-tokenized and still reconstruct the trajectory. | Current study replays token identifiers under a shared tokenizer. | Unsupported | ReTokSync-style evaluation is a separate future experiment. |
+| C12 | The implemented top-two, 16-bit base apportionment adds only a bounded finite-mass TV term. | R050 proves \(TV<2(k-1)/M\) and verifies \(k=2,M=2^{16}\) across all 1,500 saved seed-0 contracts, giving a per-step bound below \(3.0518\times10^{-5}\). | Supported for the audited allocator | The bound is not a KL bound and does not include full-logit quantization or support truncation. |
+| C13 | Token-level SPRC is smaller than fixed block-repair records under one referenced-package boundary. | R051: SPRC 1,148 bytes; block-repair-4/8/16/32 1,408/1,655/1,963/2,553 bytes; all exact 20/20 on the same 1,500 tokens. | Supported for the frozen seed-0 bundle | SPRC and block repair are target-specific and use two logical target passes. Full trace is target-independent and uses zero target passes. R052 provides the matched unquantized delta comparison. |
+| C14 | The quantized integer contract provides a measurable sparsity advantage over a matched unquantized top-two delta. | R052: unquantized top-two minus SPRC correction rate +0.01123, paired prompt 95% interval [+0.00171,+0.02015]; 1,200 versus 1,148 referenced bytes. | Supported for the frozen BF16 seed-0 target | One seed per prompt and one target stack. The top-16-cap result also contains one positive-support shortfall step. |
 
 ## Claim wording allowed in the manuscript
 
@@ -29,6 +32,9 @@ In stochastic autoregressive language generation, we show that a canonical integ
 - "Top-four retained more source mass but did not reduce correction density in the 20-prompt ablation."
 - "The results support bidirectional FP16/BF16 replay on the tested software and hardware stack."
 - "For the seed-0 bundle, the compact referenced certificate was 24.76% of the matching referenced full trace; the self-contained JSON audit package was 63.89%."
+- "For the implemented top-two, 16-bit allocator, the integer-apportionment TV term is strictly below \(3.0518\times10^{-5}\) per step."
+- "Under the matched referenced boundary, SPRC used 1,148 bytes versus 1,408 bytes for four-token block repair and 4,636 bytes for a full token trace."
+- "Removing logit bins and integer mass at matched top-two support increased correction density by 1.123 percentage points [0.171, 2.015] and package size by 52 bytes."
 
 ## Claim wording prohibited before additional evidence
 

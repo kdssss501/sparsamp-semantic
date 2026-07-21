@@ -1,0 +1,27 @@
+{
+  "apportionment": {
+    "bound_type": "strict distribution-free upper bound for base support-preserving largest-remainder allocation",
+    "kl_note": "No finite distribution-free KL bound exists without a lower bound on target probabilities.",
+    "max_tv_upper_bound": 3.0517578125e-05,
+    "mean_tv_upper_bound": 3.0517578125e-05,
+    "uniform_kl_bound": null
+  },
+  "candidate_counts": [
+    2
+  ],
+  "context": {
+    "max_full_logit_quantization_tv": 0.059950150549411774,
+    "mean_full_logit_quantization_tv": 0.02257538480703482,
+    "mean_truncation_reverse_kl_nats": 0.38366146641940296
+  },
+  "contracts": 1500,
+  "mass_bits": [
+    16
+  ],
+  "schema": "integer-apportionment-audit-v1",
+  "source": {
+    "path": "outputs\\R047_local_target.json",
+    "sha256": "3b0a154455968c15427a66405ab4c7fdbe6203eb017a27a127ee722ec56a6ea0"
+  },
+  "trials": 20
+}

@@ -34,12 +34,54 @@ def citation_numbers(text: str) -> set[int]:
     return numbers
 
 
+def valid_figure_package(root: Path, figure: dict[str, Any], text: str) -> bool:
+    number = int(str(figure["artifact_id"]).split("-")[-1])
+    matching = list((root / "paper/figures").glob(f"figure_{number:02d}_*.pdf"))
+    matching_png = list((root / "paper/figures").glob(f"figure_{number:02d}_*.png"))
+    source = figure.get("source_data")
+    source_ok = isinstance(source, str) and (root / source).is_file()
+    figure_transformation = figure.get("transformation", {})
+    transform_path = root / figure_transformation.get("script", "")
+    transform_ok = (
+        transform_path.is_file()
+        and figure_transformation.get("sha256") == sha256(transform_path)
+        and bool(figure_transformation.get("operation"))
+    )
+    supported_claims = figure.get("supported_manuscript_claims", [])
+    claims_ok = bool(supported_claims) and all(
+        isinstance(item, dict)
+        and bool(item.get("claim"))
+        and item["claim"] in text
+        and bool(item.get("locator"))
+        for item in supported_claims
+    )
+    required_keys = {
+        "artifact_id",
+        "source_data",
+        "transformation",
+        "caption_claim",
+        "supported_manuscript_claims",
+        "limitations",
+    }
+    return (
+        required_keys <= figure.keys()
+        and len(matching) == 1
+        and len(matching_png) == 1
+        and source_ok
+        and transform_ok
+        and claims_ok
+    )
+
+
 def audit(
     manuscript: Path,
     scale_analysis: Path,
     cost_analysis: Path,
     figure_trace: Path,
     official_analysis: Path | None = None,
+    apportionment_analysis: Path | None = None,
+    baseline_analysis: Path | None = None,
+    unquantized_analysis: Path | None = None,
 ) -> dict[str, Any]:
     text = manuscript.read_text(encoding="utf-8")
     scale = json.loads(scale_analysis.read_text(encoding="utf-8"))
@@ -95,6 +137,69 @@ def audit(
             official["source"],
         )
 
+    if apportionment_analysis is not None:
+        apportionment = json.loads(
+            apportionment_analysis.read_text(encoding="utf-8")
+        )
+        bound = apportionment["apportionment"]["max_tv_upper_bound"]
+        apportionment_claims = {
+            "integer apportionment contract count": (
+                f"all {apportionment['contracts']:,} saved seed-0 contracts"
+            ),
+            "integer apportionment TV bound": (
+                r"1/32768=3.0518\times10^{-5}"
+                if abs(bound - 1 / 32768) < 1e-15
+                else f"{bound:.10f}"
+            ),
+            "integer apportionment KL boundary": (
+                "No finite distribution-free KL bound exists"
+            ),
+        }
+        for name, value in apportionment_claims.items():
+            check(checks, name, value in text, f"expected manuscript token: {value}")
+
+    if baseline_analysis is not None:
+        baselines = json.loads(baseline_analysis.read_text(encoding="utf-8"))
+        by_name = {item["name"]: item for item in baselines["baselines"]}
+        baseline_claims = {
+            "SPRC referenced bytes": (
+                f"{by_name['sparse_precision_replay_certificate']['referenced_package_bytes']:,} bytes"
+            ),
+            "full-trace referenced bytes": (
+                f"{by_name['full_token_trace']['referenced_package_bytes']:,} bytes"
+            ),
+            "block-repair-4 referenced bytes": (
+                f"{by_name['block_repair_4']['referenced_package_bytes']:,} bytes"
+            ),
+        }
+        for name, value in baseline_claims.items():
+            check(checks, name, value in text, f"expected manuscript token: {value}")
+
+    if unquantized_analysis is not None:
+        unquantized = json.loads(unquantized_analysis.read_text(encoding="utf-8"))
+        top2 = unquantized["variants"]["top_2"]
+        top16 = unquantized["variants"]["top_16"]
+        unquantized_claims = {
+            "unquantized top-2 correction delta": (
+                f"{100 * top2['correction_rate_delta_vs_sprc']:.3f} percentage points"
+            ),
+            "unquantized top-2 interval": (
+                f"{100 * top2['paired_prompt_ci95'][0]:.3f}-"
+                f"{100 * top2['paired_prompt_ci95'][1]:.3f}"
+            ),
+            "unquantized top-2 package": (
+                f"{top2['referenced_package_bytes']:,} referenced bytes"
+            ),
+            "unquantized top-16 correction rate": (
+                f"{100 * top16['mean_correction_rate']:.3f}%"
+            ),
+            "finite-precision support shortfall": (
+                "One of 1,500 steps retained only five positive-probability candidates"
+            ),
+        }
+        for name, value in unquantized_claims.items():
+            check(checks, name, value in text, f"expected manuscript token: {value}")
+
     cited = citation_numbers(text)
     references = {
         int(value)
@@ -108,9 +213,10 @@ def audit(
     )
 
     required_boundaries = {
-        "no zero-divergence claim": "do not establish target-independent determinism, zero distributional divergence or cross-hardware generality",
-        "no human ratings": "no human ratings have been collected",
-        "same-machine external replay": "same-machine smoke test rather than independent hardware evidence",
+        "no native-distribution claim": "do not establish target-independent determinism, native-distribution preservation, semantic equivalence or cross-hardware generality",
+        "exactness is an integrity gate": "exact replay as an integrity gate",
+        "no human ratings": "no human ratings were collected",
+        "same-machine external replay": "current 20-trial result is a same-machine smoke test",
         "token-id boundary": "does not test recovery after public-text re-tokenization",
     }
     lowered = text.lower()
@@ -132,11 +238,7 @@ def audit(
     )
     for figure in trace["figures"]:
         number = int(str(figure["artifact_id"]).split("-")[-1])
-        matching = list((ROOT / "paper/figures").glob(f"figure_{number:02d}_*.pdf"))
-        matching_png = list((ROOT / "paper/figures").glob(f"figure_{number:02d}_*.png"))
-        source = figure.get("source_data")
-        source_ok = source is None or (ROOT / source).is_file()
-        passed = len(matching) == 1 and len(matching_png) == 1 and source_ok
+        passed = valid_figure_package(ROOT, figure, text)
         check(checks, f"figure package: {number}", passed, str(figure))
 
     placeholders = text.count("AUTHOR_INPUT_NEEDED")
@@ -194,6 +296,21 @@ def main() -> int:
     parser.add_argument("--cost", type=Path, default=ROOT / "outputs/R049_cost_analysis.json")
     parser.add_argument("--figure-trace", type=Path, default=ROOT / "paper/source_data/figure_trace.json")
     parser.add_argument("--official", type=Path, default=ROOT / "docs/reproducibility/R002_OFFICIAL_ANALYSIS.json")
+    parser.add_argument(
+        "--apportionment",
+        type=Path,
+        default=ROOT / "docs/reproducibility/R050_INTEGER_APPORTIONMENT.json",
+    )
+    parser.add_argument(
+        "--baselines",
+        type=Path,
+        default=ROOT / "docs/reproducibility/R051_REPLAY_BASELINES.json",
+    )
+    parser.add_argument(
+        "--unquantized",
+        type=Path,
+        default=ROOT / "docs/reproducibility/R052_UNQUANTIZED_DELTA_ANALYSIS.json",
+    )
     parser.add_argument("--output", type=Path, default=ROOT / "paper/MANUSCRIPT_INTEGRITY.json")
     parser.add_argument("--markdown", type=Path, default=ROOT / "paper/MANUSCRIPT_INTEGRITY.md")
     args = parser.parse_args()
@@ -203,6 +320,9 @@ def main() -> int:
         args.cost,
         args.figure_trace,
         args.official,
+        args.apportionment,
+        args.baselines,
+        args.unquantized,
     )
     args.output.write_text(json.dumps(report, indent=2, ensure_ascii=True), encoding="utf-8")
     args.markdown.write_text(markdown_report(report), encoding="utf-8")

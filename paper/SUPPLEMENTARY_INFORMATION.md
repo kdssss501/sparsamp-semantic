@@ -1,6 +1,6 @@
 # Supplementary Information
 
-## Sparse correction certificates recover stochastic language generation across numerical precision
+## Target-specific sparse correction certificates recover stochastic language trajectories across numerical precision
 
 **Authors:** AUTHOR_INPUT_NEEDED
 
@@ -45,3 +45,23 @@ The complete machine-readable table is provided in `source_data/supplementary_ta
 ## Reproducibility boundary
 
 The raw 1,200-trial checkpoint is excluded from Git with other model outputs. Every trial was written atomically, and resuming required an exact configuration match. The tracked analysis file stores the raw-checkpoint SHA-256, software environment, bootstrap settings, configuration summaries and acceptance details. Reproduction of the exact timing numbers requires the recorded GPU and software stack; reproduction of the capacity comparison requires the unchanged artifact code, the recorded contexts and the local GPT-2 checkpoint identified by the stored fingerprint.
+
+## Supplementary Note 2: Mechanism and trust-boundary comparison
+
+The main study concerns target-specific token-trajectory replay, not secret-message transmission. Table S2 separates adjacent mechanisms by objective and state assumptions so that the SparSamp compatibility result is not treated as inherited evidence for SPRC novelty.
+
+| Mechanism | Primary objective | Distribution relationship | Recipient state | Exact selected-path replay | Tokenization layer |
+|---|---|---|---|---|---|
+| Public seed only | Re-run stochastic inference | Uses the target implementation's local distribution | Model, prompt, configuration and seed | No; 5/20 on the frozen seed-0 subset | Shared tokenizer only |
+| Full token trace | Store the selected path | Does not regenerate a distribution | Complete token sequence plus tokenizer | Yes, target-independent | Shared tokenizer only |
+| SPRC | Repair a known target's seeded path | Quantized top-*k* integer contract; truncation and quantization disclosed | Reference bundle, target identity and sparse corrections | Yes, conditional on the constructed target | Shared tokenizer only |
+| Unquantized top-two delta | Isolate the probability-contract contribution | Same HMAC fraction and top-two support without bins or integer mass | Reference bundle, target identity and sparse corrections | Yes, conditional on the constructed target | Shared tokenizer only |
+| Unquantized top-16-cap delta | Probe wider positive support | Up to 16 positive-probability BF16 candidates; one support shortfall observed | Reference bundle, target identity and sparse corrections | Yes, conditional on the constructed target | Shared tokenizer only |
+| Fixed block repair | Repair every block containing a disagreement | Same contract as SPRC | Reference bundle, target identity and dirty reference blocks | Yes, conditional on the constructed target | Shared tokenizer only |
+| SparSamp [3] | Provably secure message embedding under its threat model | Probability-partition sampling claim | Model/context plus message-decoding state | Not its primary objective | Token Ambiguity is a separate condition |
+| Range coding [4] | Efficient secure linguistic coding | Range partition over next-token probabilities | Synchronized coder state | Not its primary objective | Shared tokenization assumed |
+| List decoding [7] | Improve PSS recovery/capacity trade-offs | Candidate-list coding | Decoder list/search state | Not evaluated here | Shared tokenization assumed |
+| Dyadic approximation [8] | Approximate LLM output laws with dyadic codes | Explicit rate-distribution approximation objective | Dyadic code specification | Not evaluated here | Shared tokenization assumed |
+| ReTokSync [9] | Recover synchronization after text re-tokenization | Orthogonal to probability replay | Public text and synchronization layer | Not evaluated here | Explicitly addresses tokenization |
+
+SPRC is therefore best interpreted as a target-conditioned sparse delta format coupled to a canonical integer sampler. Its current evidence supports smaller records than fixed block repair and the matched unquantized variants on one frozen bundle. The top-two comparison isolates a small contract advantage; the top-16-cap result shows that wider unquantized support sharply increases corrections in this target stack. These data do not establish global optimality, replay security or text-channel synchronization.

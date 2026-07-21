@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
+from fractions import Fraction
 from math import ceil, log2
 from typing import Literal
 
@@ -80,6 +81,21 @@ def decision_context(model_name: str, prompt: str, config: ReplayContractConfig)
     return hashlib.sha256("\0".join(fields).encode("utf-8")).digest()
 
 
+def public_replay_fraction(
+    step: int, context: bytes, public_seed: int
+) -> Fraction:
+    """Return the public per-step random fraction shared by replay coders."""
+
+    if step < 0 or public_seed < 0:
+        raise ValueError("step and public seed must be non-negative")
+    seed_key = hashlib.sha256(
+        b"public-replay-seed\0" + public_seed.to_bytes(16, "big")
+    ).digest()
+    return HmacRandomStream(seed_key, context).fraction(
+        step, domain=b"replay-certificate-choice\0"
+    )
+
+
 def contract_decision(
     snapshot: DistributionSnapshot,
     step: int,
@@ -111,12 +127,7 @@ def contract_decision(
             range(len(token_ids)), key=lambda item: (-allocation.counts[item], token_ids[item])
         )
     elif policy == "seeded":
-        seed_key = hashlib.sha256(
-            b"public-replay-seed\0" + config.public_seed.to_bytes(16, "big")
-        ).digest()
-        sample = HmacRandomStream(seed_key, context).fraction(
-            step, domain=b"replay-certificate-choice\0"
-        )
+        sample = public_replay_fraction(step, context, config.public_seed)
         mass_index = sample.numerator * allocation.total_mass // sample.denominator
         cumulative = 0
         index = 0

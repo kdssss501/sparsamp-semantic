@@ -1,16 +1,16 @@
-# Sparse correction certificates recover stochastic language generation across numerical precision
+# Target-specific sparse correction certificates recover stochastic language trajectories across numerical precision
 
 **Authors:** AUTHOR_INPUT_NEEDED
 **Affiliations:** AUTHOR_INPUT_NEEDED
 **Corresponding author:** AUTHOR_INPUT_NEEDED
-**Draft status:** v0.2, submission-preparation draft, with author metadata and external validation pending
-**Intended format:** Nature Communications-style computational methods article
+**Draft status:** v0.3, Stage 4 major-revision draft, with author metadata and independent hardware validation pending
+**Intended format:** specialist machine-learning systems and reproducibility article
 
 **Keywords:** stochastic inference, numerical precision, exact replay, language models, reproducibility, probability contracts
 
 ## Abstract
 
-Stochastic language generation is difficult to reproduce across numerical precision because small score changes can alter an early token and propagate through the autoregressive trajectory. Here we introduce sparse precision replay certificates, target-specific records for exact stochastic replay. The method quantizes relative logits onto a public grid, orders retained candidates canonically, maps their weights to a power-of-two integer mass and records a correction only when the target environment would otherwise choose a different token. In Qwen2.5-1.5B-Instruct experiments spanning 20 English and Chinese prompts and three public seeds, uncorrected FP16-to-BF16 replay reproduced 10 of 60 trajectories, whereas certificate-corrected replay reproduced 60 of 60. Corrections affected 2.16% of tokens on average (prompt-cluster bootstrap 95% confidence interval, 1.80-2.53%), and 58 of 60 outputs reached a public sentence endpoint. Reversing precision retained exact corrected recovery in 20 of 20 additional trials. Increasing contract support from two to four tokens reduced the measured truncation component by 0.184 nats per token but did not reduce correction density. A seed-0 replay-package audit measured 6.65% payload-only binary overhead and 24.76% overhead for a compact package referencing a shared bundle. A self-contained JSON audit package was 63.89% of the full-trace comparator. These results establish target-specific replay for a known model and precision pair. They do not establish target-independent determinism, zero distributional divergence or cross-hardware generality.
+Stochastic language generation is difficult to reproduce across numerical precision because one changed token can propagate through an autoregressive trajectory. Here we introduce sparse precision replay certificates (SPRCs), target-specific correction records built from a public integer next-token contract. Exact corrected replay is a protocol invariant; the empirical questions are how often corrections occur and what they cost under a declared package boundary. In Qwen2.5-1.5B-Instruct experiments spanning 20 English and Chinese prompts and three public seeds, uncorrected FP16-to-BF16 replay reproduced 10 of 60 trajectories, whereas complete manifests recovered 60 of 60. Corrections affected 2.16% of tokens on average (prompt-cluster bootstrap 95% confidence interval, 1.80-2.53%), and 58 of 60 outputs reached a public sentence endpoint. Reversing precision retained exact recovery in 20 of 20 additional trials. On the frozen 20-prompt seed-0 bundle, a compact referenced SPRC used 1,148 bytes, 24.76% of the matching 4,636-byte full trace and less than fixed block-repair baselines. Removing the logit-bin and integer-mass contracts at the same top-two support increased correction density by 1.123 percentage points (paired prompt bootstrap 95% interval, 0.171-2.015). A distribution-free audit bounded the top-two, 16-bit integer-apportionment total variation below \(3.052\times10^{-5}\) per step. These results establish compact target-specific replay for one known model and GPU stack. They do not establish target-independent determinism, native-distribution preservation, semantic equivalence or cross-hardware generality.
 
 ## Introduction
 
@@ -20,9 +20,9 @@ Existing approaches address complementary parts of this problem. Higher-precisio
 
 A strict bitwise contract over all model operations would be expensive and brittle. Conversely, recording the complete generated token sequence always guarantees replay but provides no compression and reveals nothing about where numerical precision actually changes a decision. We study an intermediate question: can a public discrete next-token contract make cross-precision disagreements sufficiently sparse that exact replay requires only a small correction record? This question separates two properties that are often conflated. Exact recovery is a deterministic property of applying a complete correction manifest. Sparsity is an empirical property of how often two numerical environments disagree under a specified contract.
 
-We introduce sparse precision replay certificates (SPRCs) for target-specific stochastic reconstruction. At each generation step, relative logits are quantized to public integer bins, candidates are ranked under a fixed top-*k* envelope and contract candidates are ordered by token identifier. Their quantized weights are apportioned into an integer mass of size \(2^B\), and a public pseudo-random value selects a token. To construct a certificate, the reference trajectory is evaluated under the target environment while conditioning on the reference prefix. The certificate stores only pairs \((t,x_t)\) for steps at which the target contract choice differs from reference token \(x_t\). During replay, corrections are applied before extending the prefix, which prevents a local disagreement from cascading.
+We introduce sparse precision replay certificates (SPRCs) for target-specific stochastic reconstruction. At each generation step, relative logits are quantized to public integer bins, candidates are ranked under a fixed top-*k* envelope and contract candidates are ordered by token identifier. Their quantized weights are apportioned into an integer mass of size \(2^B\), and a public pseudo-random value selects a token. To construct a certificate, the reference trajectory is evaluated under the intended target environment while conditioning on the reference prefix. The certificate stores only pairs \((t,x_t)\) for steps at which the target contract choice differs from reference token \(x_t\). During replay, corrections are applied before extending the prefix, which prevents a local disagreement from cascading. This is a target-conditioned sparse delta representation; the scientific question is whether the public probability contract makes that delta sparse and auditable enough to improve on coarser repair records under the same assumptions.
 
-We first establish compatibility with the published SparSamp artifact on GPT-2 and then evaluate the replay design on the instruction-tuned Qwen2.5-1.5B model [3,6]. The principal experiment contains 20 bilingual prompts, three public seeds and 60 FP16-to-BF16 trajectories. We measure exact token replay, correction density, correction-record size, sentence completion, candidate-envelope coverage and the distributional cost of logit quantization and support truncation. We further test a wider contract and reverse the precision direction. Across the main experiment, certificates recover all 60 reference trajectories while changing the target-side decision at 2.16% of token positions on average. The wider contract exposes a clear Pareto trade-off: it retains more source probability mass but does not reduce correction density and lowers cross-precision contract agreement. The resulting claim is deliberately bounded to a known model, tokenizer, prompt, sampling configuration and target numerical environment.
+We first establish compatibility with the published SparSamp artifact on GPT-2 and then evaluate the replay design on the instruction-tuned Qwen2.5-1.5B model [3,6]. The principal experiment contains 20 bilingual prompts, three public seeds and 60 FP16-to-BF16 trajectories. We measure correction density as the primary empirical endpoint, with exact replay as an integrity gate, and separately report package bytes, target passes, sentence completion, candidate coverage and distributional costs. Matched seed-only, full-trace and block-repair controls use the same referenced-package boundary. The resulting claim is deliberately bounded to a known model, tokenizer, prompt, sampling configuration and target numerical environment.
 
 ## Results
 
@@ -67,6 +67,28 @@ R049 measured serialization on the 20-trial seed-0 reference bundle (1,500 gener
 | FP16 to BF16, top-4 | 20 | 20/20 | 1/20 | 2.41% [1.94, 2.87] | 3.21% [2.58, 3.82] | 16/20 |
 | BF16 to FP16, top-2 | 20 | 20/20 | 5/20 | 2.06% [1.33, 2.86] | 2.75% [1.76, 3.82] | 19/20 |
 
+### Matched replay baselines isolate sparse-record cost
+
+To test whether token-level corrections improve on simpler replay records, we re-analysed the frozen 20-prompt seed-0 bundle using one referenced header and the same per-trial identity records for every method (Table 2). Seed-only replay added no trajectory payload but recovered 5 of 20 paths; its 901 bytes consist entirely of shared and per-trial identity metadata. The SPRC recovered 20 of 20 using 1,148 bytes (6.123 bits per token), compared with 4,636 bytes (24.725 bits per token) for a target-independent full token trace. Fixed block repair stored every reference token in a block containing at least one SPRC correction. Its smallest four-token variant required 1,408 bytes, with larger blocks increasing to 2,553 bytes at block size 32. Thus the sparse record was smaller than each exact block-repair control under the matched boundary.
+
+We next removed the logit-bin and integer-mass contracts while retaining the same HMAC fraction, frozen reference prefix, BF16 target and top-two support. This unquantized top-two delta required corrections at 3.178% of positions, 1.123 percentage points more than SPRC (paired prompt bootstrap 95% interval, +0.171 to +2.015), and used 1,200 referenced bytes. Expanding the unquantized support to a positive-probability top-16 cap increased correction density to 25.454% and package size to 2,371 bytes. One of 1,500 steps retained only five positive-probability candidates in BF16, so this variant is explicitly a positive-support cap rather than an ideal real-arithmetic top-16 distribution. No reference token fell outside the available positive support.
+
+The byte advantage does not imply a compute advantage over direct storage. Full-trace reconstruction requires no target-model pass. SPRC, unquantized delta and block-repair construction evaluate the target on every reference prefix, and operational replay evaluates the target again. A specialized block implementation could skip generation within stored blocks, but that optimization was not timed.
+
+**Table 2 | Matched referenced-package replay controls on the 20-prompt seed-0 bundle.** All byte counts include the same 101-byte referenced header and per-trial identity records.
+
+| Method | Exact recovery | Referenced bytes | Ratio to full trace | Bits/token | Target passes | Target-specific |
+|---|---:|---:|---:|---:|---:|---|
+| Seed only | 5/20 | 901 | 19.43% | 4.805 | 1 | No |
+| SPRC | 20/20 | 1,148 | 24.76% | 6.123 | 2 | Yes |
+| Unquantized top-two delta | 20/20 | 1,200 | 25.88% | 6.400 | 2 | Yes |
+| Full token trace | 20/20 | 4,636 | 100.00% | 24.725 | 0 | No |
+| Four-token block repair | 20/20 | 1,408 | 30.37% | 7.509 | 2 | Yes |
+| Eight-token block repair | 20/20 | 1,655 | 35.70% | 8.827 | 2 | Yes |
+| Sixteen-token block repair | 20/20 | 1,963 | 42.34% | 10.469 | 2 | Yes |
+| Thirty-two-token block repair | 20/20 | 2,553 | 55.07% | 13.616 | 2 | Yes |
+| Unquantized top-16-cap delta | 20/20 | 2,371 | 51.14% | 12.645 | 2 | Yes |
+
 ### A public sentence rule improves structural completion
 
 Fixed token budgets can produce exact but visibly truncated outputs. We therefore separated token replay from structural completion. In the sentence-completion pilot, generation continued beyond token 64 until a public terminal-punctuation rule was satisfied or token 96 was reached. For six seeded trajectories, sentence completion improved from zero of six under the fixed 64-token setting to six of six under the public stopping rule, at an average cost of 9.5 additional tokens. Exact corrected replay remained six of six and the mean correction rate was 1.62%.
@@ -89,15 +111,15 @@ These data support bidirectional precision replay on the tested model and GPU st
 
 ## Discussion
 
-Our results show that cross-precision stochastic language generation can be reconstructed exactly with a compact, auditable correction record when the reference and target environments are known. A complete correction manifest guarantees replay by construction. The empirical advance is that disagreements remained sparse across 4,500 Qwen token positions, 20 bilingual prompts and three public seeds, even though uncorrected full-sequence agreement was low. This converts autoregressive divergence from an all-or-nothing outcome into a measurable per-step record.
+Our results show that target-specific cross-precision stochastic language trajectories can be reconstructed with a compact correction record when the reference and intended target environments are known. A complete manifest guarantees replay by construction; it is not an empirical accuracy claim. The empirical result is that disagreements remained sparse across 4,500 Qwen token positions, 20 bilingual prompts and three public seeds. On the seed-0 bundle, token-level SPRCs were smaller than matched block-repair records, but a full trace remained computationally simpler and target-independent.
 
 SPRCs complement approaches that suppress or detect nondeterminism. Higher-precision computation aims to prevent numerical divergence [1], whereas SPRCs permit a specified target environment to differ and record only the decisions needed to reconstruct a selected path. Token-level verification methods determine whether outputs are consistent with a trusted reference [2]. The present method instead emits enough information to recover a particular trajectory. Shared-random sampling methods such as SparSamp and range coding motivate deterministic probability partitions [3,4], while finite-precision detection results show why implementation-level probability contracts cannot be treated as ideal real arithmetic [5]. Our experiments operationalize this distinction by reporting full-logit quantization, support truncation, contract agreement and correction density separately.
 
-The top-*k* ablation identifies a practical design rule. A wider support retains more probability mass and lowers the truncation component, but creates more opportunities for cross-precision candidate and integer-boundary disagreement. In the present sample, top-four therefore improves one distributional objective while worsening contract agreement and structural completion. This is a Pareto trade-off rather than a uniformly superior configuration. Related work on list decoding, dyadic approximation and tokenization synchronization addresses capacity or text-channel synchronization under different objectives [7-9]. Those mechanisms are relevant extensions, but they are not required for the target-specific replay claim tested here.
+The top-*k* ablation identifies a practical design rule. A wider support retains more probability mass and lowers the truncation component, but creates more opportunities for cross-precision candidate and integer-boundary disagreement. In the present sample, top-four therefore improves one distributional objective while worsening contract agreement and structural completion. This is a Pareto trade-off rather than a uniformly superior configuration. The matched unquantized top-two result isolates a small but measurable probability-contract contribution: removing bins and integer mass increased correction density by 1.123 percentage points and referenced size by 52 bytes. In contrast, widening the unquantized support to 16 produced a much larger correction increase. The integer-apportionment audit shows that the 16-bit allocation term is bounded far below the observed quantization TV at top-two; support selection and shared boundaries, rather than integer mass resolution, dominate the disclosed reliability-fidelity trade-off. Related work on list decoding, dyadic approximation and tokenization synchronization addresses capacity or text-channel synchronization under different objectives [7-9]. Those mechanisms are potential composition layers, not evidence for target-independent replay.
 
 Several limitations define the current result. First, certificates are target-specific: construction evaluates the target precision on the reference prefix, so a certificate for BF16 is not guaranteed to work for a different accelerator, kernel, model revision or tokenizer. Second, all Qwen experiments used one RTX 3060 Laptop GPU and one software stack. Independent hardware replication is therefore required for a cross-system claim. Third, the top-two contract retains approximately three quarters of the quantized source mass on average and incurs a substantial truncation component. Exact replay must not be interpreted as distribution preservation. Integer apportionment adds a further finite-mass approximation that was not isolated as a separate divergence term in the main artifacts. Fourth, public sentence completion is not a semantic or factual-quality measure. Fifth, this study reconstructs token identifiers under a shared tokenizer and does not test recovery after public-text re-tokenization, normalization or rewriting.
 
-Within these boundaries, sparse certificates provide a practical research instrument. They preserve the stochastic reference trajectory without forcing all inference into FP32 and expose where precision changes an actual token decision. The R047 bundle and checkpointed target runner make an independent replay test operational, but the current 20-trial result is a same-machine smoke test rather than independent hardware evidence. R048 has produced native, top-two and top-four materials for a blinded quality study. Its protocol and offline evaluator remain `ETHICS_PENDING`, and no human ratings have been collected. Independent hardware replication and an approved blinded comparison should therefore precede claims of hardware generality or semantic equivalence.
+Within these boundaries, sparse certificates provide a research instrument for auditing where precision changes a sampled token. Their best current use case is a frozen benchmark or incident record for a known recipient environment, not arbitrary portability. The external bundle and checkpointed target runner make an independent replay test operational, but the current 20-trial result is a same-machine smoke test. Native, top-two and top-four materials have been prepared for a blinded quality study, but no human ratings were collected. Independent hardware replication, broader parameter sensitivity and an approved blinded comparison should precede claims of hardware generality, globally optimal contract design or semantic equivalence.
 
 ## Methods
 
@@ -147,6 +169,20 @@ w_i=\exp\left(\frac{q(b_i-\max_j b_j)}{T}\right).
 
 The contract used a total integer mass \(M=2^{16}\). One count was reserved for each retained token. The remaining \(M-k\) counts were assigned proportionally to \(w_i\) by deterministic largest-remainder apportionment. Remainder ties were resolved by token identifier. The resulting counts are non-negative, preserve retained support and sum exactly to \(M\).
 
+Let \(p_i\) be the normalized retained-support weight before apportionment, \(a_i\) the largest-remainder allocation of \((M-k)p_i\), \(c_i=1+a_i\) the implemented count and \(r_i=c_i/M\). If \(e_i=a_i-(M-k)p_i\), then
+
+\[
+r_i-p_i=\frac{1-kp_i+e_i}{M}, \qquad -1<e_i<1.
+\]
+
+Every positive coordinate error is therefore strictly below \(2/M\). Because coordinate errors sum to zero, at most \(k-1\) can be positive, giving the distribution-free bound
+
+\[
+\operatorname{TV}(p,r)<\frac{2(k-1)}{M}.
+\]
+
+For the top-two, 16-bit contract this is \(1/32768=3.0518\times10^{-5}\) per step. We verified the applicable \(k\) and \(M\) on all 1,500 saved seed-0 contracts. This term is separate from full-logit quantization and support truncation. No finite distribution-free KL bound exists without a public positive lower bound on every \(p_i\), so we do not infer one from the TV bound.
+
 For public seeded sampling, a key was derived by hashing the public seed. HMAC-SHA256 over the model name, prompt, contract parameters, seed and step produced a rational sample that was mapped to one of the integer cumulative intervals. Greedy controls selected the largest count with token identifier as a tie breaker. The public-seed construction supports reproducible experiments. It is not a cryptographic secrecy claim.
 
 ### Sparse precision replay certificate
@@ -168,6 +204,16 @@ g_t(y_{<t}), & \text{otherwise}.
 
 If the model, tokenizer, prompt, configuration, public seed and target numerical environment match certificate construction, induction on \(t\) yields \(y_{1:n}=x_{1:n}\). This is a conditional safety property, not a termination or target-independence theorem.
 
+The operational procedure is:
+
+1. The constructor generates and freezes reference tokens, then evaluates the intended target contract on each reference prefix.
+2. A correction pair is emitted exactly when the target choice differs from the frozen reference token.
+3. The recipient verifies bundle, model and target-environment identities before replay.
+4. Replay recomputes the target choice on the reconstructed prefix and substitutes a stored token at correction steps.
+5. An auditor checks token-sequence equality and package identities; exact equality is an integrity gate, while correction density and bytes are measured outcomes.
+
+The compact referenced package assumes that some state has already been distributed. The reference bundle and model identity are shared per frozen study; the prompt, seed, tokenizer and contract configuration are shared per trial set; and correction positions and tokens are transferred per trajectory. The constructor must access the intended target environment during certificate construction. The recipient needs that matching target environment during replay. An auditor can verify hashes and decoded tokens without treating the correction manifest as a cryptographic proof of model execution. Correction tokens may reveal local information about the reference output and are not a privacy mechanism.
+
 The sparse record stored the step and token identifier for each correction. We report three serialization boundaries: payload-only bytes, a self-contained JSON audit package, and a compact binary package that references a shared bundle. The historical fixed-width payload comparator used vocabulary size \(V\), token identifiers of \(\lceil\log_2(V)/8\rceil\) bytes and step identifiers of \(\lceil\log_2(n)/8\rceil\) bytes. The new binary manifest uses versioned magic bytes and unsigned variable-length integers. Its referenced package header contains SHA-256 identifiers for the bundle, model and target environment. Ratios are always reported against the matching full-trace comparator, and the shared-bundle assumption is stated explicitly.
 
 ### Outcome measures
@@ -184,7 +230,7 @@ Exact counts are reported without null-hypothesis significance tests. For the ma
 
 ## Data availability
 
-The fixed bilingual prompt set, aggregate analysis files, Figure 1-4 source-data CSVs, generated PDF and 300-dpi PNG figures, R002 official-reproduction analysis and supplementary source table, source hashes and deterministic result signatures are included in the project repository. Raw model outputs, private blinding keys and participant packages are excluded from version control and remain local experiment artifacts. The 1,200-trial R002 checkpoint and R047 reference-only bundle are transferred separately and verified by SHA-256 before analysis or external replay. AUTHOR_INPUT_NEEDED: provide the public archival location and accession or DOI before submission.
+The fixed bilingual prompt set, aggregate analysis files, Figure 1-4 source-data CSVs, generated PDF and 300-dpi PNG figures, R002 official-reproduction analysis, R050 integer-apportionment audit, R051 matched-baseline analysis, R052 unquantized-delta analysis, source hashes and deterministic result signatures are included in the project repository. Raw model outputs, private blinding keys and participant packages are excluded from version control and remain local experiment artifacts. The 1,200-trial R002 checkpoint and frozen reference-only bundle are transferred separately and verified by SHA-256 before analysis or external replay. AUTHOR_INPUT_NEEDED: provide the public archival location and accession or DOI before submission.
 
 ## Code availability
 

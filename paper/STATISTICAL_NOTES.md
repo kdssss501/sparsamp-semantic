@@ -51,3 +51,24 @@ frozen bundle. They must not be pooled with R044's prompt-cluster interval or pr
 estimates of the same quantity. The referenced package costs 6.123 bits per generated token and
 assumes that the identified reference bundle, model and target-environment contracts are available
 to the recipient.
+
+## R050 and R051 deterministic audits
+
+R050 reports a mathematical upper bound, not a sample estimate. For the implemented base
+support-preserving allocation, \(TV<2(k-1)/M\). Every saved seed-0 contract has \(k=2\) and
+\(M=2^{16}\), so the per-step bound is \(1/32768\). It receives no bootstrap interval and must not
+be added to KL terms with different directions.
+
+R051 uses the same frozen 20-trial, 1,500-token seed-0 bundle as R049. Its package byte counts are
+deterministic serialization lengths under one referenced header. Seed-only, SPRC, full trace and
+block-repair records are therefore paired engineering controls, not draws from a prompt
+population. No inferential interval is attached. The native-softmax delta baseline is missing and
+must not be imputed from integer-contract choices.
+
+R052 recomputes BF16 target distributions on the same frozen reference prefixes using the same
+HMAC fraction but no logit-bin or integer-mass contract. The top-two minus SPRC correction-rate
+difference is calculated per prompt and uses 10,000 paired prompt bootstrap resamples with seed
+20260721. The interval describes variation across the fixed 20 prompts; it is not a population
+confidence claim. Package-byte differences remain deterministic for the frozen bundle. The
+top-16 variant is a positive-support cap because one BF16 step exposed only five non-zero
+candidates.

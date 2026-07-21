@@ -1,0 +1,106 @@
+{
+  "baselines": [
+    {
+      "bits_per_token": 4.8053333333333335,
+      "exact_successes": 5,
+      "name": "seed_only",
+      "payload_bytes": 0,
+      "ratio_to_referenced_full_trace": 0.1943485763589301,
+      "referenced_package_bytes": 901,
+      "target_model_passes_per_trial": 1,
+      "target_specific": false,
+      "trials": 20
+    },
+    {
+      "bits_per_token": 6.1226666666666665,
+      "exact_successes": 20,
+      "name": "sparse_precision_replay_certificate",
+      "payload_bytes": 247,
+      "ratio_to_referenced_full_trace": 0.24762726488352027,
+      "referenced_package_bytes": 1148,
+      "target_model_passes_per_trial": 2,
+      "target_specific": true,
+      "trials": 20
+    },
+    {
+      "bits_per_token": 24.72533333333333,
+      "exact_successes": 20,
+      "name": "full_token_trace",
+      "payload_bytes": 3715,
+      "ratio_to_referenced_full_trace": 1.0,
+      "referenced_package_bytes": 4636,
+      "target_model_passes_per_trial": 0,
+      "target_specific": false,
+      "trials": 20
+    },
+    {
+      "bits_per_token": 7.509333333333333,
+      "exact_successes": 20,
+      "name": "block_repair_4",
+      "payload_bytes": 507,
+      "ratio_to_referenced_full_trace": 0.30371009490940465,
+      "referenced_package_bytes": 1408,
+      "target_model_passes_per_trial": 2,
+      "target_specific": true,
+      "trials": 20
+    },
+    {
+      "bits_per_token": 8.826666666666666,
+      "exact_successes": 20,
+      "name": "block_repair_8",
+      "payload_bytes": 754,
+      "ratio_to_referenced_full_trace": 0.3569887834339948,
+      "referenced_package_bytes": 1655,
+      "target_model_passes_per_trial": 2,
+      "target_specific": true,
+      "trials": 20
+    },
+    {
+      "bits_per_token": 10.469333333333333,
+      "exact_successes": 20,
+      "name": "block_repair_16",
+      "payload_bytes": 1061,
+      "ratio_to_referenced_full_trace": 0.4234253666954271,
+      "referenced_package_bytes": 1963,
+      "target_model_passes_per_trial": 2,
+      "target_specific": true,
+      "trials": 20
+    },
+    {
+      "bits_per_token": 13.616,
+      "exact_successes": 20,
+      "name": "block_repair_32",
+      "payload_bytes": 1648,
+      "ratio_to_referenced_full_trace": 0.5506902502157032,
+      "referenced_package_bytes": 2553,
+      "target_model_passes_per_trial": 2,
+      "target_specific": true,
+      "trials": 20
+    }
+  ],
+  "interpretation": {
+    "block_repair": "A block baseline stores every reference token in each fixed block containing at least one SPRC correction; it is exact under the same target-conditioned assumptions but coarser than token-level repair.",
+    "common_boundary": "All byte results use the same referenced header and per-trial identity record.",
+    "compute": "Pass counts are logical target-model passes; block repair may skip generation inside stored blocks but that optimization is not timed here."
+  },
+  "missing_baselines": [
+    {
+      "name": "native_softmax_target_conditioned_delta",
+      "reason": "Requires a new GPU run that samples the unquantized native distribution on each frozen reference prefix; current artifacts do not store those choices."
+    }
+  ],
+  "referenced_header_bytes": 101,
+  "schema": "precision-replay-baseline-analysis-v1",
+  "source": {
+    "bundle": {
+      "path": "outputs\\R047_reference_seed0.json",
+      "sha256": "3db563f6e569828689e82b06184d439cdb12cfe78d9b5bdd4b5ec3d2601ff76c"
+    },
+    "target": {
+      "path": "outputs\\R047_local_target.json",
+      "sha256": "3b0a154455968c15427a66405ab4c7fdbe6203eb017a27a127ee722ec56a6ea0"
+    }
+  },
+  "tokens": 1500,
+  "trials": 20
+}
