@@ -1,0 +1,36 @@
+{
+  "schema": "r048-rating-schema-v1",
+  "ethics_status": "ETHICS_PENDING",
+  "scale": {
+    "minimum": 1,
+    "maximum": 5,
+    "anchors": {
+      "1": "very poor",
+      "3": "acceptable",
+      "5": "excellent"
+    }
+  },
+  "dimensions": [
+    {
+      "id": "relevance",
+      "label_zh": "相关性",
+      "definition": "The response directly addresses the prompt without irrelevant content."
+    },
+    {
+      "id": "correctness",
+      "label_zh": "正确性",
+      "definition": "The response is factually or procedurally correct for the requested task."
+    },
+    {
+      "id": "coherence",
+      "label_zh": "连贯性",
+      "definition": "The response follows a consistent and understandable line of reasoning."
+    },
+    {
+      "id": "fluency",
+      "label_zh": "流畅性",
+      "definition": "The language is grammatical, natural and easy to read."
+    }
+  ],
+  "preference_options": ["A", "B", "C", "tie_or_unsure"]
+}

@@ -423,6 +423,8 @@ def run_replay(
         reference_in_top8 += int(reference_rank < 8)
         shared.append(reference_token)
 
+    manifest_seconds = perf_counter() - started
+
     manifest = build_manifest(tuple(reference), tuple(local_shared_choices))
     corrected = provider.start(prompt)
     corrected_tokens: list[int] = []
@@ -435,6 +437,8 @@ def run_replay(
         corrected.append(token_id)
         corrected_tokens.append(token_id)
 
+    corrected_replay_seconds = perf_counter() - started - manifest_seconds
+
     uncorrected = provider.start(prompt)
     uncorrected_tokens: list[int] = []
     for step in range(token_count):
@@ -444,6 +448,10 @@ def run_replay(
         )
         uncorrected.append(decision.token_id)
         uncorrected_tokens.append(decision.token_id)
+
+    uncorrected_replay_seconds = (
+        perf_counter() - started - manifest_seconds - corrected_replay_seconds
+    )
 
     sparse_bytes, full_bytes = manifest_payload_sizes(
         manifest, vocabulary_size=args.vocabulary_size
@@ -475,6 +483,9 @@ def run_replay(
             "sparse_payload_bytes": sparse_bytes,
             "full_trace_payload_bytes": full_bytes,
             "sparse_to_full_payload_ratio": sparse_bytes / full_bytes,
+            "manifest_construction_seconds": manifest_seconds,
+            "corrected_replay_seconds": corrected_replay_seconds,
+            "uncorrected_replay_seconds": uncorrected_replay_seconds,
             "replay_seconds": perf_counter() - started,
         }
     )

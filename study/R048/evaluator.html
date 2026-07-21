@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>R048 匿名文本质量评测</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, "Microsoft YaHei", sans-serif; }
+    body { margin: 0; color: #202124; background: #f5f6f7; }
+    header, main { max-width: 1120px; margin: 0 auto; padding: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    h1 { margin: 0; font-size: 22px; letter-spacing: 0; }
+    button, input { font: inherit; }
+    button { border: 1px solid #c7c9cc; background: #fff; padding: 8px 14px; cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .45; }
+    .status { padding: 12px 14px; border-left: 5px solid #d55e00; background: #fff3e8; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; align-items: center; }
+    .prompt { padding: 16px 0; border-top: 1px solid #d9dcdf; border-bottom: 1px solid #d9dcdf; }
+    .responses { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
+    .response { background: white; border-top: 5px solid #0072b2; padding: 14px; min-width: 0; }
+    .response h2 { font-size: 18px; margin: 0 0 10px; }
+    .text { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 180px; line-height: 1.55; }
+    fieldset { border: 0; border-top: 1px solid #e1e3e5; margin: 12px 0 0; padding: 10px 0 0; }
+    legend { font-weight: 600; }
+    .scale { display: flex; gap: 10px; flex-wrap: wrap; }
+    .preference { background: #fff; padding: 14px; margin-bottom: 18px; }
+    .navigation { display: flex; justify-content: space-between; }
+    @media (max-width: 800px) { .responses { grid-template-columns: 1fr; } .text { min-height: 0; } }
+  </style>
+</head>
+<body>
+  <header><h1>R048 匿名文本质量评测</h1><strong id="progress">未载入材料</strong></header>
+  <main>
+    <div id="status" class="status">请选择 participant package。伦理状态未就绪时仅可预览。</div>
+    <div class="toolbar">
+      <input id="package" type="file" accept="application/json">
+      <button id="export" disabled>导出评分 JSON</button>
+    </div>
+    <section id="content" hidden>
+      <div class="prompt"><strong>问题</strong><p id="prompt"></p></div>
+      <div id="responses" class="responses"></div>
+      <div class="preference"><strong>总体最佳</strong><div id="preference" class="scale"></div></div>
+      <div class="navigation"><button id="previous">上一题</button><button id="next">下一题</button></div>
+    </section>
+  </main>
+  <script>
+    const dimensions = [["relevance","相关性"],["correctness","正确性"],["coherence","连贯性"],["fluency","流畅性"]];
+    let packageData = null, index = 0, ratings = {};
+    const byId = id => document.getElementById(id);
+    function trialRating(id) { return ratings[id] ??= {responses:{}, preference:null}; }
+    function render() {
+      const trial = packageData.trials[index], record = trialRating(trial.trial_id);
+      byId("progress").textContent = `${index + 1} / ${packageData.trials.length}`;
+      byId("prompt").textContent = trial.prompt;
+      byId("responses").replaceChildren(...trial.responses.map(response => {
+        const article = document.createElement("article"); article.className = "response";
+        article.innerHTML = `<h2>${response.label}</h2><div class="text"></div>`;
+        article.querySelector(".text").textContent = response.text;
+        const values = record.responses[response.label] ??= {};
+        for (const [id,label] of dimensions) {
+          const field = document.createElement("fieldset"); field.innerHTML = `<legend>${label}</legend>`;
+          const scale = document.createElement("div"); scale.className = "scale";
+          for (let value=1; value<=5; value++) {
+            const item = document.createElement("label"), input = document.createElement("input");
+            input.type="radio"; input.name=`${trial.trial_id}-${response.label}-${id}`; input.value=value;
+            input.checked = values[id] === value; input.disabled = packageData.ethics_status !== "READY";
+            input.onchange = () => values[id] = value; item.append(input, ` ${value}`); scale.append(item);
+          }
+          field.append(scale); article.append(field);
+        }
+        return article;
+      }));
+      byId("preference").replaceChildren(...["A","B","C","tie_or_unsure"].map(value => {
+        const label=document.createElement("label"), input=document.createElement("input");
+        input.type="radio"; input.name=`${trial.trial_id}-preference`; input.value=value;
+        input.checked=record.preference===value; input.disabled=packageData.ethics_status!=="READY";
+        input.onchange=()=>record.preference=value; label.append(input, ` ${value}`); return label;
+      }));
+      byId("previous").disabled=index===0; byId("next").disabled=index===packageData.trials.length-1;
+    }
+    byId("package").onchange = async event => {
+      packageData=JSON.parse(await event.target.files[0].text()); index=0; ratings={};
+      if (packageData.schema !== "r048-blind-quality-participant-v1") throw new Error("材料格式不匹配");
+      const ready=packageData.ethics_status === "READY";
+      byId("status").textContent=ready ? "伦理状态 READY：可进行离线评分。" : "ETHICS_PENDING：当前仅可预览，不得收集或导出评分。";
+      byId("export").disabled=!ready; byId("content").hidden=false; render();
+    };
+    byId("previous").onclick=()=>{index--;render()}; byId("next").onclick=()=>{index++;render()};
+    byId("export").onclick=()=>{
+      const output={schema:"r048-offline-ratings-v1",study_id:"R048",package_signature:packageData.package_signature,participant_id:crypto.randomUUID(),completed_at:new Date().toISOString(),ratings};
+      const url=URL.createObjectURL(new Blob([JSON.stringify(output,null,2)],{type:"application/json"}));
+      const link=document.createElement("a"); link.href=url; link.download=`R048-ratings-${output.participant_id}.json`; link.click(); URL.revokeObjectURL(url);
+    };
+  </script>
+</body>
+</html>

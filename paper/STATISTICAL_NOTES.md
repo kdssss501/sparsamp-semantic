@@ -33,3 +33,21 @@ For the one-seed top-*k* and precision-direction ablations, the paired effect is
 - The fixed prompt set is not a random sample from a formally defined prompt population.
 - Seeds are repeated stochastic trajectories, not independent prompt samples.
 - No null-hypothesis significance tests or multiplicity-adjusted *P* values are used.
+
+## Serialization estimands
+
+R044's 2.8808% value is a mean trial-level legacy estimate based on fixed-width step and token
+identifiers with no shared header. R049 uses the 20 seed-0 trials and reports three separate
+deterministic byte-count estimands:
+
+| Estimand | Certificate | Full-trace comparator | Ratio |
+|---|---:|---:|---:|
+| Versioned binary payload only | 247 bytes | 3,715 bytes | 6.65% |
+| Self-contained JSON audit package | 6,136 bytes | 9,604 bytes | 63.89% |
+| Compact binary package referencing a shared bundle | 1,148 bytes | 4,636 bytes | 24.76% |
+
+These values do not have sampling intervals because they are exact serialization lengths for one
+frozen bundle. They must not be pooled with R044's prompt-cluster interval or presented as three
+estimates of the same quantity. The referenced package costs 6.123 bits per generated token and
+assumes that the identified reference bundle, model and target-environment contracts are available
+to the recipient.

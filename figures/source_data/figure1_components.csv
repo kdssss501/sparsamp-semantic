@@ -1,0 +1,6 @@
+stage,operation
+reference,top-16 validation envelope
+reference,public top-k integer contract
+construction,target evaluation on reference prefix
+construction,sparse disagreement record
+replay,correction before prefix extension
