@@ -1,7 +1,12 @@
 import json
 from pathlib import Path
 
-from scripts.audit_manuscript_integrity import audit, citation_numbers
+from scripts.audit_manuscript_integrity import (
+    audit,
+    citation_numbers,
+    sha256,
+    valid_figure_package,
+)
 
 
 def write_json(path: Path, value: dict) -> None:
@@ -50,3 +55,31 @@ def test_audit_fails_when_required_claims_are_missing(tmp_path: Path) -> None:
     report = audit(manuscript, scale, cost, trace)
     assert report["summary"]["status"] == "FAIL"
     assert report["summary"]["failed"] > 0
+
+
+def test_figure_package_requires_per_figure_traceability(tmp_path: Path) -> None:
+    figures = tmp_path / "paper" / "figures"
+    figures.mkdir(parents=True)
+    (figures / "figure_01_test.pdf").write_bytes(b"pdf")
+    (figures / "figure_01_test.png").write_bytes(b"png")
+    source = tmp_path / "paper" / "source.csv"
+    source.write_text("value\n1\n", encoding="utf-8")
+    script = tmp_path / "render.py"
+    script.write_text("print('render')\n", encoding="utf-8")
+    figure = {
+        "artifact_id": "fig-1",
+        "source_data": "paper/source.csv",
+        "transformation": {
+            "script": "render.py",
+            "sha256": sha256(script),
+            "operation": "test render",
+        },
+        "caption_claim": "Caption claim.",
+        "supported_manuscript_claims": [
+            {"claim": "Supported claim.", "locator": "Results"}
+        ],
+        "limitations": [],
+    }
+    assert valid_figure_package(tmp_path, figure, "Supported claim.")
+    del figure["transformation"]
+    assert not valid_figure_package(tmp_path, figure, "Supported claim.")

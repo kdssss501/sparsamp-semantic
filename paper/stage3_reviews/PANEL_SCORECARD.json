@@ -1,0 +1,46 @@
+{
+  "manuscript_id": "SPRC-STAGE3-001",
+  "review_date": "2026-07-21",
+  "contract_id": "reviewer/reviewer_full/v1",
+  "expected_panel_size": 5,
+  "observed_panel_size": 5,
+  "reviewers": [
+    {
+      "id": "EIC",
+      "recommendation": "major_revision",
+      "confidence": 4,
+      "dimensions": {"D1": "warn", "D2": "warn", "D3": "pass", "D4": "block", "D5": "warn"}
+    },
+    {
+      "id": "R1",
+      "recommendation": "major_revision",
+      "confidence": 5,
+      "dimensions": {"D1": "warn", "D2": "warn", "D3": "pass", "D4": "warn", "D5": "pass"}
+    },
+    {
+      "id": "R2",
+      "recommendation": "major_revision",
+      "confidence": 4,
+      "dimensions": {"D1": "warn", "D2": "warn", "D3": "warn", "D4": "warn", "D5": "warn"}
+    },
+    {
+      "id": "R3",
+      "recommendation": "major_revision",
+      "confidence": 4,
+      "dimensions": {"D1": "warn", "D2": "pass", "D3": "warn", "D4": "warn", "D5": "warn"}
+    },
+    {
+      "id": "DA",
+      "recommendation": null,
+      "confidence": null,
+      "dimensions": {"D1": "warn", "D2": "warn", "D3": "pass", "D4": "block", "D5": "pass"}
+    }
+  ],
+  "failure_conditions": {
+    "F0": {"fired": false, "reason": "Mandatory dimensions are not all pass across the panel."},
+    "F1": {"fired": false, "reason": "No reviewer assigned block to D1, D2 or D3."},
+    "F2": {"fired": true, "reason": "Five of five panel members have at least two mandatory dimensions at warn or worse; majority threshold is three."},
+    "F3": {"fired": true, "reason": "EIC and DA assigned block to high-priority D4."}
+  },
+  "mechanical_decision": "major_revision"
+}

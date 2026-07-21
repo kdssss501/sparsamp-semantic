@@ -349,51 +349,86 @@ def main() -> int:
         "figure_04_precision_direction",
     )
 
+    transformation = {
+        "script": repo_path(Path(__file__)),
+        "sha256": sha256(Path(__file__)),
+    }
     trace = {
-        "schema": "manuscript-figure-trace-v1",
+        "schema": "manuscript-figure-trace-v2",
         "inputs": {
             "scale": {"path": repo_path(args.scale), "sha256": sha256(args.scale)},
             "forward": {"path": repo_path(args.forward), "sha256": sha256(args.forward)},
             "top4": {"path": repo_path(args.top4), "sha256": sha256(args.top4)},
             "reverse": {"path": repo_path(args.reverse), "sha256": sha256(args.reverse)},
         },
-        "transformation": {"script": repo_path(Path(__file__)), "sha256": sha256(Path(__file__))},
+        "transformation": transformation,
         "bootstrap": {"repetitions": args.bootstrap, "seed": args.seed},
         "figures": [
             {
                 "artifact_id": "fig-1",
-                "source_data": None,
+                "source_data": "paper/FIGURE_PLAN.md",
+                "transformation": {
+                    **transformation,
+                    "operation": "conceptual workflow rendering from the documented algorithm",
+                },
                 "caption_claim": "A target-specific sparse correction record reconstructs the selected reference trajectory under a fixed target environment.",
                 "supported_manuscript_claims": [
-                    "Corrections are applied before prefix extension, preventing local disagreements from cascading."
+                    {
+                        "claim": "During replay, corrections are applied before extending the prefix, which prevents a local disagreement from cascading.",
+                        "locator": "Introduction",
+                    }
                 ],
                 "limitations": ["Conceptual workflow; not an empirical result."],
             },
             {
                 "artifact_id": "fig-2",
                 "source_data": repo_path(args.source_dir / "figure_02_source.csv"),
+                "transformation": {
+                    **transformation,
+                    "operation": "exact-replay counts and prompt-level correction-rate plotting",
+                },
                 "caption_claim": "Certificates recovered 60 of 60 trajectories while prompt-level correction rates remained low.",
                 "supported_manuscript_claims": [
-                    "Certificate-corrected replay recovered 60 of 60 token trajectories, whereas uncorrected replay recovered 10 of 60.",
-                    "The mean correction rate was 2.16 percent across the main 60 trajectories.",
+                    {
+                        "claim": "Certificate-corrected replay recovered 60 of 60 token trajectories, whereas uncorrected replay recovered 10 of 60 (Table 1 and Fig. 2a).",
+                        "locator": "Results: Exact replay scales across bilingual prompts",
+                    },
+                    {
+                        "claim": "The mean correction rate was 2.16% (prompt-cluster bootstrap 95% confidence interval, 1.80-2.53%), with a maximum trial rate of 6.15% and prompt-level variation shown in Fig. 2b.",
+                        "locator": "Results: Exact replay scales across bilingual prompts",
+                    },
                 ],
                 "limitations": ["Fixed prompt set on one model and GPU stack."],
             },
             {
                 "artifact_id": "fig-3",
                 "source_data": repo_path(args.source_dir / "figure_03_source.csv"),
+                "transformation": {
+                    **transformation,
+                    "operation": "paired prompt-cluster contract-width summary plotting",
+                },
                 "caption_claim": "Top-four retained more source mass and reduced the truncation component but did not reduce correction density.",
                 "supported_manuscript_claims": [
-                    "Increasing contract support improves retained-mass fidelity but not replay sparsity in the controlled ablation."
+                    {
+                        "claim": "The distributional improvement did not produce a reliability improvement.",
+                        "locator": "Results: Contract width exposes a distribution-reliability Pareto frontier",
+                    }
                 ],
                 "limitations": ["One public seed per contract-width condition."],
             },
             {
                 "artifact_id": "fig-4",
                 "source_data": repo_path(args.source_dir / "figure_04_source.csv"),
+                "transformation": {
+                    **transformation,
+                    "operation": "paired prompt-cluster precision-direction summary plotting",
+                },
                 "caption_claim": "Correction density and retained mass were similar after reversing FP16 and BF16 within the tested stack.",
                 "supported_manuscript_claims": [
-                    "The data support bidirectional precision replay on the tested model and GPU stack."
+                    {
+                        "claim": "These data support bidirectional precision replay on the tested model and GPU stack.",
+                        "locator": "Results: Replay is stable in both FP16/BF16 directions within the tested environment",
+                    }
                 ],
                 "limitations": ["One public seed per precision direction; same GPU stack."],
             },

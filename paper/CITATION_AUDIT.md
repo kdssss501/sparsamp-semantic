@@ -1,8 +1,8 @@
 # Citation Audit
 
-**Search date:** 2026-07-20
+**Search date:** 2026-07-21
 **Scope:** direct scholarly literature for numerical LLM reproducibility, inference verification, probability-contract sampling and finite-precision effects. Nature/CNS journal filtering was not applied because the user requested Nature writing style rather than Nature-only sources.
-**Metadata sources:** arXiv API, ACL Anthology BibTeX and USENIX official proceedings page.
+**Metadata sources:** arXiv API, Crossref DOI records, ACL Anthology and the USENIX official proceedings page.
 
 ## Claim-to-source mapping
 

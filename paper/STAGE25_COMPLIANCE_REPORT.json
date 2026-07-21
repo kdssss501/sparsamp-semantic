@@ -1,0 +1,43 @@
+{
+  "mode": "primary_research",
+  "stage": "2.5",
+  "generated_at": "2026-07-21T10:09:15Z",
+  "prisma_trAIce": null,
+  "raise": {
+    "mode": "principles_only",
+    "principles": {
+      "human_oversight": "warn",
+      "transparency": "warn",
+      "reproducibility": "pass",
+      "fit_for_purpose": "warn"
+    },
+    "principle_evidence": {
+      "human_oversight": [
+        "paper/MANUSCRIPT_DRAFT.md#AI-assisted-work-disclosure states author supervision and responsibility.",
+        "[WEAK EVIDENCE] Author names, qualifications and an adjudication record remain AUTHOR_INPUT_NEEDED."
+      ],
+      "transparency": [
+        "paper/MANUSCRIPT_DRAFT.md#AI-assisted-work-disclosure lists assisted stages.",
+        "[WEAK EVIDENCE] Tool names, versions and per-stage parameters are not yet enumerated in the manuscript."
+      ],
+      "reproducibility": [
+        "paper/STAGE25_MATERIAL_PASSPORT.json contains a populated repro_lock and stochasticity declaration.",
+        "R002 and R041-R049 result files record configurations, hashes or deterministic signatures."
+      ],
+      "fit_for_purpose": [
+        "The manuscript states that executable changes were reviewed with tests or source inspection.",
+        "[WEAK EVIDENCE] The manuscript does not yet justify each AI tool against a validation reference or pilot."
+      ]
+    },
+    "block_decision": "warn"
+  },
+  "overall_decision": "warn",
+  "user_action_required": false,
+  "evidence": [
+    "paper/MANUSCRIPT_DRAFT.md",
+    "paper/STAGE25_MATERIAL_PASSPORT.json",
+    "paper/STAGE25_INTEGRITY_REPORT.md",
+    "paper/MANUSCRIPT_INTEGRITY.json"
+  ],
+  "upstream_sync_status": "current"
+}

@@ -1,0 +1,429 @@
+{
+  "origin_skill": "academic-pipeline",
+  "origin_mode": "pre-review",
+  "origin_date": "2026-07-21T10:09:15Z",
+  "verification_status": "VERIFIED",
+  "version_label": "stage-2.5-v1",
+  "integrity_pass_date": "2026-07-21T10:09:15Z",
+  "content_hash": "32494b5c8c6940179d3793fa183543f6a09c06e0da3a30197579d97ee2645518",
+  "upstream_dependencies": [
+    "research-v0.36-official-matrix-reproduction",
+    "paper-draft-v0.2"
+  ],
+  "repro_lock": {
+    "schema_version": "1.0",
+    "stochasticity_declaration": "LLM outputs are not byte-reproducible. This lockfile documents configuration, not a deterministic replay guarantee.",
+    "ars_version": "3.16.0",
+    "model": {
+      "family": "codex",
+      "id": "codex-gpt-5-active-session",
+      "weight_stable": false
+    },
+    "prompts": {
+      "hash_timing": "skill-load",
+      "skill_md_hash": "sha256:b41a6158a80cc39d67bfbe88921a2b97177adacf5e0bc5da808def95b2620516",
+      "agents_bundle_hash": "sha256:55f187a3d8547418fac2377bcd340ea9292a18103d59bc504eea2e0649dfbed9"
+    },
+    "materials": {
+      "list_hash": "sha256:1fb422d4ac5482831be4a85a98f17e9230a4932178800a004424fc5f9b391867",
+      "count": 15
+    },
+    "external_protocols": {
+      "s2_api_protocol_version": "not-invoked; DOI, arXiv, ACL Anthology and USENIX primary metadata used",
+      "s2_snapshot_available": false
+    },
+    "cross_model": {
+      "enabled": false,
+      "secondary_model_id": null
+    }
+  },
+  "slr_lineage": false,
+  "experiment_intake_declaration": {
+    "status": "experiments_declared",
+    "declared_at": "2026-07-21T10:09:15Z",
+    "declared_by": "scholar"
+  },
+  "experiment_provenance": [
+    {
+      "experiment_id": "exp-sprc-r001-r049",
+      "title": "SparSamp compatibility and sparse precision replay study",
+      "description": "Consolidated provenance ledger for the official compatibility reproduction and R041-R049 replay experiments. Per-run configurations and model fingerprints remain in the referenced result files.",
+      "repro_lock": {
+        "schema_version": "1.0",
+        "stochasticity_declaration": "LLM outputs are not byte-reproducible. This lockfile documents configuration, not a deterministic replay guarantee.",
+        "ars_version": "3.16.0",
+        "model": {
+          "family": "local-huggingface",
+          "id": "gpt2-and-qwen2.5-1.5b-instruct; exact fingerprints in result files",
+          "weight_stable": false
+        },
+        "prompts": {
+          "hash_timing": "skill-load",
+          "skill_md_hash": "sha256:b41a6158a80cc39d67bfbe88921a2b97177adacf5e0bc5da808def95b2620516",
+          "agents_bundle_hash": "sha256:55f187a3d8547418fac2377bcd340ea9292a18103d59bc504eea2e0649dfbed9"
+        },
+        "materials": {
+          "list_hash": "sha256:1fb422d4ac5482831be4a85a98f17e9230a4932178800a004424fc5f9b391867",
+          "count": 15
+        },
+        "external_protocols": {
+          "s2_api_protocol_version": "not-applicable-to-local-experiments",
+          "s2_snapshot_available": false
+        },
+        "cross_model": {
+          "enabled": false,
+          "secondary_model_id": null
+        }
+      },
+      "planned_vs_executed": [
+        {
+          "planned": "Run the official SparSamp Basic Test without changing encode_spar or decode_spar.",
+          "executed": true,
+          "result_file": "outputs/official/basic.json",
+          "metric": "decoded payload and embedding rate",
+          "value": "576 bits in 105 tokens; exact decode"
+        },
+        {
+          "planned": "Run the 12-condition official GPT-2 compatibility matrix over 100 IMDB contexts per condition.",
+          "executed": true,
+          "result_file": "outputs/official/R002_official_matrix_compat.json",
+          "metric": "no-ambiguity decode and capacity tolerance",
+          "value": "846/846 exact; 16/16 capacity checks within 5%"
+        },
+        {
+          "planned": "Establish an FP32-to-FP16 GPT-2 replay-certificate pilot.",
+          "executed": true,
+          "result_file": "outputs/R041_gpt2_replay_certificate.json",
+          "metric": "corrected exact replay",
+          "value": "6/6"
+        },
+        {
+          "planned": "Establish a fixed-length FP16-to-BF16 Qwen pilot.",
+          "executed": true,
+          "result_file": "outputs/R042_qwen_fp16_bf16_replay.json",
+          "metric": "corrected exact replay",
+          "value": "6/6"
+        },
+        {
+          "planned": "Evaluate the public sentence-completion stopping rule.",
+          "executed": true,
+          "result_file": "outputs/R043_qwen_sentence_replay.json",
+          "metric": "sentence completion and corrected exact replay",
+          "value": "6/6 complete; 6/6 exact"
+        },
+        {
+          "planned": "Run the main bilingual top-two FP16-to-BF16 scale experiment.",
+          "executed": true,
+          "result_file": "outputs/R044_qwen_replay_scale.json",
+          "metric": "corrected exact replay and mean correction rate",
+          "value": "60/60; 2.1605904154340095%"
+        },
+        {
+          "planned": "Run the matched top-four contract-width ablation.",
+          "executed": true,
+          "result_file": "outputs/R045_qwen_contract_k4.json",
+          "metric": "retained mass, truncation component and correction rate",
+          "value": "20/20 exact; no detected correction-rate reduction"
+        },
+        {
+          "planned": "Reverse the Qwen precision direction from BF16 references to FP16 replay.",
+          "executed": true,
+          "result_file": "outputs/R046_qwen_reverse_precision.json",
+          "metric": "corrected exact replay",
+          "value": "20/20"
+        },
+        {
+          "planned": "Reconstruct the frozen seed-0 bundle without copying a target correction manifest.",
+          "executed": true,
+          "result_file": "outputs/R047_local_target.json",
+          "metric": "corrected exact replay",
+          "value": "20/20 on the source machine"
+        },
+        {
+          "planned": "Audit payload-only, self-contained and referenced-package serialization costs.",
+          "executed": true,
+          "result_file": "outputs/R049_cost_analysis.json",
+          "metric": "certificate/full-trace byte ratio",
+          "value": "6.65%, 63.89% and 24.76% under distinct stated boundaries"
+        },
+        {
+          "planned": "Replay the frozen package on an independent GPU and CUDA stack.",
+          "executed": false,
+          "skip_reason": "No second independent hardware environment was available before Stage 2.5. The manuscript excludes cross-hardware claims."
+        },
+        {
+          "planned": "Collect blinded human semantic-quality ratings for R048 materials.",
+          "executed": false,
+          "skip_reason": "R048 remains ethics-pending and no participants were recruited. The manuscript excludes human-quality claims."
+        }
+      ],
+      "negative_results": [
+        {
+          "description": "Uncorrected FP16-to-BF16 replay recovered only 10 of 60 main-scale trajectories.",
+          "result_file": "outputs/R044_qwen_replay_scale.json"
+        },
+        {
+          "description": "Increasing support from top-two to top-four did not reduce correction density and reduced structural sentence completion in the controlled ablation.",
+          "result_file": "outputs/R046_precision_replay_ablation_analysis.json"
+        }
+      ],
+      "known_limitations": [
+        {
+          "description": "Qwen replay evidence uses one checkpoint and one RTX 3060 Laptop GPU stack."
+        },
+        {
+          "description": "R047 is a same-machine package-separation smoke test, not independent hardware validation."
+        },
+        {
+          "description": "Replay operates on token identifiers and does not test public-text re-tokenization."
+        },
+        {
+          "description": "No human semantic-quality ratings were collected."
+        },
+        {
+          "description": "Top-k support truncates the source distribution, so zero-KL and distribution-preservation claims are prohibited."
+        }
+      ]
+    }
+  ],
+  "claim_intent_manifests": [
+    {
+      "manifest_version": "1.0",
+      "manifest_id": "M-2026-07-21T10:09:15Z-a25f",
+      "emitted_by": "draft_writer_agent",
+      "emitted_at": "2026-07-21T10:09:15Z",
+      "session_id": "stage-2.5-pre-review",
+      "claims": [
+        {
+          "claim_id": "C-001",
+          "claim_text": "The official SparSamp compatibility reproduction passed the declared decoding and capacity gates with stated limitations.",
+          "intended_evidence_kind": "empirical",
+          "planned_refs": ["sparsamp-2025"],
+          "planned_experiment_ids": ["exp-sprc-r001-r049"]
+        },
+        {
+          "claim_id": "C-002",
+          "claim_text": "A shared public seed alone did not reliably reproduce the tested Qwen trajectories across FP16 and BF16.",
+          "intended_evidence_kind": "empirical",
+          "planned_refs": [],
+          "planned_experiment_ids": ["exp-sprc-r001-r049"]
+        },
+        {
+          "claim_id": "C-003",
+          "claim_text": "Complete target-specific correction manifests recovered every tested corrected trajectory.",
+          "intended_evidence_kind": "empirical",
+          "planned_refs": [],
+          "planned_experiment_ids": ["exp-sprc-r001-r049"]
+        },
+        {
+          "claim_id": "C-004",
+          "claim_text": "Cross-precision corrections were sparse for the tested Qwen configuration.",
+          "intended_evidence_kind": "empirical",
+          "planned_refs": [],
+          "planned_experiment_ids": ["exp-sprc-r001-r049"]
+        },
+        {
+          "claim_id": "C-005",
+          "claim_text": "A referenced compact certificate was smaller than its matching referenced full trace for the audited seed-0 bundle.",
+          "intended_evidence_kind": "empirical",
+          "planned_refs": [],
+          "planned_experiment_ids": ["exp-sprc-r001-r049"]
+        },
+        {
+          "claim_id": "C-006",
+          "claim_text": "Corrected replay succeeded in both FP16/BF16 directions within the tested stack.",
+          "intended_evidence_kind": "empirical",
+          "planned_refs": [],
+          "planned_experiment_ids": ["exp-sprc-r001-r049"]
+        },
+        {
+          "claim_id": "C-007",
+          "claim_text": "Top-four retained more source mass but did not reduce correction density in the controlled ablation.",
+          "intended_evidence_kind": "empirical",
+          "planned_refs": [],
+          "planned_experiment_ids": ["exp-sprc-r001-r049"]
+        },
+        {
+          "claim_id": "C-008",
+          "claim_text": "The reference-only package reconstructed the frozen seed-0 subset on the source machine without copying a target manifest.",
+          "intended_evidence_kind": "empirical",
+          "planned_refs": [],
+          "planned_experiment_ids": ["exp-sprc-r001-r049"]
+        }
+      ],
+      "manifest_negative_constraints": [
+        {
+          "constraint_id": "MNC-1",
+          "rule": "Do not claim target-independent or cross-hardware determinism."
+        },
+        {
+          "constraint_id": "MNC-2",
+          "rule": "Do not claim zero KL, full-distribution preservation, semantic equivalence, security or undetectability."
+        },
+        {
+          "constraint_id": "MNC-3",
+          "rule": "Do not treat sentence punctuation as a human semantic-quality result."
+        }
+      ]
+    }
+  ],
+  "experiment_alignment_results": [
+    {
+      "finding_id": "EA-001",
+      "scoped_manifest_id": "M-2026-07-21T10:09:15Z-a25f",
+      "claim_id": "C-001",
+      "claim_text": "The official SparSamp compatibility reproduction passed the declared decoding and capacity gates with stated limitations.",
+      "experiment_id": "exp-sprc-r001-r049",
+      "result_pointer": "docs/reproducibility/R002_OFFICIAL_ANALYSIS.json#/acceptance",
+      "manuscript_locator": "Results: Official SparSamp compatibility reproduction establishes artifact fidelity",
+      "alignment_verdict": "ALIGNED",
+      "rationale": "Direct recount gives 846/846 eligible exact decodes, 16/16 capacity checks within 5%, and seven budget-exhausted trials retained as limitations.",
+      "judge_model": "codex-gpt-5-active-session",
+      "judge_run_at": "2026-07-21T10:09:15Z",
+      "rule_version": "EA-v1"
+    },
+    {
+      "finding_id": "EA-002",
+      "scoped_manifest_id": "M-2026-07-21T10:09:15Z-a25f",
+      "claim_id": "C-002",
+      "claim_text": "A shared public seed alone did not reliably reproduce the tested Qwen trajectories across FP16 and BF16.",
+      "experiment_id": "exp-sprc-r001-r049",
+      "result_pointer": "outputs/R044_qwen_replay_scale.json#/rows/*/uncorrected_exact",
+      "manuscript_locator": "Results: Exact replay scales across bilingual prompts",
+      "alignment_verdict": "ALIGNED",
+      "rationale": "Direct recount found 10 uncorrected exact trajectories among all 60 configured trials.",
+      "judge_model": "codex-gpt-5-active-session",
+      "judge_run_at": "2026-07-21T10:09:15Z",
+      "rule_version": "EA-v1"
+    },
+    {
+      "finding_id": "EA-003",
+      "scoped_manifest_id": "M-2026-07-21T10:09:15Z-a25f",
+      "claim_id": "C-003",
+      "claim_text": "Complete target-specific correction manifests recovered every tested corrected trajectory.",
+      "experiment_id": "exp-sprc-r001-r049",
+      "result_pointer": "outputs/R044_qwen_replay_scale.json#/rows/*/corrected_exact",
+      "manuscript_locator": "Results: Exact replay scales across bilingual prompts",
+      "alignment_verdict": "ALIGNED",
+      "rationale": "R041, R042, R043, R044, R045 and R046 all report complete corrected recovery; direct R044 recount is 60/60.",
+      "judge_model": "codex-gpt-5-active-session",
+      "judge_run_at": "2026-07-21T10:09:15Z",
+      "rule_version": "EA-v1"
+    },
+    {
+      "finding_id": "EA-004",
+      "scoped_manifest_id": "M-2026-07-21T10:09:15Z-a25f",
+      "claim_id": "C-004",
+      "claim_text": "Cross-precision corrections were sparse for the tested Qwen configuration.",
+      "experiment_id": "exp-sprc-r001-r049",
+      "result_pointer": "outputs/R044_qwen_replay_scale_analysis.json#/groups/overall/correction_rate",
+      "manuscript_locator": "Results: Exact replay scales across bilingual prompts",
+      "alignment_verdict": "ALIGNED",
+      "rationale": "The deterministic analysis and direct row mean both give 0.021605904154340095 with cluster interval 0.018013859157276123-0.025277080761966178.",
+      "judge_model": "codex-gpt-5-active-session",
+      "judge_run_at": "2026-07-21T10:09:15Z",
+      "rule_version": "EA-v1"
+    },
+    {
+      "finding_id": "EA-005",
+      "scoped_manifest_id": "M-2026-07-21T10:09:15Z-a25f",
+      "claim_id": "C-005",
+      "claim_text": "A referenced compact certificate was smaller than its matching referenced full trace for the audited seed-0 bundle.",
+      "experiment_id": "exp-sprc-r001-r049",
+      "result_pointer": "outputs/R049_cost_analysis.json#/serialization/referenced_package_ratio",
+      "manuscript_locator": "Results: Replay-package cost depends on the audit boundary",
+      "alignment_verdict": "ALIGNED",
+      "rationale": "The recomputed referenced ratio is 1148/4636 = 0.24762726488352027; the manuscript names the shared-bundle assumption.",
+      "judge_model": "codex-gpt-5-active-session",
+      "judge_run_at": "2026-07-21T10:09:15Z",
+      "rule_version": "EA-v1"
+    },
+    {
+      "finding_id": "EA-006",
+      "scoped_manifest_id": "M-2026-07-21T10:09:15Z-a25f",
+      "claim_id": "C-006",
+      "claim_text": "Corrected replay succeeded in both FP16/BF16 directions within the tested stack.",
+      "experiment_id": "exp-sprc-r001-r049",
+      "result_pointer": "outputs/R046_precision_replay_ablation_analysis.json#/variants",
+      "manuscript_locator": "Results: Replay is stable in both FP16/BF16 directions within the tested environment",
+      "alignment_verdict": "ALIGNED",
+      "rationale": "The matched forward and reverse subsets each achieved 20/20 corrected exact replay, and the claim remains limited to the tested stack.",
+      "judge_model": "codex-gpt-5-active-session",
+      "judge_run_at": "2026-07-21T10:09:15Z",
+      "rule_version": "EA-v1"
+    },
+    {
+      "finding_id": "EA-007",
+      "scoped_manifest_id": "M-2026-07-21T10:09:15Z-a25f",
+      "claim_id": "C-007",
+      "claim_text": "Top-four retained more source mass but did not reduce correction density in the controlled ablation.",
+      "experiment_id": "exp-sprc-r001-r049",
+      "result_pointer": "outputs/R046_precision_replay_ablation_analysis.json#/comparisons/top4_minus_top2/deltas",
+      "manuscript_locator": "Results: Contract width exposes a distribution-reliability Pareto frontier",
+      "alignment_verdict": "ALIGNED",
+      "rationale": "The paired retained-mass interval is positive, while the equal-trial correction-rate difference interval includes zero; the null correction result is disclosed.",
+      "judge_model": "codex-gpt-5-active-session",
+      "judge_run_at": "2026-07-21T10:09:15Z",
+      "rule_version": "EA-v1"
+    },
+    {
+      "finding_id": "EA-008",
+      "scoped_manifest_id": "M-2026-07-21T10:09:15Z-a25f",
+      "claim_id": "C-008",
+      "claim_text": "The reference-only package reconstructed the frozen seed-0 subset on the source machine without copying a target manifest.",
+      "experiment_id": "exp-sprc-r001-r049",
+      "result_pointer": "outputs/R047_local_target.json#/summary",
+      "manuscript_locator": "Discussion: limitations and same-machine replay boundary",
+      "alignment_verdict": "ALIGNED",
+      "rationale": "The target report gives 20/20 corrected replay and 5/20 uncorrected replay, while the manuscript explicitly labels this as a same-machine smoke test.",
+      "judge_model": "codex-gpt-5-active-session",
+      "judge_run_at": "2026-07-21T10:09:15Z",
+      "rule_version": "EA-v1"
+    }
+  ],
+  "compliance_history": [
+    {
+      "mode": "primary_research",
+      "stage": "2.5",
+      "generated_at": "2026-07-21T10:09:15Z",
+      "prisma_trAIce": null,
+      "raise": {
+        "mode": "principles_only",
+        "principles": {
+          "human_oversight": "warn",
+          "transparency": "warn",
+          "reproducibility": "pass",
+          "fit_for_purpose": "warn"
+        },
+        "principle_evidence": {
+          "human_oversight": [
+            "paper/MANUSCRIPT_DRAFT.md#AI-assisted-work-disclosure states author supervision and responsibility.",
+            "[WEAK EVIDENCE] Author names, qualifications and an adjudication record remain AUTHOR_INPUT_NEEDED."
+          ],
+          "transparency": [
+            "paper/MANUSCRIPT_DRAFT.md#AI-assisted-work-disclosure lists assisted stages.",
+            "[WEAK EVIDENCE] Tool names, versions and per-stage parameters are not yet enumerated in the manuscript."
+          ],
+          "reproducibility": [
+            "paper/STAGE25_MATERIAL_PASSPORT.json contains a populated repro_lock and stochasticity declaration.",
+            "R002 and R041-R049 result files record configurations, hashes or deterministic signatures."
+          ],
+          "fit_for_purpose": [
+            "The manuscript states that executable changes were reviewed with tests or source inspection.",
+            "[WEAK EVIDENCE] The manuscript does not yet justify each AI tool against a validation reference or pilot."
+          ]
+        },
+        "block_decision": "warn"
+      },
+      "overall_decision": "warn",
+      "user_action_required": false,
+      "evidence": [
+        "paper/MANUSCRIPT_DRAFT.md",
+        "paper/STAGE25_MATERIAL_PASSPORT.json",
+        "paper/STAGE25_INTEGRITY_REPORT.md",
+        "paper/MANUSCRIPT_INTEGRITY.json"
+      ],
+      "upstream_sync_status": "current"
+    }
+  ]
+}
