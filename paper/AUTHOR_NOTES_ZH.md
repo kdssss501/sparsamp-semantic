@@ -1,56 +1,64 @@
-# 论文初稿中文作者说明
+# 论文作者说明
 
-## 定位
+## 当前定位
 
-这版初稿按 Nature Communications 风格的计算方法论文组织，而不是直接按 Nature 主刊投稿强度包装。当前最稳妥的主线是“跨精度随机生成的稀疏重放证书”，不是隐写容量、安全性或语义质量论文。
+正式稿按 Nature Communications 风格的计算方法论文组织。核心主线是“跨数值精度随机生成的稀疏重放证书”，而不是宣称获得了更高隐写容量、零分布偏差或不可检测性。
 
-核心句：在已知目标精度环境、固定模型与 tokenizer 的条件下，公开离散概率合同配合稀疏 token 修正记录，可以恢复完全一致的随机生成轨迹；Qwen 主实验为 60/60，平均修正率为 2.16%。
+当前最稳妥的一句话结论是：在模型、tokenizer、prompt、公开随机配置和目标数值环境固定时，公开离散概率合同配合目标环境专用的稀疏 token 修正记录，可以恢复完全一致的随机生成轨迹。Qwen 主实验实现 60/60 精确重放，平均修正率为 2.16%。
 
-## 结构选择
+## 已完成证据
 
-- 摘要采用“问题 -> 缺口 -> 方法 -> 定量结果 -> 边界”结构。
-- 引言先说明随机推理可复现性，再引入有限精度概率边界，不从隐写应用直接开场。
-- Results 将“证书保证精确恢复”与“修正记录是否稀疏”分开，避免循环论证。
-- top-2/top-4 被写成 Pareto 结果，不写成 top-4 全面退化或 top-2 全面最优。
-- Discussion 明确说明证书依赖已知目标环境，因此不是任意硬件上的通用确定性方案。
-- Methods 单独区分 logit 量化、support truncation 和整数质量分配，禁止把 `-log Z` 写成完整总 KL。
-
-## 当前可以写进摘要的结果
-
-- Qwen FP16 到 BF16：60/60 修正后精确重放，未修正 10/60。
+- Qwen FP16 到 BF16：修正后 60/60 精确重放，未修正 10/60。
 - 平均修正率 2.16%，prompt-cluster bootstrap 95% CI 为 1.80%-2.53%。
-- 旧 fixed-width payload-only 比例为 2.88%，95% CI 为 2.40%-3.36%；它不包含 header，不能写成完整证书开销。
-- R049 seed-0 审计：versioned binary payload 为 6.65%，引用共享 bundle 的 compact package 为 24.76%（6.123 bits/token），自包含 JSON audit package 为 63.89%。
-- 58/60 达到公开句末结构条件。
-- BF16 到 FP16 的 20-prompt 消融为 20/20。
-- 按每条轨迹等权统计，top-4 相对 top-2 的 retained mass 增加 0.1100，truncation KL component 降低 0.1840 nats/token，但没有降低修正率。
+- 58/60 输出达到公开句末结构条件。该指标不是语义质量或事实正确性评价。
+- BF16 到 FP16 的 20-prompt 消融为 20/20 精确重放。
+- top-4 相对 top-2 提高 retained source mass 并降低 truncation component，但没有降低修正率，且 shared-contract exactness 更低。
+- R049 seed-0 审计区分了三种开销边界：payload-only 6.65%，引用共享 bundle 的 compact package 24.76%，自包含 JSON audit package 63.89%。三者不是同一估计量。
+- Figure 1-4 的 PDF、300-dpi PNG、source-data CSV、生成脚本和哈希 trace 已生成并通过视觉检查。
+- 正式稿 claim 审计为 22/22 通过，状态为 `PASS_WITH_AUTHOR_INPUT`。
 
-## AUTHOR_INPUT_NEEDED
+## 官方 SparSamp 复现状态
+
+- R001 Basic compatibility reproduction 已完成：105 tokens、576 bits、5.486 bits/token、精确解码。
+- R002 正在运行论文 Tables 2-4 对应的 12 个唯一配置，共 100 个 IMDB contexts 和 1,200 trials。
+- 当前矩阵使用未修改的 Zenodo 15025436 算法源码、PyTorch 2.7.1+cu126 与 Transformers 4.41.2。
+- 这属于 compatibility reproduction，不是严格 Torch 2.2.2 环境复现。Transformers 4.57.6 已记录旧 cache API 不兼容失败，严格 Torch 2.2.2 CUDA wheel 下载因上游 TLS/连接中断未完成。
+- R002 逐 trial 原子保存，最终结果将进入 Supplementary Information；速度只作硬件相关描述，容量与解码才是主要验收门禁。
+
+## 禁止写成的结论
+
+- 不得写“跨任意硬件通用确定性”。当前只有一台 RTX 3060 Laptop GPU。
+- 不得写“零 KL”“完整分布保持”或“等价于原始模型分布”。top-k 截断和整数质量分配均有明确代价。
+- 不得写“语义等价于原生生成”。R048 只有盲评材料，没有真人评分。
+- 不得写“安全”或“不可检测”。当前论文研究的是随机轨迹重放，不是完整隐写安全证明。
+- 不得把 target-specific manifest 的构造性精确恢复包装成纯经验发现。真正的经验贡献是修正的稀疏性、开销和边界。
+- 不得把 R047 写成独立硬件复现。它是同一机器上的 reference-only bundle 与 fresh target replay smoke test。
+
+## 作者必须提供
 
 1. 作者姓名、单位、通讯作者和邮箱。
-2. CRediT 作者贡献与利益冲突声明。
-3. 目标期刊：Nature Communications、Scientific Reports 或计算机领域会议/期刊。
-4. 数据与代码的长期归档地址；投稿前建议创建 Zenodo DOI。
-5. 是否把早期 GPT-2/R022-R023 负面结果放入 Supplementary Information。
-6. 是否能获得第二台 GPU 或不同 CUDA 栈完成独立复验。
-7. 是否开展盲法文本评价；若招募人类评价者，需要在实验前确认伦理、知情同意和数据管理要求。
+2. CRediT 作者贡献。
+3. 资金来源；若无专项资金，应明确写“无专项资助”。
+4. 利益冲突声明。
+5. 最终目标期刊或会议。
+6. 公开代码和数据的不可变归档地址及 DOI。
+7. 是否能够获得第二台 GPU 或不同 CUDA 栈完成独立复现。
+8. 是否计划进行真人盲评；如进行，必须先确认伦理、知情同意和数据管理要求。
 
 ## 投稿前 P0/P1 风险
 
-- **P0：跨硬件主张尚无证据。** 当前只允许写“tested software and hardware stack”。
-- **P0：不能声称零 KL 或完整分布保持。** top-2 的截断项约为 0.353 nats/token，整数 apportionment 误差未单独测量。
-- **P1：top-4 只有一个 seed。** 当前足够支持设计消融，不足以支持一般语义质量结论。
-- **P1：没有盲法语义评价。** 句末标点只是一项结构指标。
-- **P1：模型范围只有 Qwen2.5-1.5B，GPT-2 仅为小型先导实验。**
-- **P1：精确恢复本身由 manifest 构造保证。** 论文必须把主要经验贡献放在稀疏率、分布代价和目标环境边界上。
-- **P1：多篇 2026 引用仍是 arXiv 预印本。** 投稿前需要再次核验出版状态和版本。
-- **P1：R047 仍不是独立硬件证据。** 当前 20/20 是同一机器上的 reference-only bundle 与 fresh target replay smoke。
-- **P1：R048 只有材料，没有真人结果。** 原生 top-16、top-2、top-4 的 20 组匿名材料已生成，但伦理状态仍为 `ETHICS_PENDING`，不能招募或报告评分。
+- **P0：作者元数据与归档 DOI 缺失。** 这些内容不能由模型代填。
+- **P0：Stage 2.5 与最终完整性审查尚未完成。** 正式稿必须经过引用、统计、图表和 AI research failure-mode 门禁。
+- **P1：跨硬件主张无证据。** 只能写“tested software and hardware stack”。
+- **P1：没有真人语义评价。** 句末标点只能作为结构指标。
+- **P1：模型范围有限。** Qwen2.5-1.5B 是主模型，GPT-2 用于先导与官方 artifact 兼容复现。
+- **P1：多篇 2026 引用仍是 arXiv 预印本。** 投稿前需要重新核验版本与出版状态。
 
-## 下一版优先顺序
+## 推荐提交顺序
 
-1. 在第二台 GPU/CUDA 栈上运行 R047 reference-only bundle，保存完整 target JSON。
-2. 完成 R048 伦理/导师确认、功效分析和预注册后，再开始 native/top-2/top-4 盲评。
-3. 为主实验 artifacts 建立不可变 Zenodo 归档并补 DOI。
-4. 根据目标期刊压缩摘要、主文长度和 Methods 位置。
-5. Figure 1-4、PDF/300 DPI PNG 与 source CSV 已完成；投稿排版时只需引用正式文件。
+1. 完成 R002，生成官方复现分析、附录表格与 Supplementary Figure。
+2. 将 R002 的有界结论写入 Methods、Results 和 Supplementary Information。
+3. 完成 Stage 2.5 完整性审查与 7 类 AI research failure-mode checklist。
+4. 进行模拟同行评审并按问题严重度修订。
+5. 作者补齐身份、资金、贡献、利益冲突和归档 DOI。
+6. 通过最终完整性门禁后再生成 LaTeX、DOCX 和 PDF 投稿包。

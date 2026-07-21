@@ -1,0 +1,76 @@
+{
+  "schema": "manuscript-figure-trace-v1",
+  "inputs": {
+    "scale": {
+      "path": "outputs/R044_qwen_replay_scale_analysis.json",
+      "sha256": "281915ac6d7b57f521941c7e41106f10b1d7ff8807459be7c1b05fd9d6dc995c"
+    },
+    "forward": {
+      "path": "outputs/R044_qwen_replay_scale.json",
+      "sha256": "6a6eaa292e8ac490b38932969879323cc44088361ceabd20b51466a836fc3110"
+    },
+    "top4": {
+      "path": "outputs/R045_qwen_contract_k4.json",
+      "sha256": "106d47424ed54c188053acc2709a1c80955ec8b113631d1242cd4fc5273b1b17"
+    },
+    "reverse": {
+      "path": "outputs/R046_qwen_reverse_precision.json",
+      "sha256": "0db87168911af7e1c65274df5c5e680f1e648f20e14d5555e50b9fbbfca755fb"
+    }
+  },
+  "transformation": {
+    "script": "scripts/generate_manuscript_figures.py",
+    "sha256": "12a74710c1bfe6a88cb81aefd21d996da3d26f96204224a4175b921e479545d1"
+  },
+  "bootstrap": {
+    "repetitions": 10000,
+    "seed": 20260720
+  },
+  "figures": [
+    {
+      "artifact_id": "fig-1",
+      "source_data": null,
+      "caption_claim": "A target-specific sparse correction record reconstructs the selected reference trajectory under a fixed target environment.",
+      "supported_manuscript_claims": [
+        "Corrections are applied before prefix extension, preventing local disagreements from cascading."
+      ],
+      "limitations": [
+        "Conceptual workflow; not an empirical result."
+      ]
+    },
+    {
+      "artifact_id": "fig-2",
+      "source_data": "paper/source_data/figure_02_source.csv",
+      "caption_claim": "Certificates recovered 60 of 60 trajectories while prompt-level correction rates remained low.",
+      "supported_manuscript_claims": [
+        "Certificate-corrected replay recovered 60 of 60 token trajectories, whereas uncorrected replay recovered 10 of 60.",
+        "The mean correction rate was 2.16 percent across the main 60 trajectories."
+      ],
+      "limitations": [
+        "Fixed prompt set on one model and GPU stack."
+      ]
+    },
+    {
+      "artifact_id": "fig-3",
+      "source_data": "paper/source_data/figure_03_source.csv",
+      "caption_claim": "Top-four retained more source mass and reduced the truncation component but did not reduce correction density.",
+      "supported_manuscript_claims": [
+        "Increasing contract support improves retained-mass fidelity but not replay sparsity in the controlled ablation."
+      ],
+      "limitations": [
+        "One public seed per contract-width condition."
+      ]
+    },
+    {
+      "artifact_id": "fig-4",
+      "source_data": "paper/source_data/figure_04_source.csv",
+      "caption_claim": "Correction density and retained mass were similar after reversing FP16 and BF16 within the tested stack.",
+      "supported_manuscript_claims": [
+        "The data support bidirectional precision replay on the tested model and GPU stack."
+      ],
+      "limitations": [
+        "One public seed per precision direction; same GPU stack."
+      ]
+    }
+  ]
+}

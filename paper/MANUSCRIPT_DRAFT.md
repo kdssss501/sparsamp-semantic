@@ -3,8 +3,10 @@
 **Authors:** AUTHOR_INPUT_NEEDED
 **Affiliations:** AUTHOR_INPUT_NEEDED
 **Corresponding author:** AUTHOR_INPUT_NEEDED
-**Draft status:** v0.1, evidence-bounded manuscript draft
+**Draft status:** v0.2, submission-preparation draft; author metadata and external validation pending
 **Intended format:** Nature Communications-style computational methods article
+
+**Keywords:** stochastic inference; numerical precision; exact replay; language models; reproducibility; probability contracts
 
 ## Abstract
 
@@ -38,7 +40,7 @@ The first Qwen pilot used FP16 references and BF16 replay for six seeded 64-toke
 
 We next evaluated the seeded policy on 20 prompts covering explanation, comparison, planning, summarization-style responses and structured lists in English and Chinese. Three public seeds were used for each prompt, giving 60 FP16 reference and BF16 replay trajectories. Generation continued for at least 64 tokens and stopped at the first public sentence endpoint, with a maximum of 96 tokens. All configured trials were retained in the analysis.
 
-Certificate-corrected replay recovered 60 of 60 token trajectories, whereas uncorrected replay recovered 10 of 60 (Table 1). All 20 prompt clusters achieved three of three corrected replays; the Wilson 95% interval across the 20 prompt clusters was 0.839-1.000. This interval describes the finite prompt set and does not establish performance on a wider prompt population. The mean correction rate was 2.16% (prompt-cluster bootstrap 95% confidence interval, 1.80-2.53%), with a maximum trial rate of 6.15%. Under the original fixed-width payload-only accounting, the mean correction-record size was 2.88% of a full token trace (95% confidence interval, 2.40-3.36%). This legacy estimate excludes identity and configuration headers; package-level costs are reported separately below.
+Certificate-corrected replay recovered 60 of 60 token trajectories, whereas uncorrected replay recovered 10 of 60 (Table 1 and Fig. 2a). All 20 prompt clusters achieved three of three corrected replays; the Wilson 95% interval across the 20 prompt clusters was 0.839-1.000. This interval describes the finite prompt set and does not establish performance on a wider prompt population. The mean correction rate was 2.16% (prompt-cluster bootstrap 95% confidence interval, 1.80-2.53%), with a maximum trial rate of 6.15% and prompt-level variation shown in Fig. 2b. Under the original fixed-width payload-only accounting, the mean correction-record size was 2.88% of a full token trace (95% confidence interval, 2.40-3.36%). This legacy estimate excludes identity and configuration headers; package-level costs are reported separately below.
 
 The result was consistent across the two language strata. English prompts reached 30 of 30 corrected replays with a mean correction rate of 1.94% (95% confidence interval, 1.47-2.42%); Chinese prompts reached 30 of 30 with a mean rate of 2.39% (1.86-2.86%). These intervals overlap and were not used for a language-difference claim. The mean trajectory length was 75.0 tokens (cluster interval, 72.3-78.1). Without corrections, the common exact prefix averaged 39.45 tokens, illustrating how a small number of local disagreements can produce full-sequence failure.
 
@@ -67,13 +69,13 @@ At scale, 58 of 60 reference trajectories satisfied the structural endpoint. Fai
 
 Restricting the contract to the two highest-probability candidates can make decisions stable but conditions generation on a smaller fraction of the model distribution. To quantify this trade-off, we compared top-two and top-four contracts on the same 20 prompts and public seed. Because contract width participates in token selection, the two settings intentionally generated different reference trajectories; the comparison is paired by prompt and seed, not by token sequence.
 
-Expanding the contract from two to four candidates increased retained source mass from 0.734 to 0.845, a paired increase of 0.110 (95% confidence interval, 0.090-0.131). The measured truncation component decreased from 0.382 to 0.198 nats per token, a change of -0.184 (-0.220 to -0.150). The full-logit quantization term remained much smaller: 0.00257 nats per token for top-two and 0.00247 for top-four in these runs. These components are reported separately; their numerical sum is not asserted to equal total divergence after integer apportionment.
+Expanding the contract from two to four candidates increased retained source mass from 0.734 to 0.845, a paired increase of 0.110 (95% confidence interval, 0.090-0.131; Fig. 3a). The measured truncation component decreased from 0.382 to 0.198 nats per token, a change of -0.184 (-0.220 to -0.150; Fig. 3b). The full-logit quantization term remained much smaller: 0.00257 nats per token for top-two and 0.00247 for top-four in these runs. These components are reported separately; their numerical sum is not asserted to equal total divergence after integer apportionment.
 
-The distributional improvement did not produce a reliability improvement. Correction density changed by +0.35 percentage points (-0.65 to +1.34), so the interval included no change. Shared-contract exactness fell by 25.14 percentage points (-27.70 to -22.72). Sentence completion decreased from 20 of 20 to 16 of 20, a paired change of -20 percentage points (-40 to -5). Because completion is an automated structural endpoint and this ablation used one seed, the decrease is treated as a bounded signal rather than a general semantic-quality result. We therefore retain top-two as the default reproducibility operating point and top-four as a lower-truncation alternative on the Pareto frontier.
+The distributional improvement did not produce a reliability improvement. Correction density changed by +0.35 percentage points (-0.65 to +1.34; Fig. 3c), so the interval included no change. Shared-contract exactness fell by 25.14 percentage points (-27.70 to -22.72; Fig. 3d). Sentence completion decreased from 20 of 20 to 16 of 20, a paired change of -20 percentage points (-40 to -5). Because completion is an automated structural endpoint and this ablation used one seed, the decrease is treated as a bounded signal rather than a general semantic-quality result. We therefore retain top-two as the default reproducibility operating point and top-four as a lower-truncation alternative on the Pareto frontier.
 
 ### Replay is stable in both FP16/BF16 directions within the tested environment
 
-To test whether the result depended on selecting FP16 as the reference, we reversed the direction for the 20-prompt ablation. BF16 references replayed in FP16 achieved 20 of 20 corrected trajectories, with a correction rate of 2.06% (1.33-2.86%) and 19 of 20 sentence-complete outputs. Relative to the matched FP16-to-BF16 top-two subset, the correction-rate change was +0.01 percentage points (-1.00 to +1.00), and the retained-mass change was -0.0043 (-0.0193 to +0.0104). Neither interval excluded zero.
+To test whether the result depended on selecting FP16 as the reference, we reversed the direction for the 20-prompt ablation (Fig. 4). BF16 references replayed in FP16 achieved 20 of 20 corrected trajectories, with a correction rate of 2.06% (1.33-2.86%) and 19 of 20 sentence-complete outputs. Relative to the matched FP16-to-BF16 top-two subset, the correction-rate change was +0.01 percentage points (-1.00 to +1.00), and the retained-mass change was -0.0043 (-0.0193 to +0.0104). Neither interval excluded zero.
 
 These data support bidirectional precision replay on the tested model and GPU stack. They do not show equivalence of FP16 and BF16 distributions: only five of 20 reference trajectories were identical across the two reference precisions, and the quantization total-variation term was slightly larger in the reverse experiment. The certificate recovers a selected reference path despite distributional differences; it does not remove those differences.
 
@@ -166,7 +168,7 @@ Exact counts are reported without null-hypothesis significance tests. For the ma
 
 ## Data availability
 
-The fixed bilingual prompt set, aggregate analysis files, Figure 1-4 source-data CSVs, generated PDF/PNG figures, source hashes and deterministic result signatures are included in the project repository. Raw model outputs, private blinding keys and participant packages are excluded from version control and remain local experiment artifacts. The R047 reference-only bundle is transferred separately and verified by SHA-256 before external replay. AUTHOR_INPUT_NEEDED: provide the public archival location and accession/DOI before submission.
+The fixed bilingual prompt set, aggregate analysis files, Figure 1-4 source-data CSVs, generated PDF and 300-dpi PNG figures, source hashes and deterministic result signatures are included in the project repository. Raw model outputs, private blinding keys and participant packages are excluded from version control and remain local experiment artifacts. The R047 reference-only bundle is transferred separately and verified by SHA-256 before external replay. AUTHOR_INPUT_NEEDED: provide the public archival location and accession or DOI before submission.
 
 ## Code availability
 
@@ -176,6 +178,10 @@ Code for probability contracts, replay certificates, checkpointed experiments, e
 
 AUTHOR_INPUT_NEEDED.
 
+## Funding
+
+AUTHOR_INPUT_NEEDED. If the work received no specific funding, replace this placeholder with: "This research received no specific grant from any funding agency in the public, commercial or not-for-profit sectors."
+
 ## Author contributions
 
 AUTHOR_INPUT_NEEDED. Use CRediT roles and distinguish conceptualization, software, validation, formal analysis, investigation, visualization, writing and supervision.
@@ -183,6 +189,14 @@ AUTHOR_INPUT_NEEDED. Use CRediT roles and distinguish conceptualization, softwar
 ## Competing interests
 
 The authors declare AUTHOR_INPUT_NEEDED.
+
+## Ethics declaration
+
+The computational experiments used public model checkpoints, fixed prompts and locally generated outputs and did not involve human participants, identifiable personal data or animal subjects. The prepared R048 blinded-evaluation materials were not administered to participants and no human ratings are reported. Any future human evaluation will require prior institutional or supervisory determination of the applicable ethics, consent and data-management requirements.
+
+## AI-assisted work disclosure
+
+Generative AI tools were used during software development, experiment planning and manuscript drafting under author supervision. All executable changes were reviewed with automated tests or source inspection, quantitative claims were traced to saved experiment artifacts, and references were checked against official publication records or primary metadata sources. The authors remain responsible for the study design, code, analysis, interpretation and final text.
 
 ## References
 
@@ -200,8 +214,8 @@ The authors declare AUTHOR_INPUT_NEEDED.
 
 **Figure 1 | Sparse precision replay certificate workflow.** A reference-precision run generates a stochastic token trajectory from a public integer contract. The target precision evaluates the same contract on each reference prefix. Only target choices that differ from the reference token are stored. A fresh target run applies these corrections before extending its prefix, preventing autoregressive error propagation. The figure must distinguish the top-16 validation envelope from the top-two or top-four contract support.
 
-**Figure 2 | Exact replay and sparse correction density across bilingual prompts.** a, Corrected and uncorrected exact-replay counts for 60 FP16-to-BF16 trajectories. b, Prompt-level correction rates for ten English and ten Chinese prompts, with three seed trajectories retained within each cluster. c, English and Chinese prompt-cluster correction intervals. d, Trial-level legacy fixed-width payload ratios; package-level R049 costs are reported in the text and source audit. Points represent trajectories; interval summaries use prompt-cluster bootstrap resampling.
+**Figure 2 | Exact replay and sparse correction density across bilingual prompts.** a, Corrected and uncorrected exact-replay counts for 60 FP16-to-BF16 trajectories. b, Mean correction rate for each of ten English and ten Chinese prompt clusters, with three seed trajectories retained within each prompt mean. The dashed line is the overall equal-trial mean.
 
-**Figure 3 | Distribution-reliability trade-off with contract width.** Retained source mass, truncation component, correction rate, shared-contract exactness, sentence completion and uncorrected exact replay for top-two and top-four contracts on 20 matched prompts. Error bars are the frozen paired prompt-cluster intervals. The full-logit quantization term is reported separately in the text and R046 analysis artifact.
+**Figure 3 | Distribution-reliability trade-off with contract width.** a, Retained source mass. b, Reverse-KL truncation component. c, Correction rate. d, Shared-contract exactness for top-two and top-four contracts on 20 matched prompts. Error bars are prompt-cluster bootstrap 95% intervals. The full-logit quantization term and paired differences are reported separately in the text and R046 analysis artifact.
 
-**Figure 4 | Precision-direction stress test.** Comparison of FP16-to-BF16 and BF16-to-FP16 top-two contracts on 20 matched prompts. Panels show corrected recovery, correction density, retained mass and structural sentence completion. Confidence intervals use paired prompt-cluster bootstrap resampling.
+**Figure 4 | Precision-direction stress test.** Comparison of FP16-to-BF16 and BF16-to-FP16 top-two contracts on 20 matched prompts. Panels show a, correction density; b, retained source mass; and c, structural sentence completion. Both directions achieved 20 of 20 corrected exact replays, which are reported in Table 1. Error bars are prompt-cluster bootstrap 95% intervals.
