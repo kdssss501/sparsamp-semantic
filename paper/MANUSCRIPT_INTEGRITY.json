@@ -1,7 +1,7 @@
 {
   "schema": "manuscript-integrity-audit-v1",
   "manuscript": "C:\\Users\\41462\\Documents\\\u9690\u5199\\paper\\MANUSCRIPT_DRAFT.md",
-  "manuscript_sha256": "affe321fff08edb9234b72dea6aea9464ec71bbf7865c95d8b3cc851bc7aecd3",
+  "manuscript_sha256": "32494b5c8c6940179d3793fa183543f6a09c06e0da3a30197579d97ee2645518",
   "checks": [
     {
       "name": "corrected recovery",
@@ -42,6 +42,31 @@
       "name": "self-contained package ratio",
       "pass": true,
       "detail": "expected manuscript token: 63.89%"
+    },
+    {
+      "name": "official eligible decoding",
+      "pass": true,
+      "detail": "expected manuscript token: All 846 completed trials without Token Ambiguity decoded exactly"
+    },
+    {
+      "name": "official capacity checks",
+      "pass": true,
+      "detail": "expected manuscript token: All 16 capacity comparisons were within 5% relative error"
+    },
+    {
+      "name": "official budget boundary",
+      "pass": true,
+      "detail": "expected manuscript token: Of 1,200 configured trials, 1,193 completed"
+    },
+    {
+      "name": "official status",
+      "pass": true,
+      "detail": "expected manuscript token: PASS_WITH_LIMITATIONS"
+    },
+    {
+      "name": "official raw checkpoint hash",
+      "pass": true,
+      "detail": "outputs\\official\\R002_official_matrix_compat.json"
     },
     {
       "name": "citation numbering",
@@ -115,7 +140,7 @@
     }
   ],
   "summary": {
-    "passed": 22,
+    "passed": 27,
     "failed": 0,
     "author_placeholders": 9,
     "status": "PASS_WITH_AUTHOR_INPUT"

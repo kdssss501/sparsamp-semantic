@@ -1,7 +1,7 @@
 # Manuscript Integrity Audit
 
 **Status:** PASS_WITH_AUTHOR_INPUT
-**Checks:** 22 passed, 0 failed
+**Checks:** 27 passed, 0 failed
 **Author placeholders:** 9
 
 | Check | Status | Detail |
@@ -14,6 +14,11 @@
 | payload ratio | PASS | expected manuscript token: 6.65% |
 | referenced package ratio | PASS | expected manuscript token: 24.76% |
 | self-contained package ratio | PASS | expected manuscript token: 63.89% |
+| official eligible decoding | PASS | expected manuscript token: All 846 completed trials without Token Ambiguity decoded exactly |
+| official capacity checks | PASS | expected manuscript token: All 16 capacity comparisons were within 5% relative error |
+| official budget boundary | PASS | expected manuscript token: Of 1,200 configured trials, 1,193 completed |
+| official status | PASS | expected manuscript token: PASS_WITH_LIMITATIONS |
+| official raw checkpoint hash | PASS | outputs\official\R002_official_matrix_compat.json |
 | citation numbering | PASS | cited=[1, 2, 3, 4, 5, 6, 7, 8, 9], references=[1, 2, 3, 4, 5, 6, 7, 8, 9] |
 | no zero-divergence claim | PASS | required boundary: do not establish target-independent determinism, zero distributional divergence or cross-hardware generality |
 | no human ratings | PASS | required boundary: no human ratings have been collected |

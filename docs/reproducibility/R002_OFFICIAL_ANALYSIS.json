@@ -1,0 +1,1020 @@
+{
+  "schema": "sparsamp-official-reproduction-analysis-v1",
+  "source_phase": "completed",
+  "source_environment": {
+    "bf16_supported": true,
+    "cuda": "12.6",
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.15",
+    "torch": "2.7.1+cu126",
+    "transformers": "4.41.2"
+  },
+  "bootstrap_repetitions": 10000,
+  "bootstrap_seed": 20260721,
+  "capacity_relative_error_tolerance": 0.05,
+  "configurations": [
+    {
+      "block_size": 2,
+      "top_p": 1.0,
+      "trials": 100,
+      "completed": 100,
+      "budget_exhausted": 0,
+      "token_ambiguity": 26,
+      "eligible": 74,
+      "decode_success": 74,
+      "metrics": {
+        "embedding_rate": {
+          "value": 1.6377104377104377,
+          "bootstrap_ci95": [
+            1.6159734280751201,
+            1.6587205387205388
+          ]
+        },
+        "utilization": {
+          "value": 0.2724309882858018,
+          "bootstrap_ci95": [
+            0.2690184304105377,
+            0.27585978539636746
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 69.54590311061337,
+          "bootstrap_ci95": [
+            65.40655962020563,
+            73.30004639267885
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 69.87576792969509,
+          "bootstrap_ci95": [
+            66.3529172043139,
+            73.081797079294
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.0009010820845079292,
+          "bootstrap_ci95": [
+            0.0008714868144226,
+            0.0009328749254478803
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.03978718848594,
+          "bootstrap_ci95": [
+            0.038231163270021865,
+            0.04101168551899602
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 42.465323239827654,
+          "bootstrap_ci95": [
+            40.107586761175455,
+            44.56620238206636
+          ]
+        }
+      },
+      "published": {
+        "paper_table2": {
+          "utilization": 0.275,
+          "embedding_speed_bits_s": 214.7,
+          "decoding_speed_bits_s": 203.7
+        }
+      }
+    },
+    {
+      "block_size": 4,
+      "top_p": 1.0,
+      "trials": 100,
+      "completed": 100,
+      "budget_exhausted": 0,
+      "token_ambiguity": 29,
+      "eligible": 71,
+      "decode_success": 71,
+      "metrics": {
+        "embedding_rate": {
+          "value": 2.647174585324712,
+          "bootstrap_ci95": [
+            2.615125105425921,
+            2.679409697821504
+          ]
+        },
+        "utilization": {
+          "value": 0.44282915608497236,
+          "bootstrap_ci95": [
+            0.4370769448705544,
+            0.44857928343094955
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 112.11958501428845,
+          "bootstrap_ci95": [
+            106.29442578992227,
+            117.36145912248958
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 109.29810290527874,
+          "bootstrap_ci95": [
+            104.22551707537944,
+            114.20040067964592
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.0008965751716212126,
+          "bootstrap_ci95": [
+            0.0008650409248792951,
+            0.0009319740729866602
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.039472875625102384,
+          "bootstrap_ci95": [
+            0.03861556914530692,
+            0.04030017504370341
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 42.3544354179932,
+          "bootstrap_ci95": [
+            40.310545170925685,
+            44.20250874354764
+          ]
+        }
+      },
+      "published": {
+        "paper_table2": {
+          "utilization": 0.447,
+          "embedding_speed_bits_s": 358.4,
+          "decoding_speed_bits_s": 339.7
+        }
+      }
+    },
+    {
+      "block_size": 8,
+      "top_p": 1.0,
+      "trials": 100,
+      "completed": 100,
+      "budget_exhausted": 0,
+      "token_ambiguity": 27,
+      "eligible": 73,
+      "decode_success": 73,
+      "metrics": {
+        "embedding_rate": {
+          "value": 3.793702497285559,
+          "bootstrap_ci95": [
+            3.7055693743495017,
+            3.8847833912098553
+          ]
+        },
+        "utilization": {
+          "value": 0.6246706818034731,
+          "bootstrap_ci95": [
+            0.6167076621350345,
+            0.6327717724437293
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 150.16226264304794,
+          "bootstrap_ci95": [
+            142.38107076999594,
+            158.11931595556462
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 149.16073255939804,
+          "bootstrap_ci95": [
+            141.36322448389745,
+            157.19592128503655
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.0009419396871687737,
+          "bootstrap_ci95": [
+            0.0009072763495587404,
+            0.0009808245726277756
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.0387277589614226,
+          "bootstrap_ci95": [
+            0.03802963596609486,
+            0.039457872292561195
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 39.58198165261796,
+          "bootstrap_ci95": [
+            37.75986960587886,
+            41.35736406634631
+          ]
+        }
+      },
+      "published": {
+        "paper_table2": {
+          "utilization": 0.645,
+          "embedding_speed_bits_s": 504.0,
+          "decoding_speed_bits_s": 477.7
+        }
+      }
+    },
+    {
+      "block_size": 16,
+      "top_p": 1.0,
+      "trials": 100,
+      "completed": 100,
+      "budget_exhausted": 0,
+      "token_ambiguity": 26,
+      "eligible": 74,
+      "decode_success": 74,
+      "metrics": {
+        "embedding_rate": {
+          "value": 4.809359212975273,
+          "bootstrap_ci95": [
+            4.6655967437904335,
+            4.94747304529066
+          ]
+        },
+        "utilization": {
+          "value": 0.7933280738402879,
+          "bootstrap_ci95": [
+            0.7829422618941175,
+            0.8040040240741678
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 183.19930521226968,
+          "bootstrap_ci95": [
+            172.5624911353148,
+            194.21576194728252
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 177.76268485316376,
+          "bootstrap_ci95": [
+            166.34927757840762,
+            189.43354005732232
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.000979333951991528,
+          "bootstrap_ci95": [
+            0.0009430353342257913,
+            0.0010188173734324746
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.03875062537045839,
+          "bootstrap_ci95": [
+            0.03784669457267285,
+            0.03969703365473273
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 38.09224828081304,
+          "bootstrap_ci95": [
+            35.950208211220186,
+            40.21674504137521
+          ]
+        }
+      },
+      "published": {
+        "paper_table2": {
+          "utilization": 0.788,
+          "embedding_speed_bits_s": 640.4,
+          "decoding_speed_bits_s": 606.7
+        }
+      }
+    },
+    {
+      "block_size": 32,
+      "top_p": 1.0,
+      "trials": 100,
+      "completed": 100,
+      "budget_exhausted": 0,
+      "token_ambiguity": 28,
+      "eligible": 72,
+      "decode_success": 72,
+      "metrics": {
+        "embedding_rate": {
+          "value": 5.177867746288799,
+          "bootstrap_ci95": [
+            5.0555777962625275,
+            5.297898305084746
+          ]
+        },
+        "utilization": {
+          "value": 0.8717630495234774,
+          "bootstrap_ci95": [
+            0.860756316341884,
+            0.8824735443199677
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 160.38262338120097,
+          "bootstrap_ci95": [
+            149.16248630385766,
+            172.70676888986029
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 154.77539068158214,
+          "bootstrap_ci95": [
+            144.09498611379655,
+            167.0204887880954
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.0011246910387819492,
+          "bootstrap_ci95": [
+            0.0010649975262777306,
+            0.0011866322006380248
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.03609432196937508,
+          "bootstrap_ci95": [
+            0.03523224782828088,
+            0.03704063596363154
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 30.974646561058673,
+          "bootstrap_ci95": [
+            28.915024484747118,
+            33.24502571996145
+          ]
+        }
+      },
+      "published": {
+        "paper_table2": {
+          "utilization": 0.873,
+          "embedding_speed_bits_s": 705.1,
+          "decoding_speed_bits_s": 667.3
+        }
+      }
+    },
+    {
+      "block_size": 64,
+      "top_p": 0.8,
+      "trials": 100,
+      "completed": 100,
+      "budget_exhausted": 0,
+      "token_ambiguity": 4,
+      "eligible": 96,
+      "decode_success": 96,
+      "metrics": {
+        "embedding_rate": {
+          "value": 3.671929149018098,
+          "bootstrap_ci95": [
+            3.575214401235032,
+            3.7672449099314025
+          ]
+        },
+        "utilization": {
+          "value": 0.9628121899501572,
+          "bootstrap_ci95": [
+            0.9529013511082894,
+            0.9730922597781162
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 120.18730409769805,
+          "bootstrap_ci95": [
+            112.19268684150146,
+            128.66267884217973
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 123.32005952473874,
+          "bootstrap_ci95": [
+            115.60337121656802,
+            131.47074348708824
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.0008399145277538887,
+          "bootstrap_ci95": [
+            0.0008003994983462491,
+            0.0008845289075063567
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.028268711610676595,
+          "bootstrap_ci95": [
+            0.027770483142238993,
+            0.02880274730314603
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 32.73137885294902,
+          "bootstrap_ci95": [
+            30.780693388948688,
+            34.87637502961995
+          ]
+        }
+      },
+      "published": {
+        "paper_tables3_4": {
+          "embedding_rate": 3.6,
+          "utilization": 0.953,
+          "sampling_atst_s_token": 0.000153,
+          "sampling_to_inference_ratio": 0.02,
+          "generation_speed_tokens_s": 125.8,
+          "embedding_speed_bits_s": 461.7,
+          "decoding_speed_bits_s": 421.4
+        }
+      }
+    },
+    {
+      "block_size": 64,
+      "top_p": 0.95,
+      "trials": 100,
+      "completed": 100,
+      "budget_exhausted": 0,
+      "token_ambiguity": 19,
+      "eligible": 81,
+      "decode_success": 81,
+      "metrics": {
+        "embedding_rate": {
+          "value": 5.031703634885611,
+          "bootstrap_ci95": [
+            4.913954491123487,
+            5.15506178984301
+          ]
+        },
+        "utilization": {
+          "value": 0.9528018391290938,
+          "bootstrap_ci95": [
+            0.9407949320320116,
+            0.9648305227443381
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 197.99428024326008,
+          "bootstrap_ci95": [
+            190.44445727163574,
+            205.7269601168006
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 202.85879040656528,
+          "bootstrap_ci95": [
+            195.30202378531305,
+            210.53528567531822
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.0007409999815144394,
+          "bootstrap_ci95": [
+            0.0007175170600348342,
+            0.0007660114133732618
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.03003358485847331,
+          "bootstrap_ci95": [
+            0.029518144457178912,
+            0.03055920319063457
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 39.349352547422285,
+          "bootstrap_ci95": [
+            38.08446761347074,
+            40.590497843528716
+          ]
+        }
+      },
+      "published": {
+        "paper_tables3_4": {
+          "embedding_rate": 5.16,
+          "utilization": 0.949,
+          "sampling_atst_s_token": 0.000157,
+          "sampling_to_inference_ratio": 0.02,
+          "generation_speed_tokens_s": 130.6,
+          "embedding_speed_bits_s": 628.2,
+          "decoding_speed_bits_s": 560.4
+        }
+      }
+    },
+    {
+      "block_size": 64,
+      "top_p": 1.0,
+      "trials": 100,
+      "completed": 100,
+      "budget_exhausted": 0,
+      "token_ambiguity": 30,
+      "eligible": 70,
+      "decode_success": 70,
+      "metrics": {
+        "embedding_rate": {
+          "value": 5.733530917418833,
+          "bootstrap_ci95": [
+            5.551011653991355,
+            5.925284361123968
+          ]
+        },
+        "utilization": {
+          "value": 0.943262512208053,
+          "bootstrap_ci95": [
+            0.9297109590896108,
+            0.9567563834424321
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 256.9250315587298,
+          "bootstrap_ci95": [
+            245.68308950208677,
+            268.305592044993
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 254.84378333581432,
+          "bootstrap_ci95": [
+            243.82981249962657,
+            265.4211078793131
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.0008586109457189054,
+          "bootstrap_ci95": [
+            0.0008386209072503646,
+            0.0008809920187497841
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.04001475682953052,
+          "bootstrap_ci95": [
+            0.03935284084966089,
+            0.04068729163488348
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 44.810961213826396,
+          "bootstrap_ci95": [
+            43.52802577280151,
+            45.95731751736987
+          ]
+        }
+      },
+      "published": {
+        "paper_table2": {
+          "utilization": 0.974,
+          "embedding_speed_bits_s": 755.4,
+          "decoding_speed_bits_s": 715.6
+        },
+        "paper_tables3_4": {
+          "embedding_rate": 5.98,
+          "utilization": 0.974,
+          "sampling_atst_s_token": 0.000721,
+          "sampling_to_inference_ratio": 0.11,
+          "generation_speed_tokens_s": 132.3,
+          "embedding_speed_bits_s": 755.4,
+          "decoding_speed_bits_s": 715.6
+        }
+      }
+    },
+    {
+      "block_size": 128,
+      "top_p": 1.0,
+      "trials": 100,
+      "completed": 100,
+      "budget_exhausted": 0,
+      "token_ambiguity": 30,
+      "eligible": 70,
+      "decode_success": 70,
+      "metrics": {
+        "embedding_rate": {
+          "value": 5.941622733701942,
+          "bootstrap_ci95": [
+            5.799563513598073,
+            6.085814319606255
+          ]
+        },
+        "utilization": {
+          "value": 0.9858174831179461,
+          "bootstrap_ci95": [
+            0.9729166740806099,
+            0.9981829361376472
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 266.7762445805029,
+          "bootstrap_ci95": [
+            258.1231761078104,
+            275.76964001639817
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 264.1442914258312,
+          "bootstrap_ci95": [
+            254.68546947078073,
+            273.6960901495414
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.0008633636366682837,
+          "bootstrap_ci95": [
+            0.0008457219433905779,
+            0.0008815075709424534
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.04032794572353801,
+          "bootstrap_ci95": [
+            0.03972844002131237,
+            0.04091470632750913
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 44.899559688854126,
+          "bootstrap_ci95": [
+            43.93035311591654,
+            45.842147499516706
+          ]
+        }
+      },
+      "published": {
+        "paper_table2": {
+          "utilization": 0.98,
+          "embedding_speed_bits_s": 731.0,
+          "decoding_speed_bits_s": 699.6
+        }
+      }
+    },
+    {
+      "block_size": 256,
+      "top_p": 1.0,
+      "trials": 100,
+      "completed": 100,
+      "budget_exhausted": 0,
+      "token_ambiguity": 39,
+      "eligible": 61,
+      "decode_success": 61,
+      "metrics": {
+        "embedding_rate": {
+          "value": 5.8664559462662975,
+          "bootstrap_ci95": [
+            5.71427807690839,
+            6.0251589341268765
+          ]
+        },
+        "utilization": {
+          "value": 0.9727071582452129,
+          "bootstrap_ci95": [
+            0.9587862290078161,
+            0.9865173388964648
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 221.558014879844,
+          "bootstrap_ci95": [
+            212.73931112267047,
+            230.87394674963616
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 224.59926472181817,
+          "bootstrap_ci95": [
+            215.36104171792581,
+            234.24754848212095
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.0010052087687504934,
+          "bootstrap_ci95": [
+            0.0009766009674262734,
+            0.0010341914639432335
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.03946175868473539,
+          "bootstrap_ci95": [
+            0.03883073557275856,
+            0.040107144301630045
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 37.766927240091945,
+          "bootstrap_ci95": [
+            36.60500600854542,
+            39.04792222759414
+          ]
+        }
+      },
+      "published": {
+        "paper_table2": {
+          "utilization": 0.985,
+          "embedding_speed_bits_s": 656.3,
+          "decoding_speed_bits_s": 629.9
+        }
+      }
+    },
+    {
+      "block_size": 512,
+      "top_p": 1.0,
+      "trials": 100,
+      "completed": 97,
+      "budget_exhausted": 3,
+      "token_ambiguity": 42,
+      "eligible": 55,
+      "decode_success": 55,
+      "metrics": {
+        "embedding_rate": {
+          "value": 6.180965775902485,
+          "bootstrap_ci95": [
+            6.0071054552747105,
+            6.3523684737174
+          ]
+        },
+        "utilization": {
+          "value": 0.9893223465067559,
+          "bootstrap_ci95": [
+            0.9758995966116184,
+            1.0030769952244722
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 230.25160995508725,
+          "bootstrap_ci95": [
+            218.60539082366995,
+            242.12010700748078
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 230.6975622829899,
+          "bootstrap_ci95": [
+            221.08579120351843,
+            240.8096305119594
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.0010175633869437127,
+          "bootstrap_ci95": [
+            0.0009849647837782158,
+            0.0010515897445754856
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.039399462466024535,
+          "bootstrap_ci95": [
+            0.03868931161519534,
+            0.04006624502001092
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 37.251720572982485,
+          "bootstrap_ci95": [
+            35.79778466501977,
+            38.73471795553997
+          ]
+        }
+      },
+      "published": {
+        "paper_table2": {
+          "utilization": 0.987,
+          "embedding_speed_bits_s": 709.7,
+          "decoding_speed_bits_s": 678.0
+        }
+      }
+    },
+    {
+      "block_size": 1023,
+      "top_p": 1.0,
+      "trials": 100,
+      "completed": 96,
+      "budget_exhausted": 4,
+      "token_ambiguity": 47,
+      "eligible": 49,
+      "decode_success": 49,
+      "metrics": {
+        "embedding_rate": {
+          "value": 6.130243365537483,
+          "bootstrap_ci95": [
+            5.979601574615293,
+            6.290249717655918
+          ]
+        },
+        "utilization": {
+          "value": 0.9998185563413726,
+          "bootstrap_ci95": [
+            0.9869388178843066,
+            1.0131861401906792
+          ]
+        },
+        "embedding_speed_bits_s": {
+          "value": 265.56662548701195,
+          "bootstrap_ci95": [
+            253.0782827647637,
+            279.2318112938344
+          ]
+        },
+        "decoding_speed_bits_s": {
+          "value": 259.1928548561651,
+          "bootstrap_ci95": [
+            246.26927570522284,
+            272.57925028669393
+          ]
+        },
+        "sampling_atst_s_token": {
+          "value": 0.0008965017357393525,
+          "bootstrap_ci95": [
+            0.000863692139722221,
+            0.0009318900837061183
+          ]
+        },
+        "sampling_to_inference_ratio": {
+          "value": 0.0404063777502296,
+          "bootstrap_ci95": [
+            0.039808607783368165,
+            0.040987026960837565
+          ]
+        },
+        "generation_speed_tokens_s": {
+          "value": 43.32073127470817,
+          "bootstrap_ci95": [
+            41.60648378382878,
+            45.12183315793167
+          ]
+        }
+      },
+      "published": {
+        "paper_table2": {
+          "utilization": 0.995,
+          "embedding_speed_bits_s": 706.0,
+          "decoding_speed_bits_s": 672.4
+        }
+      }
+    }
+  ],
+  "acceptance": {
+    "decode_without_token_ambiguity": {
+      "pass": true,
+      "successes": 846,
+      "trials": 846
+    },
+    "capacity_within_tolerance": {
+      "pass": true,
+      "passed": 16,
+      "checks": 16,
+      "details": [
+        {
+          "source": "paper_table2",
+          "block_size": 2,
+          "top_p": 1.0,
+          "metric": "utilization",
+          "relative_error": 0.009341860778902583,
+          "pass": true
+        },
+        {
+          "source": "paper_table2",
+          "block_size": 4,
+          "top_p": 1.0,
+          "metric": "utilization",
+          "relative_error": 0.009330747013484663,
+          "pass": true
+        },
+        {
+          "source": "paper_table2",
+          "block_size": 8,
+          "top_p": 1.0,
+          "metric": "utilization",
+          "relative_error": 0.031518322785313094,
+          "pass": true
+        },
+        {
+          "source": "paper_table2",
+          "block_size": 16,
+          "top_p": 1.0,
+          "metric": "utilization",
+          "relative_error": 0.006761515025746045,
+          "pass": true
+        },
+        {
+          "source": "paper_table2",
+          "block_size": 32,
+          "top_p": 1.0,
+          "metric": "utilization",
+          "relative_error": 0.0014168963075860408,
+          "pass": true
+        },
+        {
+          "source": "paper_table4",
+          "block_size": 64,
+          "top_p": 0.8,
+          "metric": "embedding_rate",
+          "relative_error": 0.019980319171693826,
+          "pass": true
+        },
+        {
+          "source": "paper_table4",
+          "block_size": 64,
+          "top_p": 0.8,
+          "metric": "utilization",
+          "relative_error": 0.010296106978129278,
+          "pass": true
+        },
+        {
+          "source": "paper_table4",
+          "block_size": 64,
+          "top_p": 0.95,
+          "metric": "embedding_rate",
+          "relative_error": 0.02486363665007541,
+          "pass": true
+        },
+        {
+          "source": "paper_table4",
+          "block_size": 64,
+          "top_p": 0.95,
+          "metric": "utilization",
+          "relative_error": 0.0040061529284444895,
+          "pass": true
+        },
+        {
+          "source": "paper_table2",
+          "block_size": 64,
+          "top_p": 1.0,
+          "metric": "utilization",
+          "relative_error": 0.031557995679617,
+          "pass": true
+        },
+        {
+          "source": "paper_table4",
+          "block_size": 64,
+          "top_p": 1.0,
+          "metric": "embedding_rate",
+          "relative_error": 0.04121556564902459,
+          "pass": true
+        },
+        {
+          "source": "paper_table4",
+          "block_size": 64,
+          "top_p": 1.0,
+          "metric": "utilization",
+          "relative_error": 0.031557995679617,
+          "pass": true
+        },
+        {
+          "source": "paper_table2",
+          "block_size": 128,
+          "top_p": 1.0,
+          "metric": "utilization",
+          "relative_error": 0.0059362072632103725,
+          "pass": true
+        },
+        {
+          "source": "paper_table2",
+          "block_size": 256,
+          "top_p": 1.0,
+          "metric": "utilization",
+          "relative_error": 0.012480042390646767,
+          "pass": true
+        },
+        {
+          "source": "paper_table2",
+          "block_size": 512,
+          "top_p": 1.0,
+          "metric": "utilization",
+          "relative_error": 0.0023529346573008007,
+          "pass": true
+        },
+        {
+          "source": "paper_table2",
+          "block_size": 1023,
+          "top_p": 1.0,
+          "metric": "utilization",
+          "relative_error": 0.0048427701923342975,
+          "pass": true
+        }
+      ]
+    },
+    "budget_completion": {
+      "completed": 1193,
+      "budget_exhausted": 7,
+      "configured": 1200
+    },
+    "overall_pass": true,
+    "overall_status": "PASS_WITH_LIMITATIONS"
+  },
+  "source": "outputs\\official\\R002_official_matrix_compat.json",
+  "source_sha256": "c99b9cd112e57cfb5a293c489cc6803181671e5c192625eef5764cc9a0fbefc6",
+  "artifacts": {
+    "source_csv": {
+      "path": "paper/source_data/supplementary_table_s1_official.csv",
+      "sha256": "1eb4562f2d208e22840b58cb9f55553c4d93af4ce0f90c8639da3067ff27e251"
+    },
+    "figure_svg": {
+      "path": "paper/figures/supplementary_figure_s1_official.svg",
+      "sha256": "18f0f79e8311f5d16731c899b8764853667aa701bbedbe789555151318758131"
+    },
+    "figure_pdf": {
+      "path": "paper/figures/supplementary_figure_s1_official.pdf",
+      "sha256": "3b4ccc7ea8adea138e59beba6d640acc1dd52cf9e0c345e8cb011e784a2682ef"
+    },
+    "figure_png": {
+      "path": "paper/figures/supplementary_figure_s1_official.png",
+      "sha256": "8b032754f9ef4b3e73d59fd938a926258f601955b5ab53bb731ccb7447ff790b"
+    }
+  }
+}

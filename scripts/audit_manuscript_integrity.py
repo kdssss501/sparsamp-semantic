@@ -39,6 +39,7 @@ def audit(
     scale_analysis: Path,
     cost_analysis: Path,
     figure_trace: Path,
+    official_analysis: Path | None = None,
 ) -> dict[str, Any]:
     text = manuscript.read_text(encoding="utf-8")
     scale = json.loads(scale_analysis.read_text(encoding="utf-8"))
@@ -67,6 +68,32 @@ def audit(
     }
     for name, value in expected_claims.items():
         check(checks, name, value in text, f"expected manuscript token: {value}")
+
+    if official_analysis is not None:
+        official = json.loads(official_analysis.read_text(encoding="utf-8"))
+        official_acceptance = official["acceptance"]
+        official_claims = {
+            "official eligible decoding": (
+                f"All {official_acceptance['decode_without_token_ambiguity']['trials']} completed trials without Token Ambiguity decoded exactly"
+            ),
+            "official capacity checks": (
+                f"All {official_acceptance['capacity_within_tolerance']['checks']} capacity comparisons were within 5% relative error"
+            ),
+            "official budget boundary": (
+                f"Of {official_acceptance['budget_completion']['configured']:,} configured trials, "
+                f"{official_acceptance['budget_completion']['completed']:,} completed"
+            ),
+            "official status": "PASS_WITH_LIMITATIONS",
+        }
+        for name, value in official_claims.items():
+            check(checks, name, value in text, f"expected manuscript token: {value}")
+        raw_source = ROOT / official["source"]
+        check(
+            checks,
+            "official raw checkpoint hash",
+            raw_source.is_file() and sha256(raw_source) == official["source_sha256"],
+            official["source"],
+        )
 
     cited = citation_numbers(text)
     references = {
@@ -166,10 +193,17 @@ def main() -> int:
     parser.add_argument("--scale", type=Path, default=ROOT / "outputs/R044_qwen_replay_scale_analysis.json")
     parser.add_argument("--cost", type=Path, default=ROOT / "outputs/R049_cost_analysis.json")
     parser.add_argument("--figure-trace", type=Path, default=ROOT / "paper/source_data/figure_trace.json")
+    parser.add_argument("--official", type=Path, default=ROOT / "docs/reproducibility/R002_OFFICIAL_ANALYSIS.json")
     parser.add_argument("--output", type=Path, default=ROOT / "paper/MANUSCRIPT_INTEGRITY.json")
     parser.add_argument("--markdown", type=Path, default=ROOT / "paper/MANUSCRIPT_INTEGRITY.md")
     args = parser.parse_args()
-    report = audit(args.manuscript, args.scale, args.cost, args.figure_trace)
+    report = audit(
+        args.manuscript,
+        args.scale,
+        args.cost,
+        args.figure_trace,
+        args.official,
+    )
     args.output.write_text(json.dumps(report, indent=2, ensure_ascii=True), encoding="utf-8")
     args.markdown.write_text(markdown_report(report), encoding="utf-8")
     print(json.dumps(report["summary"], indent=2))

@@ -3,7 +3,7 @@
 | Run ID | Milestone | Purpose | System / Variant | Data | Metrics | Priority | Status | Notes |
 |---|---|---|---|---|---|---|---|---|
 | R001 | M0 | Official basic reproduction | Artifact GPT-2 | Paper prompts | decode, bit/token | MUST | DONE-COMPAT | 105 tokens, 576 bits, 5.486 bit/token, exact decode; Torch 2.2.2 strict environment still pending |
-| R002 | M0 | E1-E3 subset | Artifact vs local core | Paper configs | capacity, ATST, SITR | MUST | TODO | Fixed revisions |
+| R002 | M0 | Official Tables 2-4 compatibility matrix | Unchanged artifact algorithm, GPT-2 | 100 IMDB contexts x 12 unique configs | decode, capacity, ATST, SITR | MUST | PASS-WITH-LIMITATIONS | 1,200 configured; 1,193 complete; 7 large-block budget exhaustions; 846/846 no-TA exact decode; 16/16 capacity checks within 5%, max error 4.12%; PyTorch 2.7.1 + Transformers 4.41.2 compatibility environment |
 | R003 | M1 | Completion survival baseline | Fixed block 2/4/8/16/32 | 20 prompts x 3 seeds | success, p95 tokens | MUST | PILOT-DONE | Qwen smoke: 3 prompts x 2 seeds x blocks 8/16/32, 18 independent trajectories, 100% token-ID decode; scale and short budgets pending |
 | R004 | M1 | Runtime profile | Qwen local provider | 10 prompts | forward/sort/transfer time | MUST | TODO | Guides optimization |
 | R005 | M2 | Adaptive schedule pilot | FH-SparSamp v1 | 3 prompts x 2 seeds x 4 budgets | success, bit/token | MUST | REJECTED-V1 | Capacity-ratio controller underperformed fixed-16 at 96/128/160 and only tied at 192; replace with tail fragmentation |

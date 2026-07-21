@@ -52,3 +52,18 @@ def test_analysis_rejects_partial_report() -> None:
 
 def test_relative_error() -> None:
     assert relative_error(0.95, 1.0) == pytest.approx(0.05)
+
+
+def test_budget_exhaustion_is_reported_as_a_limitation() -> None:
+    rows = [row(0), row(1), {**row(2), "status": "budget_exhausted"}]
+    report = {
+        "phase": "completed",
+        "progress": {"expected_trials": 3},
+        "environment": {},
+        "rows": rows,
+    }
+    analysis = analyze_report(
+        report, repetitions=10, seed=1, capacity_tolerance=1.0
+    )
+    assert analysis["acceptance"]["budget_completion"]["budget_exhausted"] == 1
+    assert analysis["acceptance"]["overall_status"] == "PASS_WITH_LIMITATIONS"

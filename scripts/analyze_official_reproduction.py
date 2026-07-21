@@ -7,7 +7,6 @@ import csv
 import hashlib
 import json
 import random
-import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Callable
@@ -197,6 +196,9 @@ def analyze_report(
             }
         )
 
+    budget_exhausted = sum(item["budget_exhausted"] for item in configurations)
+    completed_trials = sum(item["completed"] for item in configurations)
+    overall_pass = all_decode_success and all(check["pass"] for check in capacity_checks)
     return {
         "schema": "sparsamp-official-reproduction-analysis-v1",
         "source_phase": report["phase"],
@@ -217,8 +219,16 @@ def analyze_report(
                 "checks": len(capacity_checks),
                 "details": capacity_checks,
             },
-            "overall_pass": all_decode_success and all(
-                check["pass"] for check in capacity_checks
+            "budget_completion": {
+                "completed": completed_trials,
+                "budget_exhausted": budget_exhausted,
+                "configured": len(rows),
+            },
+            "overall_pass": overall_pass,
+            "overall_status": (
+                "PASS_WITH_LIMITATIONS" if overall_pass and budget_exhausted else (
+                    "PASS" if overall_pass else "FAIL"
+                )
             ),
         },
     }
@@ -237,8 +247,8 @@ def markdown_report(analysis: dict[str, Any]) -> str:
         "",
         "## Results",
         "",
-        "| block | top-p | complete | TA | eligible | decode | bits/token | utilization (95% CI) | paper utilization | relative error |",
-        "|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| block | top-p | complete | budget exhausted | TA | eligible | decode | bits/token | utilization (95% CI) | paper utilization | relative error |",
+        "|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     checks = {
         (item["block_size"], item["top_p"], item["metric"]): item
@@ -258,7 +268,7 @@ def markdown_report(analysis: dict[str, Any]) -> str:
                 published = item["published"]["paper_table2"]["utilization"]
         lines.append(
             f"| {item['block_size']} | {item['top_p']:.2f} | {item['completed']} | "
-            f"{item['token_ambiguity']} | {item['eligible']} | "
+            f"{item['budget_exhausted']} | {item['token_ambiguity']} | {item['eligible']} | "
             f"{item['decode_success']}/{item['eligible']} | "
             f"{metric['embedding_rate']['value']:.3f} | {util['value']:.3f} "
             f"[{util['bootstrap_ci95'][0]:.3f}, {util['bootstrap_ci95'][1]:.3f}] | "
@@ -266,6 +276,7 @@ def markdown_report(analysis: dict[str, Any]) -> str:
         )
     decode = acceptance["decode_without_token_ambiguity"]
     capacity = acceptance["capacity_within_tolerance"]
+    budget = acceptance["budget_completion"]
     lines.extend(
         [
             "",
@@ -276,7 +287,9 @@ def markdown_report(analysis: dict[str, Any]) -> str:
             f"- Capacity gate: **{'PASS' if capacity['pass'] else 'FAIL'}**, "
             f"{capacity['passed']}/{capacity['checks']} comparisons within "
             f"{analysis['capacity_relative_error_tolerance']:.0%} relative error.",
-            f"- Overall: **{'PASS' if acceptance['overall_pass'] else 'FAIL'}**.",
+            f"- Budget completion: {budget['completed']}/{budget['configured']} completed; "
+            f"{budget['budget_exhausted']} trials did not finish a message block within the 200-token ceiling.",
+            f"- Overall: **{acceptance['overall_status']}**.",
             "",
             "## Interpretation Boundaries",
             "",
@@ -299,6 +312,7 @@ def write_csv(path: Path, analysis: dict[str, Any]) -> None:
                 "block_size",
                 "top_p",
                 "completed",
+                "budget_exhausted",
                 "token_ambiguity",
                 "eligible",
                 "decode_success",
@@ -321,6 +335,7 @@ def write_csv(path: Path, analysis: dict[str, Any]) -> None:
                     "block_size": item["block_size"],
                     "top_p": item["top_p"],
                     "completed": item["completed"],
+                    "budget_exhausted": item["budget_exhausted"],
                     "token_ambiguity": item["token_ambiguity"],
                     "eligible": item["eligible"],
                     "decode_success": item["decode_success"],
@@ -337,56 +352,78 @@ def write_csv(path: Path, analysis: dict[str, Any]) -> None:
             )
 
 
-def write_svg(path: Path, analysis: dict[str, Any]) -> None:
-    """Write a dependency-free comparison plot for Table 2 utilization."""
-    width, height = 900, 520
-    margin = {"left": 75, "right": 30, "top": 45, "bottom": 70}
-    plot_w = width - margin["left"] - margin["right"]
-    plot_h = height - margin["top"] - margin["bottom"]
+def write_figure(path: Path, analysis: dict[str, Any]) -> None:
+    """Write SVG, PDF and 300-dpi PNG comparisons for Table 2 utilization."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    matplotlib.rcParams.update(
+        {
+            "font.family": "sans-serif",
+            "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+            "font.size": 9,
+            "axes.labelsize": 10,
+            "xtick.labelsize": 8,
+            "ytick.labelsize": 8,
+            "legend.fontsize": 8,
+            "figure.dpi": 300,
+            "savefig.dpi": 300,
+            "savefig.bbox": "tight",
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "pdf.fonttype": 42,
+            "svg.fonttype": "none",
+        }
+    )
     rows = [
         item
         for item in analysis["configurations"]
         if item["top_p"] == 1.0 and item["block_size"] in PAPER_TABLE2
     ]
     rows.sort(key=lambda item: item["block_size"])
-    root = ET.Element(
-        "svg",
-        {"xmlns": "http://www.w3.org/2000/svg", "width": str(width), "height": str(height), "viewBox": f"0 0 {width} {height}"},
+    x = list(range(len(rows)))
+    observed = [item["metrics"]["utilization"]["value"] for item in rows]
+    low = [item["metrics"]["utilization"]["bootstrap_ci95"][0] for item in rows]
+    high = [item["metrics"]["utilization"]["bootstrap_ci95"][1] for item in rows]
+    published = [PAPER_TABLE2[item["block_size"]]["utilization"] for item in rows]
+    errors = [
+        [value - lower for value, lower in zip(observed, low, strict=True)],
+        [upper - value for value, upper in zip(observed, high, strict=True)],
+    ]
+    fig, ax = plt.subplots(figsize=(6.9, 4.2))
+    ax.errorbar(
+        x,
+        observed,
+        yerr=errors,
+        color="#0077BB",
+        marker="o",
+        linewidth=1.8,
+        capsize=3,
+        label="Compatibility reproduction (95% CI)",
     )
-    ET.SubElement(root, "rect", {"width": str(width), "height": str(height), "fill": "white"})
-    for tick in range(0, 101, 20):
-        y = margin["top"] + plot_h * (1 - tick / 100)
-        ET.SubElement(root, "line", {"x1": str(margin["left"]), "x2": str(width - margin["right"]), "y1": str(y), "y2": str(y), "stroke": "#d9dee5", "stroke-width": "1"})
-        label = ET.SubElement(root, "text", {"x": str(margin["left"] - 12), "y": str(y + 5), "text-anchor": "end", "font-family": "Arial", "font-size": "13", "fill": "#333"})
-        label.text = f"{tick}%"
-    points_observed = []
-    points_paper = []
-    for index, item in enumerate(rows):
-        x = margin["left"] + plot_w * index / max(1, len(rows) - 1)
-        observed = item["metrics"]["utilization"]
-        paper = PAPER_TABLE2[item["block_size"]]["utilization"]
-        y_observed = margin["top"] + plot_h * (1 - observed["value"])
-        y_paper = margin["top"] + plot_h * (1 - paper)
-        points_observed.append(f"{x:.2f},{y_observed:.2f}")
-        points_paper.append(f"{x:.2f},{y_paper:.2f}")
-        low, high = observed["bootstrap_ci95"]
-        y_low = margin["top"] + plot_h * (1 - low)
-        y_high = margin["top"] + plot_h * (1 - high)
-        ET.SubElement(root, "line", {"x1": str(x), "x2": str(x), "y1": str(y_low), "y2": str(y_high), "stroke": "#1565c0", "stroke-width": "2"})
-        label = ET.SubElement(root, "text", {"x": str(x), "y": str(height - 42), "text-anchor": "middle", "font-family": "Arial", "font-size": "12", "fill": "#333"})
-        label.text = str(item["block_size"])
-    ET.SubElement(root, "polyline", {"points": " ".join(points_paper), "fill": "none", "stroke": "#d1495b", "stroke-width": "3", "stroke-dasharray": "7 5"})
-    ET.SubElement(root, "polyline", {"points": " ".join(points_observed), "fill": "none", "stroke": "#1565c0", "stroke-width": "3"})
-    title = ET.SubElement(root, "text", {"x": str(width / 2), "y": "27", "text-anchor": "middle", "font-family": "Arial", "font-size": "19", "font-weight": "bold", "fill": "#222"})
-    title.text = "Official SparSamp Table 2 compatibility reproduction"
-    xlabel = ET.SubElement(root, "text", {"x": str(width / 2), "y": str(height - 12), "text-anchor": "middle", "font-family": "Arial", "font-size": "14", "fill": "#333"})
-    xlabel.text = "Message block length"
-    legend1 = ET.SubElement(root, "text", {"x": "90", "y": "67", "font-family": "Arial", "font-size": "13", "fill": "#1565c0"})
-    legend1.text = "Observed (bootstrap 95% CI)"
-    legend2 = ET.SubElement(root, "text", {"x": "310", "y": "67", "font-family": "Arial", "font-size": "13", "fill": "#d1495b"})
-    legend2.text = "Published"
+    ax.plot(
+        x,
+        published,
+        color="#CC3311",
+        marker="s",
+        linestyle="--",
+        linewidth=1.5,
+        label="Published Table 2",
+    )
+    ax.set_xticks(x, [str(item["block_size"]) for item in rows])
+    ax.set_xlabel("Message block length")
+    ax.set_ylabel("Entropy utilization")
+    ax.set_ylim(0, 1.05)
+    ax.grid(axis="y", color="#d9dee5", linewidth=0.6)
+    ax.legend(frameon=False, loc="lower right")
+    fig.tight_layout()
     path.parent.mkdir(parents=True, exist_ok=True)
-    ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
+    fig.savefig(path)
+    fig.savefig(path.with_suffix(".pdf"))
+    fig.savefig(path.with_suffix(".png"), dpi=300)
+    plt.close(fig)
 
 
 def main() -> int:
@@ -409,12 +446,25 @@ def main() -> int:
     )
     analysis["source"] = str(args.input)
     analysis["source_sha256"] = hashlib.sha256(args.input.read_bytes()).hexdigest()
-    args.output.parent.mkdir(parents=True, exist_ok=True)
     args.markdown.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(analysis, indent=2, ensure_ascii=True), encoding="utf-8")
     args.markdown.write_text(markdown_report(analysis), encoding="utf-8")
     write_csv(args.csv, analysis)
-    write_svg(args.figure, analysis)
+    write_figure(args.figure, analysis)
+    artifact_paths = {
+        "source_csv": args.csv,
+        "figure_svg": args.figure,
+        "figure_pdf": args.figure.with_suffix(".pdf"),
+        "figure_png": args.figure.with_suffix(".png"),
+    }
+    analysis["artifacts"] = {
+        name: {
+            "path": path.as_posix(),
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        }
+        for name, path in artifact_paths.items()
+    }
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(analysis, indent=2, ensure_ascii=True), encoding="utf-8")
     print(json.dumps(analysis["acceptance"], indent=2))
     return 0 if analysis["acceptance"]["overall_pass"] else 1
 

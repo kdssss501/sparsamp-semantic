@@ -20,10 +20,10 @@
 ## 官方 SparSamp 复现状态
 
 - R001 Basic compatibility reproduction 已完成：105 tokens、576 bits、5.486 bits/token、精确解码。
-- R002 正在运行论文 Tables 2-4 对应的 12 个唯一配置，共 100 个 IMDB contexts 和 1,200 trials。
+- R002 已完成论文 Tables 2-4 对应的 12 个唯一配置，共 100 个 IMDB contexts 和 1,200 trials。
 - 当前矩阵使用未修改的 Zenodo 15025436 算法源码、PyTorch 2.7.1+cu126 与 Transformers 4.41.2。
 - 这属于 compatibility reproduction，不是严格 Torch 2.2.2 环境复现。Transformers 4.57.6 已记录旧 cache API 不兼容失败，严格 Torch 2.2.2 CUDA wheel 下载因上游 TLS/连接中断未完成。
-- R002 逐 trial 原子保存，最终结果将进入 Supplementary Information；速度只作硬件相关描述，容量与解码才是主要验收门禁。
+- R002 逐 trial 原子保存，正式结论为 `PASS_WITH_LIMITATIONS`：1,193/1,200 完成、7 次大 block 的 200-token budget exhaustion、846/846 无 TA 精确解码、16/16 容量检查在 5% 误差内。结果已进入 Supplementary Information；速度只作硬件相关描述。
 
 ## 禁止写成的结论
 
@@ -56,9 +56,8 @@
 
 ## 推荐提交顺序
 
-1. 完成 R002，生成官方复现分析、附录表格与 Supplementary Figure。
-2. 将 R002 的有界结论写入 Methods、Results 和 Supplementary Information。
-3. 完成 Stage 2.5 完整性审查与 7 类 AI research failure-mode checklist。
-4. 进行模拟同行评审并按问题严重度修订。
-5. 作者补齐身份、资金、贡献、利益冲突和归档 DOI。
-6. 通过最终完整性门禁后再生成 LaTeX、DOCX 和 PDF 投稿包。
+1. 完成 Stage 2 写作检查点确认。
+2. 完成 Stage 2.5 完整性审查与 7 类 AI research failure-mode checklist。
+3. 进行模拟同行评审并按问题严重度修订。
+4. 作者补齐身份、资金、贡献、利益冲突和归档 DOI。
+5. 通过最终完整性门禁后再生成 LaTeX、DOCX 和 PDF 投稿包。

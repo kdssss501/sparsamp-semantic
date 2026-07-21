@@ -8,6 +8,7 @@ In stochastic autoregressive language generation, we show that a canonical integ
 
 | ID | Claim | Evidence | Status | Boundary or required action |
 |---|---|---|---|---|
+| C0 | The unchanged official SparSamp algorithm reproduces the published GPT-2 capacity trend and no-TA decoding property in a compatible modern environment. | R001 Basic exact decode; R002 846/846 no-TA exact decode and 16/16 capacity checks within 5%, maximum relative error 4.12%. | Supported with limitations | Seven large-block trials exhausted the 200-token ceiling. PyTorch 2.7.1 + Transformers 4.41.2 is a compatibility environment, not strict Torch 2.2.2. Absolute speed is not a fidelity gate. |
 | C1 | A shared public seed alone does not reliably reproduce a stochastic Qwen trajectory across FP16 and BF16. | R044: uncorrected exact replay 10/60; mean common exact prefix 39.45 tokens. | Supported in tested setting | Do not generalize to all models, kernels or decoding modes. |
 | C2 | A complete target-specific sparse correction manifest yields exact token replay. | Inductive construction in `replay_certificate.py`; R041 6/6, R044 60/60, R045 20/20 and R046 20/20. | Supported conditionally | Requires identical model, tokenizer, prompt, public configuration and the target environment used during certificate construction. |
 | C3 | Cross-precision disagreements are sparse for the tested Qwen configuration. | R044 mean correction rate 2.1606%, prompt-cluster 95% CI 1.8014-2.5277%; maximum 6.1538%. | Supported | Evidence is one Qwen checkpoint and one GPU stack. |
@@ -23,6 +24,7 @@ In stochastic autoregressive language generation, we show that a canonical integ
 ## Claim wording allowed in the manuscript
 
 - "Recovered all 60 tested FP16-to-BF16 Qwen trajectories with a mean correction rate of 2.16%."
+- "The official GPT-2 compatibility matrix achieved 846/846 exact no-ambiguity decodes, with all 16 capacity comparisons within 5% of the published values."
 - "The certificate provides exact replay conditional on a fixed target environment and a complete correction manifest."
 - "Top-four retained more source mass but did not reduce correction density in the 20-prompt ablation."
 - "The results support bidirectional FP16/BF16 replay on the tested software and hardware stack."
@@ -35,6 +37,7 @@ In stochastic autoregressive language generation, we show that a canonical integ
 - "Semantically equivalent to native generation."
 - "Secure" or "undetectable" on the basis of replay experiments.
 - "The first method" without a completed novelty review.
+- "Strict reproduction of the official dependency environment."
 - "Statistically identical" when a confidence interval merely includes zero.
 
 ## Paragraph architecture
