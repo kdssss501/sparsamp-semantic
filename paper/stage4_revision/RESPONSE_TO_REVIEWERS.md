@@ -42,7 +42,9 @@ We thank the panel for distinguishing internal correctness from external validit
 
 **Response:** Partially accepted. The existing top-2/top-4 ablation is retained and the paper no longer claims optimality. A new (q,T,B,k) grid requires GPU execution and remains pending.
 
-**Status:** `PARTIAL`.
+**Status:** `RESOLVED_WITH_BOUNDED_OFA`.
+
+**Stage 4' update:** The bounded R053 one-factor-at-a-time sensitivity contract prespecified `q={0.25,0.5,1.0}`, `T={1.0,1.2,1.4}` and `B={12,16,20}` around the frozen `k=2` baseline, with the existing `k=4` result retained. All 120 new trials completed and passed the corrected-exact integrity gate. B=20 had the lowest observed correction density, 1.721% versus 2.000% baseline, but its paired 95% interval for the -0.279 percentage-point change was [-1.159, +0.537] and did not exclude no change. The manuscript reports the full grid and does not claim global optimality.
 
 ### R6: Trust, state and cost model
 

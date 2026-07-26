@@ -1,7 +1,7 @@
 # Manuscript Integrity Audit
 
 **Status:** PASS_WITH_AUTHOR_INPUT
-**Checks:** 39 passed, 0 failed
+**Checks:** 45 passed, 0 failed
 **Author placeholders:** 9
 
 | Check | Status | Detail |
@@ -30,6 +30,12 @@
 | unquantized top-2 package | PASS | expected manuscript token: 1,200 referenced bytes |
 | unquantized top-16 correction rate | PASS | expected manuscript token: 25.454% |
 | finite-precision support shortfall | PASS | expected manuscript token: One of 1,500 steps retained only five positive-probability candidates |
+| R053 integrity-gate count | PASS | expected manuscript token: All 120 new trajectories and the 20 baseline trajectories passed |
+| R053 baseline correction density | PASS | expected manuscript token: 2.000% |
+| R053 B12 correction density | PASS | expected manuscript token: 3.074% |
+| R053 B20 correction density | PASS | expected manuscript token: 1.721% |
+| R053 B20 correction interval | PASS | expected manuscript token: -1.159 to +0.537 |
+| R053 B20 referenced bytes | PASS | expected manuscript token: 1,131 bytes |
 | citation numbering | PASS | cited=[1, 2, 3, 4, 5, 6, 7, 8, 9], references=[1, 2, 3, 4, 5, 6, 7, 8, 9] |
 | no native-distribution claim | PASS | required boundary: do not establish target-independent determinism, native-distribution preservation, semantic equivalence or cross-hardware generality |
 | exactness is an integrity gate | PASS | required boundary: exact replay as an integrity gate |

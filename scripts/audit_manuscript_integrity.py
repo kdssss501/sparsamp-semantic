@@ -82,6 +82,7 @@ def audit(
     apportionment_analysis: Path | None = None,
     baseline_analysis: Path | None = None,
     unquantized_analysis: Path | None = None,
+    sensitivity_analysis: Path | None = None,
 ) -> dict[str, Any]:
     text = manuscript.read_text(encoding="utf-8")
     scale = json.loads(scale_analysis.read_text(encoding="utf-8"))
@@ -200,6 +201,36 @@ def audit(
         for name, value in unquantized_claims.items():
             check(checks, name, value in text, f"expected manuscript token: {value}")
 
+    if sensitivity_analysis is not None:
+        sensitivity = json.loads(sensitivity_analysis.read_text(encoding="utf-8"))
+        baseline = sensitivity["variants"]["baseline"]
+        b12 = sensitivity["variants"]["b12"]
+        b20 = sensitivity["variants"]["b20"]
+        b20_delta = sensitivity["comparisons"]["b20_minus_baseline"]["deltas"][
+            "correction_rate"
+        ]
+        sensitivity_claims = {
+            "R053 integrity-gate count": "All 120 new trajectories and the 20 baseline trajectories passed",
+            "R053 baseline correction density": (
+                f"{100 * baseline['metrics']['correction_rate']['value']:.3f}%"
+            ),
+            "R053 B12 correction density": (
+                f"{100 * b12['metrics']['correction_rate']['value']:.3f}%"
+            ),
+            "R053 B20 correction density": (
+                f"{100 * b20['metrics']['correction_rate']['value']:.3f}%"
+            ),
+            "R053 B20 correction interval": (
+                f"{100 * b20_delta['paired_cluster_ci95'][0]:.3f} to "
+                f"+{100 * b20_delta['paired_cluster_ci95'][1]:.3f}"
+            ),
+            "R053 B20 referenced bytes": (
+                f"{b20['referenced_package_bytes']:,} bytes"
+            ),
+        }
+        for name, value in sensitivity_claims.items():
+            check(checks, name, value in text, f"expected manuscript token: {value}")
+
     cited = citation_numbers(text)
     references = {
         int(value)
@@ -311,6 +342,11 @@ def main() -> int:
         type=Path,
         default=ROOT / "docs/reproducibility/R052_UNQUANTIZED_DELTA_ANALYSIS.json",
     )
+    parser.add_argument(
+        "--sensitivity",
+        type=Path,
+        default=ROOT / "docs/reproducibility/R053_QTB_SENSITIVITY.json",
+    )
     parser.add_argument("--output", type=Path, default=ROOT / "paper/MANUSCRIPT_INTEGRITY.json")
     parser.add_argument("--markdown", type=Path, default=ROOT / "paper/MANUSCRIPT_INTEGRITY.md")
     args = parser.parse_args()
@@ -323,6 +359,7 @@ def main() -> int:
         args.apportionment,
         args.baselines,
         args.unquantized,
+        args.sensitivity,
     )
     args.output.write_text(json.dumps(report, indent=2, ensure_ascii=True), encoding="utf-8")
     args.markdown.write_text(markdown_report(report), encoding="utf-8")

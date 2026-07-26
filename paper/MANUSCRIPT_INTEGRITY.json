@@ -1,7 +1,7 @@
 {
   "schema": "manuscript-integrity-audit-v1",
   "manuscript": "C:\\Users\\41462\\Documents\\\u9690\u5199\\paper\\MANUSCRIPT_DRAFT.md",
-  "manuscript_sha256": "5510cf05dbfa6732f53e93be128eceb045537c62a64684bc867d80e5c25bf3a8",
+  "manuscript_sha256": "bec5ff15c89cdaf4bd64f3e0372849bdcebce3ce208c1a685c1329c85066f05a",
   "checks": [
     {
       "name": "corrected recovery",
@@ -124,6 +124,36 @@
       "detail": "expected manuscript token: One of 1,500 steps retained only five positive-probability candidates"
     },
     {
+      "name": "R053 integrity-gate count",
+      "pass": true,
+      "detail": "expected manuscript token: All 120 new trajectories and the 20 baseline trajectories passed"
+    },
+    {
+      "name": "R053 baseline correction density",
+      "pass": true,
+      "detail": "expected manuscript token: 2.000%"
+    },
+    {
+      "name": "R053 B12 correction density",
+      "pass": true,
+      "detail": "expected manuscript token: 3.074%"
+    },
+    {
+      "name": "R053 B20 correction density",
+      "pass": true,
+      "detail": "expected manuscript token: 1.721%"
+    },
+    {
+      "name": "R053 B20 correction interval",
+      "pass": true,
+      "detail": "expected manuscript token: -1.159 to +0.537"
+    },
+    {
+      "name": "R053 B20 referenced bytes",
+      "pass": true,
+      "detail": "expected manuscript token: 1,131 bytes"
+    },
+    {
       "name": "citation numbering",
       "pass": true,
       "detail": "cited=[1, 2, 3, 4, 5, 6, 7, 8, 9], references=[1, 2, 3, 4, 5, 6, 7, 8, 9]"
@@ -200,7 +230,7 @@
     }
   ],
   "summary": {
-    "passed": 39,
+    "passed": 45,
     "failed": 0,
     "author_placeholders": 9,
     "status": "PASS_WITH_AUTHOR_INPUT"

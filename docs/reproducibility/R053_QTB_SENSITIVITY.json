@@ -1,0 +1,1225 @@
+{
+  "schema": "r053-qtb-sensitivity-analysis-v1",
+  "selected_seed": 0,
+  "bootstrap_repetitions": 10000,
+  "bootstrap_seed": 20260723,
+  "referenced_header_bytes": 101,
+  "sources": {
+    "baseline": {
+      "path": "outputs\\R044_qwen_replay_scale.json",
+      "sha256": "6a6eaa292e8ac490b38932969879323cc44088361ceabd20b51466a836fc3110"
+    },
+    "q025": {
+      "path": "outputs\\R053_q025.json",
+      "sha256": "b5c033f6ee3dd3bc8cad72c1662837b655b4791bd55173ad107e118da5cc1288"
+    },
+    "q100": {
+      "path": "outputs\\R053_q100.json",
+      "sha256": "d6b8f0df314f88303cde0579e32558cf1a5544a150c29d0a58ff768e033d643a"
+    },
+    "t100": {
+      "path": "outputs\\R053_t100.json",
+      "sha256": "02be133461a1b4e2566ed158223b6516f66b74f0151570fde8b9ecdf60221d75"
+    },
+    "t140": {
+      "path": "outputs\\R053_t140.json",
+      "sha256": "1c92dec4bb4ee63e255627c9014eb11e67d0fc3484100fb9fa69fff11ffb4f18"
+    },
+    "b12": {
+      "path": "outputs\\R053_b12.json",
+      "sha256": "b9f8ccc94f121708f76a33fe13f8e84bfb7fe8c4362f130b2f4baabf53b4e866"
+    },
+    "b20": {
+      "path": "outputs\\R053_b20.json",
+      "sha256": "3ecf31d5ef127c0995f39d985eb23fe9248a0a49decdea10ca8797f193b2324f"
+    }
+  },
+  "variants": {
+    "baseline": {
+      "run_label": "R044",
+      "result_signature": "c9ca57129a664a4114d7c186527c176c5e898596c1549e62724d88679a30c62d",
+      "reference_dtype": "float16",
+      "replay_dtype": "bfloat16",
+      "contract_top_k": 2,
+      "trials": 20,
+      "tokens": 1500,
+      "corrected_exact": 20,
+      "corrected_exact_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "sentence_complete": 20,
+      "sentence_complete_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "reference_tokens_per_second": 11.526479922181988,
+      "replay_tokens_per_second": 2.5910437502557944,
+      "top4_coverage": 0.9993333333333333,
+      "top8_coverage": 1.0,
+      "metrics": {
+        "correction_rate": {
+          "value": 0.02,
+          "ci95": [
+            0.012387904616081297,
+            0.028341038406827865
+          ]
+        },
+        "contract_source_mass": {
+          "value": 0.7335440213815764,
+          "ci95": [
+            0.7094084259537023,
+            0.7591056684270628
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "value": 0.383661466419403,
+          "ci95": [
+            0.33960396249808056,
+            0.4262910891998266
+          ]
+        },
+        "quantization_kl_nats": {
+          "value": 0.00256698169951994,
+          "ci95": [
+            0.002373771097115014,
+            0.0027436419323423607
+          ]
+        },
+        "quantization_tv": {
+          "value": 0.02257538480703482,
+          "ci95": [
+            0.021132031882903662,
+            0.023895157836992222
+          ]
+        },
+        "contract_exact_rate": {
+          "value": 0.8446666666666667,
+          "ci95": [
+            0.8283942108890421,
+            0.8595694125068225
+          ]
+        },
+        "record_ratio": {
+          "value": 0.02666666666666667,
+          "ci95": [
+            0.01653994238701998,
+            0.03801765105227427
+          ]
+        },
+        "sentence_complete_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "value": 0.25,
+          "ci95": [
+            0.1,
+            0.45
+          ]
+        }
+      },
+      "parameters": {
+        "contract_top_k": 2,
+        "logit_quantum": 0.5,
+        "mass_bits": 16,
+        "temperature": 1.2
+      },
+      "referenced_package_bytes": 1148,
+      "referenced_bits_per_token": 6.1226666666666665
+    },
+    "q025": {
+      "run_label": "R053-q025",
+      "result_signature": "e8d1c27da0c8961587d6f741739ed5fc70805880c8d3b2983d9f4825750492c7",
+      "reference_dtype": "float16",
+      "replay_dtype": "bfloat16",
+      "contract_top_k": 2,
+      "trials": 20,
+      "tokens": 1561,
+      "corrected_exact": 20,
+      "corrected_exact_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "sentence_complete": 19,
+      "sentence_complete_wilson95": [
+        0.763868806553258,
+        0.9911185511992047
+      ],
+      "reference_tokens_per_second": 9.88060979415082,
+      "replay_tokens_per_second": 4.046367942522793,
+      "top4_coverage": 1.0,
+      "top8_coverage": 1.0,
+      "metrics": {
+        "correction_rate": {
+          "value": 0.024983984625240232,
+          "ci95": [
+            0.01864951768488746,
+            0.03177715015794251
+          ]
+        },
+        "contract_source_mass": {
+          "value": 0.7465309462893405,
+          "ci95": [
+            0.7260747032188422,
+            0.7668970922050764
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "value": 0.3545011302735873,
+          "ci95": [
+            0.31851504702042327,
+            0.38902363591233546
+          ]
+        },
+        "quantization_kl_nats": {
+          "value": 0.0006222864384373657,
+          "ci95": [
+            0.0005757423868447216,
+            0.0006694404112923872
+          ]
+        },
+        "quantization_tv": {
+          "value": 0.011065982653551722,
+          "ci95": [
+            0.010454590691486423,
+            0.011692154573411469
+          ]
+        },
+        "contract_exact_rate": {
+          "value": 0.6982703395259449,
+          "ci95": [
+            0.6776099803020355,
+            0.7192061865053223
+          ]
+        },
+        "record_ratio": {
+          "value": 0.037475976937860346,
+          "ci95": [
+            0.027985074626865673,
+            0.04757089933571793
+          ]
+        },
+        "sentence_complete_rate": {
+          "value": 0.95,
+          "ci95": [
+            0.85,
+            1.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "value": 0.05,
+          "ci95": [
+            0.0,
+            0.15
+          ]
+        }
+      },
+      "parameters": {
+        "contract_top_k": 2,
+        "logit_quantum": 0.25,
+        "mass_bits": 16,
+        "temperature": 1.2
+      },
+      "referenced_package_bytes": 1178,
+      "referenced_bits_per_token": 6.037155669442665
+    },
+    "q100": {
+      "run_label": "R053-q100",
+      "result_signature": "7fb8aa8d82f4141668f3ab0490fe1b0c07758138071293d72bab1636668b54fd",
+      "reference_dtype": "float16",
+      "replay_dtype": "bfloat16",
+      "contract_top_k": 2,
+      "trials": 20,
+      "tokens": 1459,
+      "corrected_exact": 20,
+      "corrected_exact_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "sentence_complete": 20,
+      "sentence_complete_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "reference_tokens_per_second": 8.9117214426969,
+      "replay_tokens_per_second": 3.332035355974875,
+      "top4_coverage": 0.997943797121316,
+      "top8_coverage": 0.9993145990404386,
+      "metrics": {
+        "correction_rate": {
+          "value": 0.0205620287868403,
+          "ci95": [
+            0.01358695652173913,
+            0.02794841348373903
+          ]
+        },
+        "contract_source_mass": {
+          "value": 0.7517331514842953,
+          "ci95": [
+            0.7268781602336506,
+            0.7757420327856285
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "value": 0.35011036893883163,
+          "ci95": [
+            0.30916306723580234,
+            0.3934332319031452
+          ]
+        },
+        "quantization_kl_nats": {
+          "value": 0.00973322519505519,
+          "ci95": [
+            0.009047530577939797,
+            0.010435903123937856
+          ]
+        },
+        "quantization_tv": {
+          "value": 0.04349631145215854,
+          "ci95": [
+            0.04106884756396064,
+            0.046084256746964786
+          ]
+        },
+        "contract_exact_rate": {
+          "value": 0.9006168608636053,
+          "ci95": [
+            0.8874820163317297,
+            0.9139125559879149
+          ]
+        },
+        "record_ratio": {
+          "value": 0.030843043180260453,
+          "ci95": [
+            0.020283633024505237,
+            0.04160891175051941
+          ]
+        },
+        "sentence_complete_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "value": 0.25,
+          "ci95": [
+            0.05,
+            0.45
+          ]
+        }
+      },
+      "parameters": {
+        "contract_top_k": 2,
+        "logit_quantum": 1.0,
+        "mass_bits": 16,
+        "temperature": 1.2
+      },
+      "referenced_package_bytes": 1141,
+      "referenced_bits_per_token": 6.256339958875943
+    },
+    "t100": {
+      "run_label": "R053-t100",
+      "result_signature": "243dd629c454661a2ea2363b875e04e1a593de99949347ccf8052a539ccf5be7",
+      "reference_dtype": "float16",
+      "replay_dtype": "bfloat16",
+      "contract_top_k": 2,
+      "trials": 20,
+      "tokens": 1531,
+      "corrected_exact": 20,
+      "corrected_exact_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "sentence_complete": 18,
+      "sentence_complete_wilson95": [
+        0.6989663547715128,
+        0.9721335187862319
+      ],
+      "reference_tokens_per_second": 10.413633020115782,
+      "replay_tokens_per_second": 3.5143260816380146,
+      "top4_coverage": 1.0,
+      "top8_coverage": 1.0,
+      "metrics": {
+        "correction_rate": {
+          "value": 0.03069888961463096,
+          "ci95": [
+            0.020685078567784686,
+            0.0408034392513482
+          ]
+        },
+        "contract_source_mass": {
+          "value": 0.8163148086326092,
+          "ci95": [
+            0.7917632541122419,
+            0.8418629778181675
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "value": 0.24524724676375678,
+          "ci95": [
+            0.20586562695930108,
+            0.28389620873524385
+          ]
+        },
+        "quantization_kl_nats": {
+          "value": 0.0028673986457220715,
+          "ci95": [
+            0.002541955626265283,
+            0.0031638408128709153
+          ]
+        },
+        "quantization_tv": {
+          "value": 0.022391540159666844,
+          "ci95": [
+            0.020326634791702564,
+            0.024323879278530025
+          ]
+        },
+        "contract_exact_rate": {
+          "value": 0.8360548661005879,
+          "ci95": [
+            0.824968590934631,
+            0.8463461950225589
+          ]
+        },
+        "record_ratio": {
+          "value": 0.04604833442194644,
+          "ci95": [
+            0.031020490802735938,
+            0.06177622471511735
+          ]
+        },
+        "sentence_complete_rate": {
+          "value": 0.9,
+          "ci95": [
+            0.75,
+            1.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "value": 0.2,
+          "ci95": [
+            0.05,
+            0.4
+          ]
+        }
+      },
+      "parameters": {
+        "contract_top_k": 2,
+        "logit_quantum": 0.5,
+        "mass_bits": 16,
+        "temperature": 1.0
+      },
+      "referenced_package_bytes": 1212,
+      "referenced_bits_per_token": 6.333115610711953
+    },
+    "t140": {
+      "run_label": "R053-t140",
+      "result_signature": "0d6fcfccadb403ff02fa6ab79be9ddd8f95adaac10afb8c8db2ce06bb6a1dc18",
+      "reference_dtype": "float16",
+      "replay_dtype": "bfloat16",
+      "contract_top_k": 2,
+      "trials": 20,
+      "tokens": 1523,
+      "corrected_exact": 20,
+      "corrected_exact_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "sentence_complete": 19,
+      "sentence_complete_wilson95": [
+        0.763868806553258,
+        0.9911185511992047
+      ],
+      "reference_tokens_per_second": 9.278416240845543,
+      "replay_tokens_per_second": 2.148622183673213,
+      "top4_coverage": 1.0,
+      "top8_coverage": 1.0,
+      "metrics": {
+        "correction_rate": {
+          "value": 0.023637557452396585,
+          "ci95": [
+            0.015852047556142668,
+            0.031756833715377505
+          ]
+        },
+        "contract_source_mass": {
+          "value": 0.6782805078188837,
+          "ci95": [
+            0.6504660717796089,
+            0.7044609725226869
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "value": 0.4940294659465544,
+          "ci95": [
+            0.4406714373334013,
+            0.553939119815182
+          ]
+        },
+        "quantization_kl_nats": {
+          "value": 0.0021846983174425697,
+          "ci95": [
+            0.00204358382537645,
+            0.0023477302521188632
+          ]
+        },
+        "quantization_tv": {
+          "value": 0.021547545213379392,
+          "ci95": [
+            0.02043839410796128,
+            0.02282623473738391
+          ]
+        },
+        "contract_exact_rate": {
+          "value": 0.8371634931057124,
+          "ci95": [
+            0.8189816561530073,
+            0.8554535442247087
+          ]
+        },
+        "record_ratio": {
+          "value": 0.03545633617859488,
+          "ci95": [
+            0.02383903974813066,
+            0.04800783801436969
+          ]
+        },
+        "sentence_complete_rate": {
+          "value": 0.95,
+          "ci95": [
+            0.85,
+            1.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "value": 0.2,
+          "ci95": [
+            0.05,
+            0.4
+          ]
+        }
+      },
+      "parameters": {
+        "contract_top_k": 2,
+        "logit_quantum": 0.5,
+        "mass_bits": 16,
+        "temperature": 1.4
+      },
+      "referenced_package_bytes": 1168,
+      "referenced_bits_per_token": 6.135259356533158
+    },
+    "b12": {
+      "run_label": "R053-b12",
+      "result_signature": "e8a2d6b1ba6277549893954da10019f4c262b9a61c7c4ffab6275f9891ab7899",
+      "reference_dtype": "float16",
+      "replay_dtype": "bfloat16",
+      "contract_top_k": 2,
+      "trials": 20,
+      "tokens": 1529,
+      "corrected_exact": 20,
+      "corrected_exact_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "sentence_complete": 20,
+      "sentence_complete_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "reference_tokens_per_second": 9.835029865589432,
+      "replay_tokens_per_second": 2.957516552700106,
+      "top4_coverage": 1.0,
+      "top8_coverage": 1.0,
+      "metrics": {
+        "correction_rate": {
+          "value": 0.030739045127534337,
+          "ci95": [
+            0.02001333146134436,
+            0.042263126567694834
+          ]
+        },
+        "contract_source_mass": {
+          "value": 0.7516033851361603,
+          "ci95": [
+            0.7217969653622923,
+            0.7819169194800797
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "value": 0.350940176499802,
+          "ci95": [
+            0.29765081565305596,
+            0.40444632977128925
+          ]
+        },
+        "quantization_kl_nats": {
+          "value": 0.0024770602206423396,
+          "ci95": [
+            0.002244544231353911,
+            0.0027164127348754848
+          ]
+        },
+        "quantization_tv": {
+          "value": 0.02200112397266886,
+          "ci95": [
+            0.020318426300095012,
+            0.02368488728747359
+          ]
+        },
+        "contract_exact_rate": {
+          "value": 0.8201438848920863,
+          "ci95": [
+            0.8026046143759561,
+            0.8373335443037975
+          ]
+        },
+        "record_ratio": {
+          "value": 0.046108567691301505,
+          "ci95": [
+            0.03,
+            0.06362511913791136
+          ]
+        },
+        "sentence_complete_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "value": 0.15,
+          "ci95": [
+            0.0,
+            0.3
+          ]
+        }
+      },
+      "parameters": {
+        "contract_top_k": 2,
+        "logit_quantum": 0.5,
+        "mass_bits": 12,
+        "temperature": 1.2
+      },
+      "referenced_package_bytes": 1212,
+      "referenced_bits_per_token": 6.341399607586658
+    },
+    "b20": {
+      "run_label": "R053-b20",
+      "result_signature": "17c6c295560c562ee898fa61f35cab76a12302aa59746d901783d65c5006b630",
+      "reference_dtype": "float16",
+      "replay_dtype": "bfloat16",
+      "contract_top_k": 2,
+      "trials": 20,
+      "tokens": 1511,
+      "corrected_exact": 20,
+      "corrected_exact_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "sentence_complete": 20,
+      "sentence_complete_wilson95": [
+        0.8388748419471806,
+        1.0
+      ],
+      "reference_tokens_per_second": 6.872398306311898,
+      "replay_tokens_per_second": 2.5427847292526833,
+      "top4_coverage": 1.0,
+      "top8_coverage": 1.0,
+      "metrics": {
+        "correction_rate": {
+          "value": 0.017207147584381206,
+          "ci95": [
+            0.011912225705329153,
+            0.02260981912144703
+          ]
+        },
+        "contract_source_mass": {
+          "value": 0.7468284142671127,
+          "ci95": [
+            0.7228230271733976,
+            0.7714554880145782
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "value": 0.3568487933880287,
+          "ci95": [
+            0.31539703824459275,
+            0.3986238892910852
+          ]
+        },
+        "quantization_kl_nats": {
+          "value": 0.002513816000095357,
+          "ci95": [
+            0.0023095139270404214,
+            0.002720326022040515
+          ]
+        },
+        "quantization_tv": {
+          "value": 0.022263389522078954,
+          "ci95": [
+            0.0208530563325862,
+            0.0237282747942308
+          ]
+        },
+        "contract_exact_rate": {
+          "value": 0.8252812706816678,
+          "ci95": [
+            0.8054298642533937,
+            0.8432123000728038
+          ]
+        },
+        "record_ratio": {
+          "value": 0.025810721376571807,
+          "ci95": [
+            0.018059898860730065,
+            0.03388704318936877
+          ]
+        },
+        "sentence_complete_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "value": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "value": 0.2,
+          "ci95": [
+            0.05,
+            0.4
+          ]
+        }
+      },
+      "parameters": {
+        "contract_top_k": 2,
+        "logit_quantum": 0.5,
+        "mass_bits": 20,
+        "temperature": 1.2
+      },
+      "referenced_package_bytes": 1131,
+      "referenced_bits_per_token": 5.988087359364659
+    }
+  },
+  "comparisons": {
+    "q025_minus_baseline": {
+      "matched_trials": 20,
+      "matching_reference_trajectories": 0,
+      "deltas": {
+        "correction_rate": {
+          "candidate_minus_baseline": 0.0049839846252402314,
+          "paired_cluster_ci95": [
+            -0.006105942332213592,
+            0.015462300690868057
+          ]
+        },
+        "contract_source_mass": {
+          "candidate_minus_baseline": 0.012986924907764097,
+          "paired_cluster_ci95": [
+            -0.006435158652703909,
+            0.032396254328507276
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "candidate_minus_baseline": -0.029160336145815702,
+          "paired_cluster_ci95": [
+            -0.0667036732333875,
+            0.007224310658250667
+          ]
+        },
+        "quantization_kl_nats": {
+          "candidate_minus_baseline": -0.0019446952610825744,
+          "paired_cluster_ci95": [
+            -0.002105811955087761,
+            -0.0017780232943028428
+          ]
+        },
+        "quantization_tv": {
+          "candidate_minus_baseline": -0.0115094021534831,
+          "paired_cluster_ci95": [
+            -0.012612423006876431,
+            -0.010351123006097664
+          ]
+        },
+        "contract_exact_rate": {
+          "candidate_minus_baseline": -0.14639632714072182,
+          "paired_cluster_ci95": [
+            -0.1701497882337104,
+            -0.12102699824178827
+          ]
+        },
+        "record_ratio": {
+          "candidate_minus_baseline": 0.010809310271193678,
+          "paired_cluster_ci95": [
+            -0.004529185212827998,
+            0.025744546217682705
+          ]
+        },
+        "sentence_complete_rate": {
+          "candidate_minus_baseline": -0.050000000000000044,
+          "paired_cluster_ci95": [
+            -0.15000000000000002,
+            0.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "candidate_minus_baseline": -0.2,
+          "paired_cluster_ci95": [
+            -0.4,
+            0.0
+          ]
+        }
+      },
+      "referenced_package_byte_delta": 30
+    },
+    "q100_minus_baseline": {
+      "matched_trials": 20,
+      "matching_reference_trajectories": 0,
+      "deltas": {
+        "correction_rate": {
+          "candidate_minus_baseline": 0.0005620287868403004,
+          "paired_cluster_ci95": [
+            -0.008993420209259926,
+            0.010055965638055138
+          ]
+        },
+        "contract_source_mass": {
+          "candidate_minus_baseline": 0.018189130102718942,
+          "paired_cluster_ci95": [
+            -0.0023162863896326654,
+            0.03918371576369814
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "candidate_minus_baseline": -0.03355109748057139,
+          "paired_cluster_ci95": [
+            -0.07194334228376223,
+            0.0032778973494551004
+          ]
+        },
+        "quantization_kl_nats": {
+          "candidate_minus_baseline": 0.007166243495535251,
+          "paired_cluster_ci95": [
+            0.006586066612393126,
+            0.007760587302910565
+          ]
+        },
+        "quantization_tv": {
+          "candidate_minus_baseline": 0.02092092664512372,
+          "paired_cluster_ci95": [
+            0.01882205521411707,
+            0.023103147988688028
+          ]
+        },
+        "contract_exact_rate": {
+          "candidate_minus_baseline": 0.055950194196938585,
+          "paired_cluster_ci95": [
+            0.042732920073506896,
+            0.07028394888310745
+          ]
+        },
+        "record_ratio": {
+          "candidate_minus_baseline": 0.0041763765135937846,
+          "paired_cluster_ci95": [
+            -0.009297312501514877,
+            0.01786299439473306
+          ]
+        },
+        "sentence_complete_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            -0.25,
+            0.25
+          ]
+        }
+      },
+      "referenced_package_byte_delta": -7
+    },
+    "t100_minus_baseline": {
+      "matched_trials": 20,
+      "matching_reference_trajectories": 0,
+      "deltas": {
+        "correction_rate": {
+          "candidate_minus_baseline": 0.01069888961463096,
+          "paired_cluster_ci95": [
+            -0.002533979316464834,
+            0.02364357394849191
+          ]
+        },
+        "contract_source_mass": {
+          "candidate_minus_baseline": 0.08277078725103282,
+          "paired_cluster_ci95": [
+            0.06698058581878484,
+            0.10040276140587744
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "candidate_minus_baseline": -0.13841421965564624,
+          "paired_cluster_ci95": [
+            -0.17040618498611892,
+            -0.1116182135032825
+          ]
+        },
+        "quantization_kl_nats": {
+          "candidate_minus_baseline": 0.00030041694620213137,
+          "paired_cluster_ci95": [
+            9.19104964180073e-05,
+            0.0005151607976009099
+          ]
+        },
+        "quantization_tv": {
+          "candidate_minus_baseline": -0.00018384464736797765,
+          "paired_cluster_ci95": [
+            -0.001539802189127693,
+            0.0012664972751175005
+          ]
+        },
+        "contract_exact_rate": {
+          "candidate_minus_baseline": -0.008611800566078798,
+          "paired_cluster_ci95": [
+            -0.02436049383436582,
+            0.009366562026837853
+          ]
+        },
+        "record_ratio": {
+          "candidate_minus_baseline": 0.01938166775527977,
+          "paired_cluster_ci95": [
+            0.0005546360471651215,
+            0.03799447552837459
+          ]
+        },
+        "sentence_complete_rate": {
+          "candidate_minus_baseline": -0.09999999999999998,
+          "paired_cluster_ci95": [
+            -0.25,
+            0.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "candidate_minus_baseline": -0.04999999999999999,
+          "paired_cluster_ci95": [
+            -0.30000000000000004,
+            0.2
+          ]
+        }
+      },
+      "referenced_package_byte_delta": 64
+    },
+    "t140_minus_baseline": {
+      "matched_trials": 20,
+      "matching_reference_trajectories": 0,
+      "deltas": {
+        "correction_rate": {
+          "candidate_minus_baseline": 0.003637557452396585,
+          "paired_cluster_ci95": [
+            -0.007981127170968627,
+            0.014291327304335593
+          ]
+        },
+        "contract_source_mass": {
+          "candidate_minus_baseline": -0.05526351356269266,
+          "paired_cluster_ci95": [
+            -0.0826837126621226,
+            -0.02915183824322237
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "candidate_minus_baseline": 0.11036799952715137,
+          "paired_cluster_ci95": [
+            0.060107879737972304,
+            0.16545653788450174
+          ]
+        },
+        "quantization_kl_nats": {
+          "candidate_minus_baseline": -0.00038228338207737037,
+          "paired_cluster_ci95": [
+            -0.0005678208550653623,
+            -0.00019280181433796825
+          ]
+        },
+        "quantization_tv": {
+          "candidate_minus_baseline": -0.0010278395936554295,
+          "paired_cluster_ci95": [
+            -0.0025083776081317385,
+            0.0005482068466710179
+          ]
+        },
+        "contract_exact_rate": {
+          "candidate_minus_baseline": -0.007503173560954313,
+          "paired_cluster_ci95": [
+            -0.027664645452254694,
+            0.012739729859923471
+          ]
+        },
+        "record_ratio": {
+          "candidate_minus_baseline": 0.008789669511928212,
+          "paired_cluster_ci95": [
+            -0.006812638133008848,
+            0.023722407474803385
+          ]
+        },
+        "sentence_complete_rate": {
+          "candidate_minus_baseline": -0.050000000000000044,
+          "paired_cluster_ci95": [
+            -0.15000000000000002,
+            0.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "candidate_minus_baseline": -0.04999999999999999,
+          "paired_cluster_ci95": [
+            -0.25,
+            0.15000000000000002
+          ]
+        }
+      },
+      "referenced_package_byte_delta": 20
+    },
+    "b12_minus_baseline": {
+      "matched_trials": 20,
+      "matching_reference_trajectories": 0,
+      "deltas": {
+        "correction_rate": {
+          "candidate_minus_baseline": 0.010739045127534336,
+          "paired_cluster_ci95": [
+            -0.004014083147458204,
+            0.025072534206697805
+          ]
+        },
+        "contract_source_mass": {
+          "candidate_minus_baseline": 0.018059363754583946,
+          "paired_cluster_ci95": [
+            -0.0067027465076894025,
+            0.04412906321657673
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "candidate_minus_baseline": -0.03272128991960099,
+          "paired_cluster_ci95": [
+            -0.08132854587715627,
+            0.011853710969685348
+          ]
+        },
+        "quantization_kl_nats": {
+          "candidate_minus_baseline": -8.992147887760052e-05,
+          "paired_cluster_ci95": [
+            -0.0003116924934815165,
+            0.0001181566947373204
+          ]
+        },
+        "quantization_tv": {
+          "candidate_minus_baseline": -0.0005742608343659618,
+          "paired_cluster_ci95": [
+            -0.0022449731981808076,
+            0.0009759328274911362
+          ]
+        },
+        "contract_exact_rate": {
+          "candidate_minus_baseline": -0.024522781774580338,
+          "paired_cluster_ci95": [
+            -0.049172508725720245,
+            0.0011960622816110386
+          ]
+        },
+        "record_ratio": {
+          "candidate_minus_baseline": 0.019441901024634837,
+          "paired_cluster_ci95": [
+            -0.001621066270686036,
+            0.04023243005916883
+          ]
+        },
+        "sentence_complete_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "candidate_minus_baseline": -0.1,
+          "paired_cluster_ci95": [
+            -0.35000000000000003,
+            0.15000000000000002
+          ]
+        }
+      },
+      "referenced_package_byte_delta": 64
+    },
+    "b20_minus_baseline": {
+      "matched_trials": 20,
+      "matching_reference_trajectories": 0,
+      "deltas": {
+        "correction_rate": {
+          "candidate_minus_baseline": -0.0027928524156187948,
+          "paired_cluster_ci95": [
+            -0.011591894352838543,
+            0.005371509408769435
+          ]
+        },
+        "contract_source_mass": {
+          "candidate_minus_baseline": 0.01328439288553629,
+          "paired_cluster_ci95": [
+            -0.009362007405604429,
+            0.03623926266945558
+          ]
+        },
+        "contract_truncation_kl_nats": {
+          "candidate_minus_baseline": -0.0268126730313743,
+          "paired_cluster_ci95": [
+            -0.06883532438017625,
+            0.014071205304563048
+          ]
+        },
+        "quantization_kl_nats": {
+          "candidate_minus_baseline": -5.3165699424582904e-05,
+          "paired_cluster_ci95": [
+            -0.00024436132348120863,
+            0.0001371789229159455
+          ]
+        },
+        "quantization_tv": {
+          "candidate_minus_baseline": -0.00031199528495586687,
+          "paired_cluster_ci95": [
+            -0.001666501597296835,
+            0.0011304933401974715
+          ]
+        },
+        "contract_exact_rate": {
+          "candidate_minus_baseline": -0.019385395984998888,
+          "paired_cluster_ci95": [
+            -0.04284329642463012,
+            0.002890886366134852
+          ]
+        },
+        "record_ratio": {
+          "candidate_minus_baseline": -0.0008559452900948616,
+          "paired_cluster_ci95": [
+            -0.012723448247333268,
+            0.01039524106996571
+          ]
+        },
+        "sentence_complete_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "corrected_exact_rate": {
+          "candidate_minus_baseline": 0.0,
+          "paired_cluster_ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "uncorrected_exact_rate": {
+          "candidate_minus_baseline": -0.04999999999999999,
+          "paired_cluster_ci95": [
+            -0.25,
+            0.15000000000000002
+          ]
+        }
+      },
+      "referenced_package_byte_delta": -17
+    }
+  },
+  "analysis_signature": "29b2d9cae6d9f2c5ca3502f826106d23c745d3ed59e6a28b5ca83b8c4898c192"
+}
