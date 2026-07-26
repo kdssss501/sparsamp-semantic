@@ -1,0 +1,582 @@
+{
+  "schema": "local-originality-screen-v1",
+  "manuscript": "C:\\Users\\41462\\Documents\\\u9690\u5199\\paper\\MANUSCRIPT_DRAFT.md",
+  "source_dir": "C:\\Users\\41462\\Documents\\\u9690\u5199\\outputs\\stage45_sources",
+  "source_references": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "eligible_paragraphs": 65,
+  "screened_paragraphs": 65,
+  "sampling_rate": 1.0,
+  "counts": {
+    "COMMON_KNOWLEDGE": 1,
+    "ORIGINAL": 64
+  },
+  "blocking_matches": 0,
+  "status": "PASS_WITH_SCOPE_LIMITATION",
+  "results": [
+    {
+      "index": 1,
+      "section": "Target-specific sparse correction certificates recover stochastic language trajectories across numerical precision",
+      "word_count": 30,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 2,
+      "section": "Abstract",
+      "word_count": 252,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 3,
+      "section": "Introduction",
+      "word_count": 125,
+      "citations": [
+        1
+      ],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 4,
+      "section": "Introduction",
+      "word_count": 123,
+      "citations": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 5,
+      "section": "Introduction",
+      "word_count": 102,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 6,
+      "section": "Introduction",
+      "word_count": 155,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 7,
+      "section": "Introduction",
+      "word_count": 108,
+      "citations": [
+        3,
+        6
+      ],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 8,
+      "section": "Official SparSamp compatibility reproduction establishes artifact fidelity",
+      "word_count": 98,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 9,
+      "section": "Official SparSamp compatibility reproduction establishes artifact fidelity",
+      "word_count": 115,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 10,
+      "section": "Official SparSamp compatibility reproduction establishes artifact fidelity",
+      "word_count": 94,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 11,
+      "section": "Sparse certificates separate exact replay from numerical agreement",
+      "word_count": 79,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 12,
+      "section": "Sparse certificates separate exact replay from numerical agreement",
+      "word_count": 105,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 13,
+      "section": "Sparse certificates separate exact replay from numerical agreement",
+      "word_count": 88,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 14,
+      "section": "Sparse certificates separate exact replay from numerical agreement",
+      "word_count": 84,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 15,
+      "section": "Exact replay scales across bilingual prompts",
+      "word_count": 68,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 16,
+      "section": "Exact replay scales across bilingual prompts",
+      "word_count": 138,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 17,
+      "section": "Exact replay scales across bilingual prompts",
+      "word_count": 98,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 18,
+      "section": "Exact replay scales across bilingual prompts",
+      "word_count": 59,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 19,
+      "section": "Replay-package cost depends on the audit boundary",
+      "word_count": 195,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 20,
+      "section": "Matched replay baselines isolate sparse-record cost",
+      "word_count": 147,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 21,
+      "section": "Matched replay baselines isolate sparse-record cost",
+      "word_count": 124,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 22,
+      "section": "Matched replay baselines isolate sparse-record cost",
+      "word_count": 57,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 23,
+      "section": "A public sentence rule improves structural completion",
+      "word_count": 91,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 24,
+      "section": "A public sentence rule improves structural completion",
+      "word_count": 56,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 25,
+      "section": "Contract width exposes a distribution-reliability Pareto frontier",
+      "word_count": 72,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 26,
+      "section": "Contract width exposes a distribution-reliability Pareto frontier",
+      "word_count": 102,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 27,
+      "section": "Contract width exposes a distribution-reliability Pareto frontier",
+      "word_count": 118,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 28,
+      "section": "Bounded parameter sensitivity identifies integer-mass saturation",
+      "word_count": 106,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 29,
+      "section": "Bounded parameter sensitivity identifies integer-mass saturation",
+      "word_count": 134,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 30,
+      "section": "Bounded parameter sensitivity identifies integer-mass saturation",
+      "word_count": 43,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 31,
+      "section": "Replay is stable in both FP16/BF16 directions within the tested environment",
+      "word_count": 93,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 32,
+      "section": "Replay is stable in both FP16/BF16 directions within the tested environment",
+      "word_count": 65,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 33,
+      "section": "Discussion",
+      "word_count": 88,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 34,
+      "section": "Discussion",
+      "word_count": 116,
+      "citations": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 35,
+      "section": "Discussion",
+      "word_count": 218,
+      "citations": [
+        7,
+        8,
+        9
+      ],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 36,
+      "section": "Discussion",
+      "word_count": 151,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 37,
+      "section": "Discussion",
+      "word_count": 107,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 38,
+      "section": "Models and software environment",
+      "word_count": 107,
+      "citations": [
+        6
+      ],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 39,
+      "section": "Official artifact compatibility protocol",
+      "word_count": 120,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 40,
+      "section": "Official artifact compatibility protocol",
+      "word_count": 129,
+      "citations": [],
+      "grade": "COMMON_KNOWLEDGE",
+      "matches": [
+        {
+          "reference": 3,
+          "words": 8,
+          "phrase": "2 4 8 16 32 64 128 256"
+        }
+      ]
+    },
+    {
+      "index": 41,
+      "section": "Official artifact compatibility protocol",
+      "word_count": 96,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 42,
+      "section": "Prompt and trajectory design",
+      "word_count": 67,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 43,
+      "section": "Prompt and trajectory design",
+      "word_count": 74,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 44,
+      "section": "Quantized next-token snapshot",
+      "word_count": 34,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 45,
+      "section": "Quantized next-token snapshot",
+      "word_count": 65,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 46,
+      "section": "Quantized next-token snapshot",
+      "word_count": 53,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 47,
+      "section": "Quantized next-token snapshot",
+      "word_count": 46,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 48,
+      "section": "Integer probability contract",
+      "word_count": 55,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 49,
+      "section": "Integer probability contract",
+      "word_count": 46,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 50,
+      "section": "Integer probability contract",
+      "word_count": 70,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 51,
+      "section": "Integer probability contract",
+      "word_count": 66,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 52,
+      "section": "Sparse precision replay certificate",
+      "word_count": 36,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 53,
+      "section": "Sparse precision replay certificate",
+      "word_count": 38,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 54,
+      "section": "Sparse precision replay certificate",
+      "word_count": 86,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 55,
+      "section": "Sparse precision replay certificate",
+      "word_count": 100,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 56,
+      "section": "Sparse precision replay certificate",
+      "word_count": 113,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 57,
+      "section": "Outcome measures",
+      "word_count": 122,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 58,
+      "section": "Outcome measures",
+      "word_count": 40,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 59,
+      "section": "Statistical analysis",
+      "word_count": 102,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 60,
+      "section": "Statistical analysis",
+      "word_count": 90,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 61,
+      "section": "Statistical analysis",
+      "word_count": 85,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 62,
+      "section": "Data availability",
+      "word_count": 96,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 63,
+      "section": "Code availability",
+      "word_count": 55,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 64,
+      "section": "Ethics declaration",
+      "word_count": 62,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    },
+    {
+      "index": 65,
+      "section": "AI-assisted work disclosure",
+      "word_count": 61,
+      "citations": [],
+      "grade": "ORIGINAL",
+      "matches": []
+    }
+  ],
+  "limitations": [
+    "Comparison is limited to the nine cited public sources extracted locally.",
+    "The screen detects exact contiguous 8-, 12- and 20-word overlap; it is not a semantic plagiarism detector.",
+    "The manuscript was not sent to an external search engine or plagiarism service.",
+    "Turnitin or iThenticate remains recommended before submission."
+  ]
+}

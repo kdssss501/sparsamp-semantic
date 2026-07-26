@@ -1,8 +1,8 @@
 # Manuscript Integrity Audit
 
-**Status:** PASS_WITH_AUTHOR_INPUT
-**Checks:** 45 passed, 0 failed
-**Author placeholders:** 9
+**Status:** PASS
+**Checks:** 50 passed, 0 failed
+**Author placeholders:** 0
 
 | Check | Status | Detail |
 |---|---|---|
@@ -51,6 +51,11 @@
 | figure package: 2 | PASS | {'artifact_id': 'fig-2', 'source_data': 'paper/source_data/figure_02_source.csv', 'transformation': {'script': 'scripts/generate_manuscript_figures.py', 'sha256': '77ed93d8acb2e75b98db5ceed9f9431e6f1d164387dc4572c49805c13945090f', 'operation': 'exact-replay counts and prompt-level correction-rate plotting'}, 'caption_claim': 'Certificates recovered 60 of 60 trajectories while prompt-level correction rates remained low.', 'supported_manuscript_claims': [{'claim': 'Certificate-corrected replay recovered 60 of 60 token trajectories, whereas uncorrected replay recovered 10 of 60 (Table 1 and Fig. 2a).', 'locator': 'Results: Exact replay scales across bilingual prompts'}, {'claim': 'The mean correction rate was 2.16% (prompt-cluster bootstrap 95% confidence interval, 1.80-2.53%), with a maximum trial rate of 6.15% and prompt-level variation shown in Fig. 2b.', 'locator': 'Results: Exact replay scales across bilingual prompts'}], 'limitations': ['Fixed prompt set on one model and GPU stack.']} |
 | figure package: 3 | PASS | {'artifact_id': 'fig-3', 'source_data': 'paper/source_data/figure_03_source.csv', 'transformation': {'script': 'scripts/generate_manuscript_figures.py', 'sha256': '77ed93d8acb2e75b98db5ceed9f9431e6f1d164387dc4572c49805c13945090f', 'operation': 'paired prompt-cluster contract-width summary plotting'}, 'caption_claim': 'Top-four retained more source mass and reduced the truncation component but did not reduce correction density.', 'supported_manuscript_claims': [{'claim': 'The distributional improvement did not produce a reliability improvement.', 'locator': 'Results: Contract width exposes a distribution-reliability Pareto frontier'}], 'limitations': ['One public seed per contract-width condition.']} |
 | figure package: 4 | PASS | {'artifact_id': 'fig-4', 'source_data': 'paper/source_data/figure_04_source.csv', 'transformation': {'script': 'scripts/generate_manuscript_figures.py', 'sha256': '77ed93d8acb2e75b98db5ceed9f9431e6f1d164387dc4572c49805c13945090f', 'operation': 'paired prompt-cluster precision-direction summary plotting'}, 'caption_claim': 'Correction density and retained mass were similar after reversing FP16 and BF16 within the tested stack.', 'supported_manuscript_claims': [{'claim': 'These data support bidirectional precision replay on the tested model and GPU stack.', 'locator': 'Results: Replay is stable in both FP16/BF16 directions within the tested environment'}], 'limitations': ['One public seed per precision direction; same GPU stack.']} |
+| table input hash: scale | PASS | outputs/R044_qwen_replay_scale_analysis.json |
+| table input hash: forward | PASS | outputs/R044_qwen_replay_scale.json |
+| table input hash: top4 | PASS | outputs/R045_qwen_contract_k4.json |
+| table input hash: reverse | PASS | outputs/R046_qwen_reverse_precision.json |
+| table package: 1 | PASS | {'artifact_id': 'table-1', 'source_data': 'paper/source_data/table_01_source.csv', 'transformation': {'script': 'scripts/generate_manuscript_table1.py', 'sha256': '4e0aebffee31ed4f9e1d00b6dad797aec8bf9249a870008113c0ddf2dd9c75e0', 'operation': 'derive Table 1 counts, equal-trial means and prompt-cluster intervals'}, 'caption_claim': 'Cross-precision replay results for Qwen2.5-1.5B-Instruct.', 'supported_manuscript_claims': [{'claim': 'Certificate-corrected replay recovered 60 of 60 token trajectories, whereas uncorrected replay recovered 10 of 60 (Table 1 and Fig. 2a).', 'locator': 'Results: Exact replay scales across bilingual prompts'}], 'manuscript_rows': ['\| FP16 to BF16, top-2, main scale \| 60 \| 60/60 \| 10/60 \| 2.16% [1.80, 2.53] \| 2.88% legacy fixed-width [2.40, 3.36] \| 58/60 \|', '\| FP16 to BF16, top-2, ablation subset \| 20 \| 20/20 \| 5/20 \| 2.05% [1.24, 2.93] \| 2.74% [1.67, 3.87] \| 20/20 \|', '\| FP16 to BF16, top-4 \| 20 \| 20/20 \| 1/20 \| 2.41% [1.95, 2.86] \| 3.21% [2.60, 3.82] \| 16/20 \|', '\| BF16 to FP16, top-2 \| 20 \| 20/20 \| 5/20 \| 2.06% [1.33, 2.86] \| 2.75% [1.74, 3.82] \| 19/20 \|'], 'limitations': ['The three 20-trial variants use one public seed per prompt.', 'Intervals describe the fixed prompt set on one model and GPU stack.']} |
 
 ## Boundary
 

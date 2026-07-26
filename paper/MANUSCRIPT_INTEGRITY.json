@@ -1,7 +1,7 @@
 {
   "schema": "manuscript-integrity-audit-v1",
   "manuscript": "C:\\Users\\41462\\Documents\\\u9690\u5199\\paper\\MANUSCRIPT_DRAFT.md",
-  "manuscript_sha256": "bec5ff15c89cdaf4bd64f3e0372849bdcebce3ce208c1a685c1329c85066f05a",
+  "manuscript_sha256": "8bcd6f07f41d2ad8d353f192c2ce3abe020d283ce440dc4977d70edeafbb8a9c",
   "checks": [
     {
       "name": "corrected recovery",
@@ -227,12 +227,37 @@
       "name": "figure package: 4",
       "pass": true,
       "detail": "{'artifact_id': 'fig-4', 'source_data': 'paper/source_data/figure_04_source.csv', 'transformation': {'script': 'scripts/generate_manuscript_figures.py', 'sha256': '77ed93d8acb2e75b98db5ceed9f9431e6f1d164387dc4572c49805c13945090f', 'operation': 'paired prompt-cluster precision-direction summary plotting'}, 'caption_claim': 'Correction density and retained mass were similar after reversing FP16 and BF16 within the tested stack.', 'supported_manuscript_claims': [{'claim': 'These data support bidirectional precision replay on the tested model and GPU stack.', 'locator': 'Results: Replay is stable in both FP16/BF16 directions within the tested environment'}], 'limitations': ['One public seed per precision direction; same GPU stack.']}"
+    },
+    {
+      "name": "table input hash: scale",
+      "pass": true,
+      "detail": "outputs/R044_qwen_replay_scale_analysis.json"
+    },
+    {
+      "name": "table input hash: forward",
+      "pass": true,
+      "detail": "outputs/R044_qwen_replay_scale.json"
+    },
+    {
+      "name": "table input hash: top4",
+      "pass": true,
+      "detail": "outputs/R045_qwen_contract_k4.json"
+    },
+    {
+      "name": "table input hash: reverse",
+      "pass": true,
+      "detail": "outputs/R046_qwen_reverse_precision.json"
+    },
+    {
+      "name": "table package: 1",
+      "pass": true,
+      "detail": "{'artifact_id': 'table-1', 'source_data': 'paper/source_data/table_01_source.csv', 'transformation': {'script': 'scripts/generate_manuscript_table1.py', 'sha256': '4e0aebffee31ed4f9e1d00b6dad797aec8bf9249a870008113c0ddf2dd9c75e0', 'operation': 'derive Table 1 counts, equal-trial means and prompt-cluster intervals'}, 'caption_claim': 'Cross-precision replay results for Qwen2.5-1.5B-Instruct.', 'supported_manuscript_claims': [{'claim': 'Certificate-corrected replay recovered 60 of 60 token trajectories, whereas uncorrected replay recovered 10 of 60 (Table 1 and Fig. 2a).', 'locator': 'Results: Exact replay scales across bilingual prompts'}], 'manuscript_rows': ['| FP16 to BF16, top-2, main scale | 60 | 60/60 | 10/60 | 2.16% [1.80, 2.53] | 2.88% legacy fixed-width [2.40, 3.36] | 58/60 |', '| FP16 to BF16, top-2, ablation subset | 20 | 20/20 | 5/20 | 2.05% [1.24, 2.93] | 2.74% [1.67, 3.87] | 20/20 |', '| FP16 to BF16, top-4 | 20 | 20/20 | 1/20 | 2.41% [1.95, 2.86] | 3.21% [2.60, 3.82] | 16/20 |', '| BF16 to FP16, top-2 | 20 | 20/20 | 5/20 | 2.06% [1.33, 2.86] | 2.75% [1.74, 3.82] | 19/20 |'], 'limitations': ['The three 20-trial variants use one public seed per prompt.', 'Intervals describe the fixed prompt set on one model and GPU stack.']}"
     }
   ],
   "summary": {
-    "passed": 45,
+    "passed": 50,
     "failed": 0,
-    "author_placeholders": 9,
-    "status": "PASS_WITH_AUTHOR_INPUT"
+    "author_placeholders": 0,
+    "status": "PASS"
   }
 }

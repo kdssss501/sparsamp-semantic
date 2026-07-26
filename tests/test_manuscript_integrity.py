@@ -6,6 +6,7 @@ from scripts.audit_manuscript_integrity import (
     citation_numbers,
     sha256,
     valid_figure_package,
+    valid_table_package,
 )
 
 
@@ -83,3 +84,31 @@ def test_figure_package_requires_per_figure_traceability(tmp_path: Path) -> None
     assert valid_figure_package(tmp_path, figure, "Supported claim.")
     del figure["transformation"]
     assert not valid_figure_package(tmp_path, figure, "Supported claim.")
+
+
+def test_table_package_requires_source_transform_claims_and_rows(tmp_path: Path) -> None:
+    source = tmp_path / "paper" / "table.csv"
+    source.parent.mkdir(parents=True)
+    source.write_text("value\n1\n", encoding="utf-8")
+    script = tmp_path / "render.py"
+    script.write_text("print('render')\n", encoding="utf-8")
+    row = "| Test | 1 |"
+    table = {
+        "artifact_id": "table-1",
+        "source_data": "paper/table.csv",
+        "transformation": {
+            "script": "render.py",
+            "sha256": sha256(script),
+            "operation": "test table",
+        },
+        "caption_claim": "Caption claim.",
+        "supported_manuscript_claims": [
+            {"claim": "Supported claim.", "locator": "Results"}
+        ],
+        "manuscript_rows": [row],
+        "limitations": [],
+    }
+    text = f"Supported claim.\n{row}\n"
+    assert valid_table_package(tmp_path, table, text)
+    table["manuscript_rows"] = ["| Missing |"]
+    assert not valid_table_package(tmp_path, table, text)

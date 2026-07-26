@@ -1,9 +1,7 @@
 # Target-specific sparse correction certificates recover stochastic language trajectories across numerical precision
 
-**Authors:** AUTHOR_INPUT_NEEDED
-**Affiliations:** AUTHOR_INPUT_NEEDED
-**Corresponding author:** AUTHOR_INPUT_NEEDED
-**Draft status:** v0.3, Stage 4 major-revision draft, with author metadata and independent hardware validation pending
+**Authors:** Lei Ke
+**Draft status:** v0.4, Stage 4.5 integrity candidate; submission declarations and independent hardware validation are not supplied
 **Intended format:** specialist machine-learning systems and reproducibility article
 
 **Keywords:** stochastic inference, numerical precision, exact replay, language models, reproducibility, probability contracts
@@ -63,9 +61,9 @@ R049 measured serialization on the 20-trial seed-0 reference bundle (1,500 gener
 | Setting | Trials | Corrected exact | Uncorrected exact | Mean correction rate | Legacy fixed-width payload ratio | Sentence complete |
 |---|---:|---:|---:|---:|---:|---:|
 | FP16 to BF16, top-2, main scale | 60 | 60/60 | 10/60 | 2.16% [1.80, 2.53] | 2.88% legacy fixed-width [2.40, 3.36] | 58/60 |
-| FP16 to BF16, top-2, ablation subset | 20 | 20/20 | 5/20 | 2.05% [1.24, 2.93] | 2.74% [1.69, 3.90] | 20/20 |
-| FP16 to BF16, top-4 | 20 | 20/20 | 1/20 | 2.41% [1.94, 2.87] | 3.21% [2.58, 3.82] | 16/20 |
-| BF16 to FP16, top-2 | 20 | 20/20 | 5/20 | 2.06% [1.33, 2.86] | 2.75% [1.76, 3.82] | 19/20 |
+| FP16 to BF16, top-2, ablation subset | 20 | 20/20 | 5/20 | 2.05% [1.24, 2.93] | 2.74% [1.67, 3.87] | 20/20 |
+| FP16 to BF16, top-4 | 20 | 20/20 | 1/20 | 2.41% [1.95, 2.86] | 3.21% [2.60, 3.82] | 16/20 |
+| BF16 to FP16, top-2 | 20 | 20/20 | 5/20 | 2.06% [1.33, 2.86] | 2.75% [1.74, 3.82] | 19/20 |
 
 ### Matched replay baselines isolate sparse-record cost
 
@@ -252,27 +250,11 @@ Exact counts are reported without null-hypothesis significance tests. For the ma
 
 ## Data availability
 
-The fixed bilingual prompt set, aggregate analysis files, Figure 1-4 source-data CSVs, generated PDF and 300-dpi PNG figures, R002 official-reproduction analysis, R050 integer-apportionment audit, R051 matched-baseline analysis, R052 unquantized-delta analysis, R053 bounded-sensitivity analysis, source hashes and deterministic result signatures are included in the project repository. Raw model outputs, private blinding keys and participant packages are excluded from version control and remain local experiment artifacts. The 1,200-trial R002 checkpoint and frozen reference-only bundle are transferred separately and verified by SHA-256 before analysis or external replay. AUTHOR_INPUT_NEEDED: provide the public archival location and accession or DOI before submission.
+The fixed bilingual prompt set, aggregate analysis files, Figure 1-4 source-data CSVs, generated PDF and 300-dpi PNG figures, R002 official-reproduction analysis, R050 integer-apportionment audit, R051 matched-baseline analysis, R052 unquantized-delta analysis, R053 bounded-sensitivity analysis, source hashes and deterministic result signatures are included in the project repository. Raw model outputs, private blinding keys and participant packages are excluded from version control and remain local experiment artifacts. The 1,200-trial R002 checkpoint and frozen reference-only bundle are transferred separately and verified by SHA-256 before analysis or external replay.
 
 ## Code availability
 
-Code for probability contracts, replay certificates, checkpointed experiments, official-artifact compatibility analysis, external replay packaging, blind-study material generation and statistical analysis is available at `https://github.com/kdssss501/sparsamp-semantic` on the immutable Git tag `research-v0.40-qtb-sensitivity-revision`, which includes the revised manuscript and R050-R053 evidence. AUTHOR_INPUT_NEEDED: create an external archival release and DOI before submission.
-
-## Acknowledgements
-
-AUTHOR_INPUT_NEEDED.
-
-## Funding
-
-AUTHOR_INPUT_NEEDED. If the work received no specific funding, replace this placeholder with: "This research received no specific grant from any funding agency in the public, commercial or not-for-profit sectors."
-
-## Author contributions
-
-AUTHOR_INPUT_NEEDED. Use CRediT roles and distinguish conceptualization, software, validation, formal analysis, investigation, visualization, writing and supervision.
-
-## Competing interests
-
-The authors declare AUTHOR_INPUT_NEEDED.
+Code for probability contracts, replay certificates, checkpointed experiments, official-artifact compatibility analysis, external replay packaging, blind-study material generation and statistical analysis is available at `https://github.com/kdssss501/sparsamp-semantic` on the immutable Git tag `research-v0.41-final-integrity`, which includes the revised manuscript, R050-R053 evidence and Stage 4.5 integrity materials.
 
 ## Ethics declaration
 

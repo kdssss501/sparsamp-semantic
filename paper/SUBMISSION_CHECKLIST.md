@@ -5,11 +5,12 @@
 - [x] Evidence-bounded English manuscript draft.
 - [x] Independent Chinese abstract and keywords.
 - [x] Figure 1-4 in PDF and 300-dpi PNG.
-- [x] Figure source-data CSVs and input/transformation hash trace.
-- [x] Executable manuscript claim audit: 39/39 checks passed.
+- [x] Figure and Table 1 source-data CSVs with input/transformation hash traces.
+- [x] Executable manuscript claim audit: 50/50 checks passed.
 - [x] Data availability, code availability, ethics and AI-assisted work statements drafted.
 - [x] Official SparSamp R002 matrix completed and incorporated into Supplementary Information.
-- [ ] Author names, affiliations and corresponding-author contact supplied.
+- [x] Author name supplied: Lei Ke.
+- [ ] Affiliation and corresponding-author contact supplied.
 - [ ] CRediT contributions supplied and approved by all authors.
 - [ ] Funding statement supplied.
 - [ ] Competing-interest statement supplied.
@@ -34,9 +35,9 @@
 - [x] Seven-mode AI research failure checklist passed with all seven modes CLEAR.
 - [x] Full simulated peer review completed: Major Revision.
 - [x] Revision round completed with every reviewer concern tracked; external hardware and author-owned archive items remain explicit residuals.
-- [ ] Final integrity review passed from scratch.
+- [x] Stage 4.5 final integrity review passed with documented scope and metadata notes.
 - [ ] Target-venue formatting, LaTeX compilation and PDF inspection completed.
 
 ## Current decision
 
-The study has completed Stage 4 major revision and is ready for Stage 3' focused re-review, but it is not ready for submission. The remaining submission blockers are author-owned metadata, an immutable archival release and the final Stage 4.5 integrity review. Independent hardware and human evaluation remain required only for stronger cross-system and semantic-quality claims; the v0.3 title, abstract and conclusions exclude those claims.
+The study has completed Stage 4.5 final integrity review and is ready for the mandatory Stage 5 formatting checkpoint. It is not ready for journal submission: affiliation/contact, CRediT roles, funding, competing interests and an external archival DOI remain unsupplied by author choice. Independent hardware and human evaluation remain required only for stronger cross-system and semantic-quality claims; the v0.4 title, abstract and conclusions exclude those claims.

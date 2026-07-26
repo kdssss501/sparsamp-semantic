@@ -73,6 +73,38 @@ def valid_figure_package(root: Path, figure: dict[str, Any], text: str) -> bool:
     )
 
 
+def valid_table_package(root: Path, table: dict[str, Any], text: str) -> bool:
+    source = table.get("source_data")
+    source_ok = isinstance(source, str) and (root / source).is_file()
+    transformation = table.get("transformation", {})
+    transform_path = root / transformation.get("script", "")
+    transform_ok = (
+        transform_path.is_file()
+        and transformation.get("sha256") == sha256(transform_path)
+        and bool(transformation.get("operation"))
+    )
+    supported_claims = table.get("supported_manuscript_claims", [])
+    claims_ok = bool(supported_claims) and all(
+        isinstance(item, dict)
+        and bool(item.get("claim"))
+        and item["claim"] in text
+        and bool(item.get("locator"))
+        for item in supported_claims
+    )
+    manuscript_rows = table.get("manuscript_rows", [])
+    rows_ok = bool(manuscript_rows) and all(row in text for row in manuscript_rows)
+    required_keys = {
+        "artifact_id",
+        "source_data",
+        "transformation",
+        "caption_claim",
+        "supported_manuscript_claims",
+        "manuscript_rows",
+        "limitations",
+    }
+    return required_keys <= table.keys() and source_ok and transform_ok and claims_ok and rows_ok
+
+
 def audit(
     manuscript: Path,
     scale_analysis: Path,
@@ -83,6 +115,7 @@ def audit(
     baseline_analysis: Path | None = None,
     unquantized_analysis: Path | None = None,
     sensitivity_analysis: Path | None = None,
+    table_trace: Path | None = None,
 ) -> dict[str, Any]:
     text = manuscript.read_text(encoding="utf-8")
     scale = json.loads(scale_analysis.read_text(encoding="utf-8"))
@@ -272,6 +305,17 @@ def audit(
         passed = valid_figure_package(ROOT, figure, text)
         check(checks, f"figure package: {number}", passed, str(figure))
 
+    if table_trace is not None:
+        table_package = json.loads(table_trace.read_text(encoding="utf-8"))
+        for name, item in table_package.get("inputs", {}).items():
+            path = ROOT / item["path"]
+            passed = path.is_file() and sha256(path) == item["sha256"]
+            check(checks, f"table input hash: {name}", passed, item["path"])
+        for table in table_package.get("tables", []):
+            number = int(str(table["artifact_id"]).split("-")[-1])
+            passed = valid_table_package(ROOT, table, text)
+            check(checks, f"table package: {number}", passed, str(table))
+
     placeholders = text.count("AUTHOR_INPUT_NEEDED")
     failures = [item for item in checks if not item["pass"]]
     return {
@@ -347,6 +391,11 @@ def main() -> int:
         type=Path,
         default=ROOT / "docs/reproducibility/R053_QTB_SENSITIVITY.json",
     )
+    parser.add_argument(
+        "--table-trace",
+        type=Path,
+        default=ROOT / "paper/source_data/table_trace.json",
+    )
     parser.add_argument("--output", type=Path, default=ROOT / "paper/MANUSCRIPT_INTEGRITY.json")
     parser.add_argument("--markdown", type=Path, default=ROOT / "paper/MANUSCRIPT_INTEGRITY.md")
     args = parser.parse_args()
@@ -360,6 +409,7 @@ def main() -> int:
         args.baselines,
         args.unquantized,
         args.sensitivity,
+        args.table_trace,
     )
     args.output.write_text(json.dumps(report, indent=2, ensure_ascii=True), encoding="utf-8")
     args.markdown.write_text(markdown_report(report), encoding="utf-8")
