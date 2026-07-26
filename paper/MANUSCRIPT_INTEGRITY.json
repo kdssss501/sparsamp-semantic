@@ -1,7 +1,7 @@
 {
   "schema": "manuscript-integrity-audit-v1",
   "manuscript": "C:\\Users\\41462\\Documents\\\u9690\u5199\\paper\\MANUSCRIPT_DRAFT.md",
-  "manuscript_sha256": "8bcd6f07f41d2ad8d353f192c2ce3abe020d283ce440dc4977d70edeafbb8a9c",
+  "manuscript_sha256": "30e70a3ec0fa8e4e50849cb15287fe8fb6fe6e73b937e295a85b9f5f746a3a2e",
   "checks": [
     {
       "name": "corrected recovery",

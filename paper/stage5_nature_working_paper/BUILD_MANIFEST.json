@@ -1,0 +1,34 @@
+{
+  "stage": 5,
+  "format": "Nature-style working paper",
+  "author": "Lei Ke",
+  "source_files": {
+    "paper\\MANUSCRIPT_DRAFT.md": "30e70a3ec0fa8e4e50849cb15287fe8fb6fe6e73b937e295a85b9f5f746a3a2e",
+    "paper\\SUPPLEMENTARY_INFORMATION.md": "c284395501a06f73113845a0c36b3bcd7dd7f971b650eefa00730427916cab69"
+  },
+  "generated_files": {
+    "WORKING_PAPER.md": "c4b61e623a66c76e3f49c46cede817bdf37d824a3fe9a7f3f241829caed62efc",
+    "SUPPLEMENTARY_INFORMATION.md": "c284395501a06f73113845a0c36b3bcd7dd7f971b650eefa00730427916cab69",
+    "working_paper.tex": "5d8e77bdc489a3e84ff4c53233d3c9f993ee7e97f9c46bbf3ff48de5898f7819",
+    "supplementary_information.tex": "623fa7f51ca0a07e73c3ac33f7a03a37c27d79b04663f101f25e5284bc04f644",
+    "README.md": "77d7ab45579ec5a23c8c1c79841dd8d98a459910013d66f5fef10474c5e90387"
+  },
+  "figure_files": {
+    "Figure 1": "347678f1fb69864fbb99c24954614d409720f58c3e8d59d2076d792d7701c2cb",
+    "Figure 2": "2c1355dbf7bfe64f10a5d711293442ad486263ba2e0230b472f8033c7d9e5966",
+    "Figure 3": "7e816231473937c29cbe529a93cde5b99eacb29543b14779632ba30d1f29cf32",
+    "Figure 4": "f2328f80a13376d5a9f95f465590defa10ca32e9b9744d0b23c642757dd4f465",
+    "Supplementary Figure 1": "3b4ccc7ea8adea138e59beba6d640acc1dd52cf9e0c345e8cb011e784a2682ef"
+  },
+  "claim_boundary": "Working-paper formatting only; no claim of Nature compliance, acceptance, target-independent determinism, native-distribution preservation, semantic equivalence or cross-hardware generality.",
+  "compiled_pdfs": {
+    "working_paper.pdf": {
+      "sha256": "13e1098a981b61f74fff9c841e09fae0a8321b2bb9f416cc2f19ee1f38d0ef4e",
+      "bytes": 272020
+    },
+    "supplementary_information.pdf": {
+      "sha256": "261af48b615947a9d246df2c38b5616fcc39599f6952d7f3267088f4c0ece100",
+      "bytes": 71282
+    }
+  }
+}

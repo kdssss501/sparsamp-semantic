@@ -1,8 +1,6 @@
 # Target-specific sparse correction certificates recover stochastic language trajectories across numerical precision
 
 **Authors:** Lei Ke
-**Draft status:** v0.4, Stage 4.5 integrity candidate; submission declarations and independent hardware validation are not supplied
-**Intended format:** specialist machine-learning systems and reproducibility article
 
 **Keywords:** stochastic inference, numerical precision, exact replay, language models, reproducibility, probability contracts
 
