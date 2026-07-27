@@ -13,9 +13,8 @@
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \let\NATUREincludegraphics\includegraphics
-\usepackage{booktabs,array}
-\usepackage{adjustbox}
-\usepackage{pdflscape}
+\usepackage{booktabs,array,xltabular}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
 \usepackage{microtype}
 \usepackage{lineno}
 \usepackage{xurl}
@@ -84,28 +83,32 @@ Every reference token appeared in the target top-eight envelope across 4,500 gen
 R049 measured serialization on the 20-trial seed-0 reference bundle (1,500 generated tokens and 30 corrections). The versioned binary manifest payload was 247 bytes against a 3,715-byte variable-length full-token trace, a payload-only ratio of 6.65\%. When a self-contained JSON package included the shared contract header and per-trial identities, the certificate package was 6,136 bytes versus 9,604 bytes for the corresponding full-trace package (63.89\%). A compact binary package that referenced the externally shared bundle, model fingerprint and target-environment fingerprint used a fixed 101-byte header and totalled 1,148 bytes versus 4,636 bytes for the referenced full trace (24.76\%, or 6.123 bits per generated token). These are different estimands: the first excludes all headers, the second includes all audit metadata, and the third assumes the shared bundle has already been transferred. Certificate construction and corrected replay each required one target-model pass. Measured source-machine throughputs were 11.53 and 11.50 tokens per second, respectively, versus 11.90 tokens per second for the uncorrected evaluation pass. The timing is descriptive for one machine, not a portability claim.
 
 \clearpage
-\begin{landscape}
-\begin{table}
-\centering
-\caption{Cross-precision replay results for Qwen2.5-1.5B-Instruct. Continuous intervals use 10,000 prompt-cluster bootstrap resamples. Exact recovery counts retain all trials.}
-\label{tab:1}
+\begingroup
 \scriptsize
-\setlength{\tabcolsep}{3.5pt}
-\renewcommand{\arraystretch}{1.18}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{lcccccc}
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{xltabular}{\textwidth}{@{}>{\raggedright\arraybackslash}X *{6}{Y}@{}}
+\caption{Cross-precision replay results for Qwen2.5-1.5B-Instruct. Continuous intervals use 10,000 prompt-cluster bootstrap resamples. Exact recovery counts retain all trials.}\label{tab:1} \\
 \toprule
 \textbf{Setting} & \textbf{Trials} & \textbf{Corrected exact} & \textbf{Uncorrected exact} & \textbf{Mean correction rate} & \textbf{Legacy fixed-width payload ratio} & \textbf{Sentence complete} \\
 \midrule
+\endfirsthead
+\multicolumn{7}{l}{\scriptsize\itshape Continued from previous page} \\
+\toprule
+\textbf{Setting} & \textbf{Trials} & \textbf{Corrected exact} & \textbf{Uncorrected exact} & \textbf{Mean correction rate} & \textbf{Legacy fixed-width payload ratio} & \textbf{Sentence complete} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{7}{r}{\scriptsize\itshape Continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
 FP16 to BF16, top-2, main scale & 60 & 60/60 & 10/60 & 2.16\% [1.80, 2.53] & 2.88\% legacy fixed-width [2.40, 3.36] & 58/60 \\
 FP16 to BF16, top-2, ablation subset & 20 & 20/20 & 5/20 & 2.05\% [1.24, 2.93] & 2.74\% [1.67, 3.87] & 20/20 \\
 FP16 to BF16, top-4 & 20 & 20/20 & 1/20 & 2.41\% [1.95, 2.86] & 3.21\% [2.60, 3.82] & 16/20 \\
 BF16 to FP16, top-2 & 20 & 20/20 & 5/20 & 2.06\% [1.33, 2.86] & 2.75\% [1.74, 3.82] & 19/20 \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
-\end{landscape}
+\end{xltabular}
+\endgroup
 \clearpage
 \subsection{Matched replay baselines isolate sparse-record cost.}
 To test whether token-level corrections improve on simpler replay records, we re-analysed the frozen 20-prompt seed-0 bundle using one referenced header and the same per-trial identity records for every method (Table 2). Seed-only replay added no trajectory payload but recovered 5 of 20 paths; its 901 bytes consist entirely of shared and per-trial identity metadata. The SPRC recovered 20 of 20 using 1,148 bytes (6.123 bits per token), compared with 4,636 bytes (24.725 bits per token) for a target-independent full token trace. Fixed block repair stored every reference token in a block containing at least one SPRC correction. Its smallest four-token variant required 1,408 bytes, with larger blocks increasing to 2,553 bytes at block size 32. Thus the sparse record was smaller than each exact block-repair control under the matched boundary.
@@ -115,19 +118,26 @@ We next removed the logit-bin and integer-mass contracts while retaining the sam
 The byte advantage does not imply a compute advantage over direct storage. Full-trace reconstruction requires no target-model pass. SPRC, unquantized delta and block-repair construction evaluate the target on every reference prefix, and operational replay evaluates the target again. A specialized block implementation could skip generation within stored blocks, but that optimization was not timed.
 
 \clearpage
-\begin{landscape}
-\begin{table}
-\centering
-\caption{Matched referenced-package replay controls on the 20-prompt seed-0 bundle. All byte counts include the same 101-byte referenced header and per-trial identity records.}
-\label{tab:2}
+\begingroup
 \scriptsize
-\setlength{\tabcolsep}{3.5pt}
-\renewcommand{\arraystretch}{1.18}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{lcccccc}
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{xltabular}{\textwidth}{@{}>{\raggedright\arraybackslash}X *{6}{Y}@{}}
+\caption{Matched referenced-package replay controls on the 20-prompt seed-0 bundle. All byte counts include the same 101-byte referenced header and per-trial identity records.}\label{tab:2} \\
 \toprule
 \textbf{Method} & \textbf{Exact recovery} & \textbf{Referenced bytes} & \textbf{Ratio to full trace} & \textbf{Bits/token} & \textbf{Target passes} & \textbf{Target-specific} \\
 \midrule
+\endfirsthead
+\multicolumn{7}{l}{\scriptsize\itshape Continued from previous page} \\
+\toprule
+\textbf{Method} & \textbf{Exact recovery} & \textbf{Referenced bytes} & \textbf{Ratio to full trace} & \textbf{Bits/token} & \textbf{Target passes} & \textbf{Target-specific} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{7}{r}{\scriptsize\itshape Continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
 Seed only & 5/20 & 901 & 19.43\% & 4.805 & 1 & No \\
 SPRC & 20/20 & 1,148 & 24.76\% & 6.123 & 2 & Yes \\
 Unquantized top-two delta & 20/20 & 1,200 & 25.88\% & 6.400 & 2 & Yes \\
@@ -137,11 +147,8 @@ Eight-token block repair & 20/20 & 1,655 & 35.70\% & 8.827 & 2 & Yes \\
 Sixteen-token block repair & 20/20 & 1,963 & 42.34\% & 10.469 & 2 & Yes \\
 Thirty-two-token block repair & 20/20 & 2,553 & 55.07\% & 13.616 & 2 & Yes \\
 Unquantized top-16-cap delta & 20/20 & 2,371 & 51.14\% & 12.645 & 2 & Yes \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
-\end{landscape}
+\end{xltabular}
+\endgroup
 \clearpage
 \subsection{A public sentence rule improves structural completion.}
 Fixed token budgets can produce exact but visibly truncated outputs. We therefore separated token replay from structural completion. In the sentence-completion pilot, generation continued beyond token 64 until a public terminal-punctuation rule was satisfied or token 96 was reached. For six seeded trajectories, sentence completion improved from zero of six under the fixed 64-token setting to six of six under the public stopping rule, at an average cost of 9.5 additional tokens. Exact corrected replay remained six of six and the mean correction rate was 1.62\%.
@@ -161,19 +168,26 @@ We next froze a one-factor-at-a-time sensitivity contract around the seed-0 top-
 The lowest observed correction density was 1.721\% at 20 mass bits, compared with 2.000\% at the 16-bit baseline. The paired change was -0.279 percentage points (95\% interval, -1.159 to +0.537) and therefore did not exclude no change. Its referenced package used 1,131 bytes versus 1,148 baseline bytes, with the difference reflecting both manifest contents and changed trajectory lengths. Reducing integer mass to 12 bits increased correction density to 3.074\%; lowering temperature to 1.0 increased retained source mass from 0.734 to 0.816 and increased corrections to 3.070\%. None of the six paired correction-rate intervals excluded zero. These results rule out a monotonic "more precision is always better" interpretation and identify 20 mass bits as a replication candidate, not a confirmed optimum.
 
 \clearpage
-\begin{landscape}
-\begin{table}
-\centering
-\caption{Prespecified one-factor-at-a-time parameter sensitivity. Each row contains the same 20 prompts and public seed 0. Delta intervals use 10,000 prompt-paired bootstrap resamples. Referenced bytes include the common 101-byte header and per-trial identity records.}
-\label{tab:3}
+\begingroup
 \scriptsize
-\setlength{\tabcolsep}{3.5pt}
-\renewcommand{\arraystretch}{1.18}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{lcccccccc}
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{xltabular}{\textwidth}{@{}>{\raggedright\arraybackslash}X *{8}{Y}@{}}
+\caption{Prespecified one-factor-at-a-time parameter sensitivity. Each row contains the same 20 prompts and public seed 0. Delta intervals use 10,000 prompt-paired bootstrap resamples. Referenced bytes include the common 101-byte header and per-trial identity records.}\label{tab:3} \\
 \toprule
 \textbf{Variant} & \textbf{q} & \textbf{T} & \textbf{B} & \textbf{Exact recovery} & \textbf{Correction density} & \textbf{Delta vs baseline, pp (95\% CI)} & \textbf{Retained mass} & \textbf{Referenced bytes} \\
 \midrule
+\endfirsthead
+\multicolumn{9}{l}{\scriptsize\itshape Continued from previous page} \\
+\toprule
+\textbf{Variant} & \textbf{q} & \textbf{T} & \textbf{B} & \textbf{Exact recovery} & \textbf{Correction density} & \textbf{Delta vs baseline, pp (95\% CI)} & \textbf{Retained mass} & \textbf{Referenced bytes} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{9}{r}{\scriptsize\itshape Continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
 Baseline & 0.5 & 1.2 & 16 & 20/20 & 2.000\% & reference & 0.734 & 1,148 \\
 q=0.25 & 0.25 & 1.2 & 16 & 20/20 & 2.498\% & +0.498 (-0.611 to +1.546) & 0.747 & 1,178 \\
 q=1.0 & 1.0 & 1.2 & 16 & 20/20 & 2.056\% & +0.056 (-0.899 to +1.006) & 0.752 & 1,141 \\
@@ -181,11 +195,8 @@ T=1.0 & 0.5 & 1.0 & 16 & 20/20 & 3.070\% & +1.070 (-0.253 to +2.364) & 0.816 & 1
 T=1.4 & 0.5 & 1.4 & 16 & 20/20 & 2.364\% & +0.364 (-0.798 to +1.429) & 0.678 & 1,168 \\
 B=12 & 0.5 & 1.2 & 12 & 20/20 & 3.074\% & +1.074 (-0.401 to +2.507) & 0.752 & 1,212 \\
 B=20 & 0.5 & 1.2 & 20 & 20/20 & 1.721\% & -0.279 (-1.159 to +0.537) & 0.747 & 1,131 \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
-\end{landscape}
+\end{xltabular}
+\endgroup
 \clearpage
 \subsection{Replay is stable in both FP16/BF16 directions within the tested environment.}
 To test whether the result depended on selecting FP16 as the reference, we reversed the direction for the 20-prompt ablation (Fig. 4). BF16 references replayed in FP16 achieved 20 of 20 corrected trajectories, with a correction rate of 2.06\% (1.33-2.86\%) and 19 of 20 sentence-complete outputs. Relative to the matched FP16-to-BF16 top-two subset, the correction-rate change was +0.01 percentage points (-1.00 to +1.00), and the retained-mass change was -0.0043 (-0.0193 to +0.0104). Neither interval excluded zero.

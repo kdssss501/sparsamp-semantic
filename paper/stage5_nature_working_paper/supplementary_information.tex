@@ -2,9 +2,8 @@
 \usepackage[margin=22mm]{geometry}
 \usepackage{newtxtext,newtxmath}
 \usepackage{graphicx}
-\usepackage{booktabs,array}
-\usepackage{adjustbox}
-\usepackage{pdflscape}
+\usepackage{booktabs,array,xltabular}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
 \usepackage{microtype}
 \usepackage{xurl}
 \usepackage[hidelinks,unicode]{hyperref}
@@ -58,19 +57,26 @@ The raw 1,200-trial checkpoint is excluded from Git with other model outputs. Ev
 The main study concerns target-specific token-trajectory replay, not secret-message transmission. Table S2 separates adjacent mechanisms by objective and state assumptions so that the SparSamp compatibility result is not treated as inherited evidence for SPRC novelty.
 
 \clearpage
-\begin{landscape}
-\begin{table}
-\centering
-\caption{Mechanism and trust-boundary comparison.}
-\label{tab:s2}
+\begingroup
 \scriptsize
-\setlength{\tabcolsep}{3.5pt}
-\renewcommand{\arraystretch}{1.18}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{lccccc}
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{xltabular}{\textwidth}{@{}>{\raggedright\arraybackslash}X *{5}{Y}@{}}
+\caption{Mechanism and trust-boundary comparison.}\label{tab:s2} \\
 \toprule
 \textbf{Mechanism} & \textbf{Primary objective} & \textbf{Distribution relationship} & \textbf{Recipient state} & \textbf{Exact selected-path replay} & \textbf{Tokenization layer} \\
 \midrule
+\endfirsthead
+\multicolumn{6}{l}{\scriptsize\itshape Continued from previous page} \\
+\toprule
+\textbf{Mechanism} & \textbf{Primary objective} & \textbf{Distribution relationship} & \textbf{Recipient state} & \textbf{Exact selected-path replay} & \textbf{Tokenization layer} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{6}{r}{\scriptsize\itshape Continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
 Public seed only & Re-run stochastic inference & Uses the target implementation's local distribution & Model, prompt, configuration and seed & No; 5/20 on the frozen seed-0 subset & Shared tokenizer only \\
 Full token trace & Store the selected path & Does not regenerate a distribution & Complete token sequence plus tokenizer & Yes, target-independent & Shared tokenizer only \\
 SPRC & Repair a known target's seeded path & Quantized top-\textit{k} integer contract; truncation and quantization disclosed & Reference bundle, target identity and sparse corrections & Yes, conditional on the constructed target & Shared tokenizer only \\
@@ -82,11 +88,8 @@ Range coding \cite{ref4} & Efficient secure linguistic coding & Range partition 
 List decoding \cite{ref7} & Improve PSS recovery/capacity trade-offs & Candidate-list coding & Decoder list/search state & Not evaluated here & Shared tokenization assumed \\
 Dyadic approximation \cite{ref8} & Approximate LLM output laws with dyadic codes & Explicit rate-distribution approximation objective & Dyadic code specification & Not evaluated here & Shared tokenization assumed \\
 ReTokSync \cite{ref9} & Recover synchronization after text re-tokenization & Orthogonal to probability replay & Public text and synchronization layer & Not evaluated here & Explicitly addresses tokenization \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
-\end{landscape}
+\end{xltabular}
+\endgroup
 \clearpage
 SPRC is therefore best interpreted as a target-conditioned sparse delta format coupled to a canonical integer sampler. Its current evidence supports smaller records than fixed block repair and the matched unquantized variants on one frozen bundle. The top-two comparison isolates a small contract advantage; the top-16-cap result shows that wider unquantized support sharply increases corrections in this target stack. These data do not establish global optimality, replay security or text-channel synchronization.
 

@@ -194,35 +194,42 @@ def parse_table(blocks: list[str], start: int, caption: str) -> tuple[MarkdownTa
 def render_table(table: MarkdownTable, table_number: int, *, supplementary: bool = False) -> str:
     columns = len(table.headers)
     label_prefix = "tab:s" if supplementary else "tab:"
-    alignment = "l" + "c" * (columns - 1)
+    alignment = r">{\raggedright\arraybackslash}X" + f" *{{{columns - 1}}}{{Y}}"
+    header = " & ".join(
+        r"\textbf{" + latex_inline(cell) + "}" for cell in table.headers
+    ) + r" \\"
     lines = [
         r"\clearpage",
-        r"\begin{landscape}" if columns >= 6 else "",
-        r"\begin{table}",
-        r"\centering",
-        r"\caption{" + latex_inline(table.caption) + "}",
-        r"\label{" + label_prefix + str(table_number) + "}",
+        r"\begingroup",
         r"\scriptsize",
-        r"\setlength{\tabcolsep}{3.5pt}",
-        r"\renewcommand{\arraystretch}{1.18}",
-        r"\resizebox{\linewidth}{!}{%",
-        r"\begin{tabular}{" + alignment + "}",
+        r"\setlength{\tabcolsep}{2.5pt}",
+        r"\renewcommand{\arraystretch}{1.22}",
+        r"\begin{xltabular}{\textwidth}{@{}" + alignment + r"@{}}",
+        r"\caption{" + latex_inline(table.caption) + r"}\label{" + label_prefix + str(table_number) + r"} \\",
         r"\toprule",
-        " & ".join(r"\textbf{" + latex_inline(cell) + "}" for cell in table.headers) + r" \\",
+        header,
         r"\midrule",
+        r"\endfirsthead",
+        r"\multicolumn{" + str(columns) + r"}{l}{\scriptsize\itshape Continued from previous page} \\",
+        r"\toprule",
+        header,
+        r"\midrule",
+        r"\endhead",
+        r"\midrule",
+        r"\multicolumn{" + str(columns) + r"}{r}{\scriptsize\itshape Continued on next page} \\",
+        r"\endfoot",
+        r"\bottomrule",
+        r"\endlastfoot",
     ]
     lines.extend(" & ".join(latex_inline(cell) for cell in row) + r" \\" for row in table.rows)
     lines.extend(
         [
-            r"\bottomrule",
-            r"\end{tabular}%",
-            r"}",
-            r"\end{table}",
-            r"\end{landscape}" if columns >= 6 else "",
+            r"\end{xltabular}",
+            r"\endgroup",
             r"\clearpage",
         ]
     )
-    return "\n".join(line for line in lines if line)
+    return "\n".join(lines)
 
 
 def caption_text(line: str) -> str:
@@ -360,9 +367,8 @@ def main_preamble(title: str) -> str:
 \usepackage{{amsmath,amssymb}}
 \usepackage{{graphicx}}
 \let\NATUREincludegraphics\includegraphics
-\usepackage{{booktabs,array}}
-\usepackage{{adjustbox}}
-\usepackage{{pdflscape}}
+\usepackage{{booktabs,array,xltabular}}
+\newcolumntype{{Y}}{{>{{\centering\arraybackslash}}X}}
 \usepackage{{microtype}}
 \usepackage{{lineno}}
 \usepackage{{xurl}}
@@ -426,9 +432,8 @@ def supplement_preamble(title: str) -> str:
 \usepackage[margin=22mm]{{geometry}}
 \usepackage{{newtxtext,newtxmath}}
 \usepackage{{graphicx}}
-\usepackage{{booktabs,array}}
-\usepackage{{adjustbox}}
-\usepackage{{pdflscape}}
+\usepackage{{booktabs,array,xltabular}}
+\newcolumntype{{Y}}{{>{{\centering\arraybackslash}}X}}
 \usepackage{{microtype}}
 \usepackage{{xurl}}
 \usepackage[hidelinks,unicode]{{hyperref}}

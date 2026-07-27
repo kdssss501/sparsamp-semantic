@@ -9,8 +9,8 @@
   "generated_files": {
     "WORKING_PAPER.md": "c4b61e623a66c76e3f49c46cede817bdf37d824a3fe9a7f3f241829caed62efc",
     "SUPPLEMENTARY_INFORMATION.md": "c284395501a06f73113845a0c36b3bcd7dd7f971b650eefa00730427916cab69",
-    "working_paper.tex": "5d8e77bdc489a3e84ff4c53233d3c9f993ee7e97f9c46bbf3ff48de5898f7819",
-    "supplementary_information.tex": "623fa7f51ca0a07e73c3ac33f7a03a37c27d79b04663f101f25e5284bc04f644",
+    "working_paper.tex": "ef7862ac17fdec9c96ea38498db897612206a9afc2eed428b6aeddac73828a91",
+    "supplementary_information.tex": "89679273870471c8461e550348866a36538aa3e56db43cac5e685ebf3ff2193e",
     "README.md": "77d7ab45579ec5a23c8c1c79841dd8d98a459910013d66f5fef10474c5e90387"
   },
   "figure_files": {
@@ -23,12 +23,12 @@
   "claim_boundary": "Working-paper formatting only; no claim of Nature compliance, acceptance, target-independent determinism, native-distribution preservation, semantic equivalence or cross-hardware generality.",
   "compiled_pdfs": {
     "working_paper.pdf": {
-      "sha256": "13e1098a981b61f74fff9c841e09fae0a8321b2bb9f416cc2f19ee1f38d0ef4e",
-      "bytes": 272020
+      "sha256": "6a66ab1a8ac114c9cdf2a886c8803a530c6ed07bfe3dcfff9f2e23268f41aaed",
+      "bytes": 270003
     },
     "supplementary_information.pdf": {
-      "sha256": "261af48b615947a9d246df2c38b5616fcc39599f6952d7f3267088f4c0ece100",
-      "bytes": 71282
+      "sha256": "19f33f2b4b44aeda20778c7de8409321a9390c70a50e73eb0fa04f10e2574f5d",
+      "bytes": 71618
     }
   }
 }

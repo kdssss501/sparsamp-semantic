@@ -6,8 +6,8 @@
 
 | Artifact | Pages | Bytes | SHA-256 |
 |---|---:|---:|---|
-| `working_paper.pdf` | 24 | 272,020 | `13e1098a981b61f74fff9c841e09fae0a8321b2bb9f416cc2f19ee1f38d0ef4e` |
-| `supplementary_information.pdf` | 6 | 71,282 | `261af48b615947a9d246df2c38b5616fcc39599f6952d7f3267088f4c0ece100` |
+| `working_paper.pdf` | 24 | 270,003 | `6a66ab1a8ac114c9cdf2a886c8803a530c6ed07bfe3dcfff9f2e23268f41aaed` |
+| `supplementary_information.pdf` | 6 | 71,618 | `19f33f2b4b44aeda20778c7de8409321a9390c70a50e73eb0fa04f10e2574f5d` |
 
 The package also contains the final Markdown, LaTeX sources, build instructions and a source/figure/PDF hash manifest.
 
@@ -18,8 +18,9 @@ The package also contains the final Markdown, LaTeX sources, build instructions 
 - Fonts: all fonts reported by `pdffonts` are embedded; the main text uses TeX Gyre Termes, TeX Gyre Heros and Latin Modern Mono.
 - Content: 3 main tables, 4 main figures, 1 supplementary figure and 9 references are present.
 - Visual inspection: title/abstract, all three table pages, all four figure pages, supplementary title, Table S2 and Supplementary Figure 1 were rendered and inspected. No clipping, overlap or blank figure was observed.
+- Page orientation: every page reports rotation 0. Main Tables 1-3 and Supplementary Table S2 use portrait `xltabular` layouts with automatic wrapping and multi-page support; no `landscape` or `resizebox` command remains in generated LaTeX.
 - Extracted-text inspection: title, author, tables, figures, declarations and references are present; no unresolved placeholders or `undefined` markers remain.
-- Pytest: 260 passed; one dependency deprecation warning only.
+- Pytest: 261 passed; one dependency deprecation warning only.
 - Ruff: all checks passed.
 - Manuscript integrity audit: 50 passed, 0 failed, status `PASS`.
 
