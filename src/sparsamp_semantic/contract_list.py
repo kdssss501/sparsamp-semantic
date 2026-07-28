@@ -24,6 +24,7 @@ class ContractListConfig:
     temperature: float = 1.2
     beam_width: int = 4096
     symbol_quota: int = 0
+    max_path_cost: int | None = None
 
     def __post_init__(self) -> None:
         if self.window_tokens < 1 or self.top_k < 2 or self.bin_radius < 0:
@@ -36,6 +37,8 @@ class ContractListConfig:
             raise ValueError("symbol quota must be non-negative")
         if self.symbol_quota and self.symbol_quota * 256 > self.beam_width:
             raise ValueError("symbol quota requires at least 256 * quota beam states")
+        if self.max_path_cost is not None and self.max_path_cost < 0:
+            raise ValueError("maximum path cost must be non-negative")
 
 
 @dataclass(frozen=True)
@@ -62,6 +65,7 @@ class ContractListWindow:
     candidate_costs: tuple[int, ...]
     peak_active_states: int
     merged_states: int
+    cost_pruned_states: int
     pruned_states: int
     exhausted: bool
 
@@ -176,6 +180,7 @@ class ContractListByteDecoder:
             resolved: dict[int, int] = {}
             peak = 1
             merged = 0
+            cost_pruned = 0
             pruned = 0
             exhausted = False
             for local_step in range(self.config.window_tokens):
@@ -205,6 +210,12 @@ class ContractListByteDecoder:
                             state.symbol_values, temp0, new_n
                         )
                         cost = state.cost + contract.cost
+                        if (
+                            self.config.max_path_cost is not None
+                            and cost > self.config.max_path_cost
+                        ):
+                            cost_pruned += 1
+                            continue
                         if new_n == 1:
                             symbol = symbol_values[0]
                             if symbol in resolved:
@@ -233,6 +244,7 @@ class ContractListByteDecoder:
                     tuple(resolved[symbol] for symbol in ranked_symbols),
                     peak,
                     merged,
+                    cost_pruned,
                     pruned,
                     exhausted or not resolved,
                 )

@@ -138,3 +138,30 @@ def test_symbol_quota_requires_sufficient_beam_width() -> None:
         assert "256 * quota" in str(error)
     else:
         raise AssertionError("expected invalid symbol quota to fail")
+
+
+def test_path_cost_cap_preserves_only_candidates_within_cap() -> None:
+    key = b"contract-list-cost-cap"
+    prompt = "bounded contract path"
+    payload = b"\x5a"
+    provider = BinaryProvider()
+    encoded = ByteSlicedCodec(ByteSlicedConfig(window_tokens=8, parity_bytes=0)).encode(
+        provider.start(prompt), payload, key
+    )
+    result = ContractListByteDecoder(
+        ContractListConfig(
+            window_tokens=8,
+            top_k=2,
+            bin_radius=1,
+            beam_width=4096,
+            max_path_cost=0,
+        )
+    ).decode(
+        provider.start(prompt),
+        encoded.token_ids,
+        key,
+        stream_context_id=provider.start(prompt).context_id,
+    )
+    assert payload[0] in result.windows[0].candidates
+    assert all(cost == 0 for cost in result.windows[0].candidate_costs)
+    assert result.windows[0].cost_pruned_states > 0
