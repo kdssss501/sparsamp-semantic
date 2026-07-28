@@ -1,0 +1,102 @@
+{
+  "schema": "sparsamp-r059-independent-bounded-decision-v1",
+  "verification_status": "INDEPENDENT_SEED_CONFIRMATION",
+  "source": {
+    "trace_path": "outputs\\R059_qwen_independent_trace.json",
+    "trace_sha256": "5111bf261d8f9593f2d5c299fbd5470863e871ffa1e3bbe14683aa5e86002959",
+    "trace_result_signature": "fce456c403848f0f969be9d8e828a95a5ad2b15544b22848d6dda45fdfcf8b12",
+    "r058_path": "outputs\\R058_bounded_decision_set.json",
+    "r058_sha256": "de1be82fe0d74e0e3a50a21d83f7532c204874154b9c4c39fe8162f6ec5ca67e",
+    "r058_result_signature": "ac2e945cfdcee73f043013b6c645901fb32c6e33532afa4bbe8c7b09cda9e069",
+    "r044_path": "outputs\\R044_qwen_replay_scale.json",
+    "r044_sha256": "6a6eaa292e8ac490b38932969879323cc44088361ceabd20b51466a836fc3110"
+  },
+  "method": {
+    "name": "independent-seed bounded decision-set confirmation",
+    "seeds": [
+      1,
+      2
+    ],
+    "prompts_per_seed": 20,
+    "threshold_source": "R058 frozen development result",
+    "target_passes_per_certificate": 0
+  },
+  "thresholds": {
+    "bin_shift": 1,
+    "mass": 1984,
+    "support": 1
+  },
+  "per_seed": {
+    "1": {
+      "trials": 20,
+      "exact_trials": 20,
+      "tokens": 1494,
+      "actual_flips": 38,
+      "false_safe_flips": 0,
+      "bounded_steps": 610,
+      "mass_steps": 85,
+      "tail_alarm_steps": 1,
+      "certificate_steps": 616,
+      "certificate_density": 0.41231593038821956,
+      "feasible_pair_count": 4877,
+      "feasible_contract_count": 43893,
+      "mean_contracts_per_token": 29.379518072289155,
+      "payload_bytes": 2464,
+      "dual_payload_bytes": 2936,
+      "target_specific_payload_bytes": 152,
+      "full_trace_payload_bytes": 4482,
+      "to_full_ratio": 0.5497545738509594,
+      "to_dual_ratio": 0.8392370572207084,
+      "to_target_specific_ratio": 16.210526315789473,
+      "mean_steps_per_trial": 30.8
+    },
+    "2": {
+      "trials": 20,
+      "exact_trials": 20,
+      "tokens": 1506,
+      "actual_flips": 28,
+      "false_safe_flips": 0,
+      "bounded_steps": 606,
+      "mass_steps": 71,
+      "tail_alarm_steps": 0,
+      "certificate_steps": 613,
+      "certificate_density": 0.4070385126162019,
+      "feasible_pair_count": 4651,
+      "feasible_contract_count": 41859,
+      "mean_contracts_per_token": 27.794820717131476,
+      "payload_bytes": 2452,
+      "dual_payload_bytes": 2868,
+      "target_specific_payload_bytes": 112,
+      "full_trace_payload_bytes": 4518,
+      "to_full_ratio": 0.5427180168216025,
+      "to_dual_ratio": 0.8549511854951185,
+      "to_target_specific_ratio": 21.892857142857142,
+      "mean_steps_per_trial": 30.65
+    }
+  },
+  "pooled": {
+    "trials": 40,
+    "exact_trials": 40,
+    "tokens": 3000,
+    "actual_flips": 66,
+    "false_safe_flips": 0,
+    "bounded_steps": 1216,
+    "mass_steps": 156,
+    "tail_alarm_steps": 1,
+    "certificate_steps": 1229,
+    "certificate_density": 0.4096666666666667,
+    "feasible_pair_count": 9528,
+    "feasible_contract_count": 85752,
+    "mean_contracts_per_token": 28.584,
+    "payload_bytes": 4916,
+    "dual_payload_bytes": 5804,
+    "target_specific_payload_bytes": 264,
+    "full_trace_payload_bytes": 9000,
+    "to_full_ratio": 0.5462222222222223,
+    "to_dual_ratio": 0.8470020675396278,
+    "to_target_specific_ratio": 18.62121212121212,
+    "mean_steps_per_trial": 30.725
+  },
+  "decision": "confirmation_strong_go",
+  "result_signature": "404459fea3e77645a42c5ef900667e0e12b04c79828494ddf07280bddeecaa60"
+}
