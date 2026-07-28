@@ -1,0 +1,6 @@
+method,exact_trials,trials,success_rate,payload_to_full,evidence
+R054 Boundary,28,30,0.9333333333333333,1.1520235467255335,development
+R056 Dual barrier,10,10,1.0,0.630173564753004,development
+R057 Local screen,7,10,0.7,0.20471740097908322,development
+R058 BDS,10,10,1.0,0.5571873609256787,development
+R059 BDS,40,40,1.0,0.5462222222222223,independent seeds

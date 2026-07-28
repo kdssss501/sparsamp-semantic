@@ -15,9 +15,16 @@ models/
 .npm-cache/
 .server/
 .artifacts/
+artifacts/
 .uv-cache/
 web/node_modules/
 web/dist/
+build-artoria-cinematic-assets.mjs
 *.aux
 *.log
 *.out
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
