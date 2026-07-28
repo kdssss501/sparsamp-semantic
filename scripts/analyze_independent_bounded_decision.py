@@ -30,11 +30,25 @@ def _without_signature(value: dict[str, Any]) -> dict[str, Any]:
     return {key: item for key, item in value.items() if key != "result_signature"}
 
 
+def _r058_signature_payload(value: dict[str, Any]) -> dict[str, Any]:
+    """Restore integer calibration keys used before the R058 JSON round-trip."""
+
+    payload = _without_signature(value)
+    scores = payload.get("calibration_scores", {}).get("bin_shift")
+    if not isinstance(scores, dict):
+        raise ValueError("R058 bin-shift calibration scores are missing")
+    payload["calibration_scores"] = dict(payload["calibration_scores"])
+    payload["calibration_scores"]["bin_shift"] = {
+        int(prompt): int(score) for prompt, score in scores.items()
+    }
+    return payload
+
+
 def load_r058(path: Path) -> dict[str, Any]:
     result = json.loads(path.read_text(encoding="utf-8"))
     if result.get("schema") != R058_SCHEMA or result.get("decision") != "development_go":
         raise ValueError("R059 requires the frozen R058 development GO")
-    if result.get("result_signature") != canonical_signature(_without_signature(result)):
+    if result.get("result_signature") != canonical_signature(_r058_signature_payload(result)):
         raise ValueError("R058 result signature is invalid")
     return result
 
