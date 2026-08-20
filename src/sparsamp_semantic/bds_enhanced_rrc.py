@@ -570,6 +570,8 @@ class BdsEnhancedRotationRangeCodec:
         random_stream = HmacRandomStream(key, session.context_id)
         records: list[StepRecord] = []
         started = perf_counter()
+        # Reset certificate for each encode call
+        self._certificate: list[tuple[int, int, int]] = []
 
         with localcontext() as context:
             context.prec = self.config.decimal_precision
