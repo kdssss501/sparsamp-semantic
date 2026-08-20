@@ -1,0 +1,166 @@
+{
+  "run_status": "jobs_prepared",
+  "deck_name": "生成式文本隐写_科研面试_技能版",
+  "selected_backend": "九秋工作台 CLI（待生图）",
+  "sample_generation_method": {
+    "backend_used": "scripts/image_gen.py (CLI/API fallback, 九秋工作台)",
+    "tool_name": "scripts/image_gen.py generate",
+    "mode": "generate",
+    "model": "gpt-image-2",
+    "size": "2560x1440",
+    "quality": "high",
+    "status": "pending_user_network_fix",
+    "note": "九秋（dingdangapii.cn）从本机直连与代理均 TLS 中断；用户已指示本阶段不生成、先预留空位"
+  },
+  "max_concurrent_slides": 6,
+  "slides": [
+    {
+      "slide_id": "slide_01",
+      "number": 1,
+      "title": "封面",
+      "job": "prompts/slide_01.json",
+      "out": "origin_image/slide_01.png",
+      "input_images": [],
+      "requires_context_images": false,
+      "status": "pending",
+      "dispatch": null,
+      "result": null,
+      "blocker": null
+    },
+    {
+      "slide_id": "slide_02",
+      "number": 2,
+      "title": "研究背景与动机",
+      "job": "prompts/slide_02.json",
+      "out": "origin_image/slide_02.png",
+      "input_images": [],
+      "requires_context_images": false,
+      "status": "pending",
+      "dispatch": null,
+      "result": null,
+      "blocker": null
+    },
+    {
+      "slide_id": "slide_03",
+      "number": 3,
+      "title": "研究问题与证据边界",
+      "job": "prompts/slide_03.json",
+      "out": "origin_image/slide_03.png",
+      "input_images": [],
+      "requires_context_images": false,
+      "status": "pending",
+      "dispatch": null,
+      "result": null,
+      "blocker": null
+    },
+    {
+      "slide_id": "slide_04",
+      "number": 4,
+      "title": "技术路线总览",
+      "job": "prompts/slide_04.json",
+      "out": "origin_image/slide_04.png",
+      "input_images": [],
+      "requires_context_images": false,
+      "status": "pending",
+      "dispatch": null,
+      "result": null,
+      "blocker": null
+    },
+    {
+      "slide_id": "slide_05",
+      "number": 5,
+      "title": "SparSamp 原理与复现",
+      "job": "prompts/slide_05.json",
+      "out": "origin_image/slide_05.png",
+      "input_images": [],
+      "requires_context_images": false,
+      "status": "pending",
+      "dispatch": null,
+      "result": null,
+      "blocker": null
+    },
+    {
+      "slide_id": "slide_06",
+      "number": 6,
+      "title": "RRC 原理与关键审计发现",
+      "job": "prompts/slide_06.json",
+      "out": "origin_image/slide_06.png",
+      "input_images": [],
+      "requires_context_images": false,
+      "status": "pending",
+      "dispatch": null,
+      "result": null,
+      "blocker": null
+    },
+    {
+      "slide_id": "slide_07",
+      "number": 7,
+      "title": "方法改进一：Verified-RRC 与 Fixed-Length",
+      "job": "prompts/slide_07.json",
+      "out": "origin_image/slide_07.png",
+      "input_images": [],
+      "requires_context_images": false,
+      "status": "pending",
+      "dispatch": null,
+      "result": null,
+      "blocker": null
+    },
+    {
+      "slide_id": "slide_08",
+      "number": 8,
+      "title": "方法改进二：BDS 跨精度回放",
+      "job": "prompts/slide_08.json",
+      "out": "origin_image/slide_08.png",
+      "input_images": [
+        {
+          "path": "C:/Users/41462/Documents/隐写/paper/ccfa_bounded_decision/figures/figure_01_architecture.png",
+          "role": "可选概念图（工作论文 Figure 1，BDS 架构）",
+          "fidelity": "reference/optional"
+        }
+      ],
+      "requires_context_images": true,
+      "status": "pending",
+      "dispatch": null,
+      "result": null,
+      "blocker": null
+    },
+    {
+      "slide_id": "slide_09",
+      "number": 9,
+      "title": "实验结果汇总",
+      "job": "prompts/slide_09.json",
+      "out": "origin_image/slide_09.png",
+      "input_images": [
+        {
+          "path": "C:/Users/41462/Documents/隐写/figures/fig2_main_scale.png",
+          "role": "严格输入资产：R044 主实验结果图（60/60 vs 10/60，2.16%）",
+          "fidelity": "preserve data, axes, labels, colors, values"
+        },
+        {
+          "path": "C:/Users/41462/Documents/隐写/deliverables/assets/fig4_precision_direction.png",
+          "role": "严格输入资产：R046 双向精度方向消融图",
+          "fidelity": "preserve data, axes, labels, colors, values"
+        }
+      ],
+      "requires_context_images": true,
+      "status": "pending",
+      "dispatch": null,
+      "result": null,
+      "blocker": null
+    },
+    {
+      "slide_id": "slide_10",
+      "number": 10,
+      "title": "局限、未来与总结",
+      "job": "prompts/slide_10.json",
+      "out": "origin_image/slide_10.png",
+      "input_images": [],
+      "requires_context_images": false,
+      "status": "pending",
+      "dispatch": null,
+      "result": null,
+      "blocker": null
+    }
+  ],
+  "updated_at": "2026-08-01T09:54:31Z"
+}

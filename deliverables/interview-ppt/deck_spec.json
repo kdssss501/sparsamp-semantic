@@ -1,0 +1,79 @@
+{
+  "deck_name": "interview-ppt",
+  "title": "大语言模型生成式文本隐写的可靠编码与跨精度回放研究",
+  "audience": "计算机学院老师（科研面试/保研面试）",
+  "duration_minutes": 8,
+  "slide_count": 10,
+  "aspect_ratio": "16:9",
+  "language": "zh-CN",
+  "delivery_style": "research_or_paper_reading",
+  "visual_style": {
+    "name": "学术白底克制风（用户指定）",
+    "background": "white / FAFBFC",
+    "text": "deep gray 27313D",
+    "accent": "deep blue 173B64 / 245C97",
+    "improvement_marker": "teal 0C8F88",
+    "risk_marker": "orange D8781F",
+    "prohibited_marker": "red C2483B",
+    "rules": [
+      "每页不超过 4 个核心信息点，短句，不堆大段文字",
+      "白底、深灰文字、深蓝强调；青绿标改进，橙色标风险",
+      "图表优先真实数据；无数据时只画示意图并标注“示意”",
+      "流程图/算法图用可编辑 PPT 图形；插图不占页面主体、不承载文字",
+      "插图：高水平期刊科学插图审美，白底、低饱和、扁平或轻微 3D、无水印"
+    ]
+  },
+  "backend": {
+    "selected": "九秋工作台（用户指定，经 imagegen 技能 CLI/API 路径）",
+    "base_url": "https://dingdangapii.cn/v1",
+    "model": "gpt-image-2",
+    "size": "1536x1024",
+    "quality": "high",
+    "output_format": "png",
+    "sample_generation_method": {
+      "backend_used": "scripts/image_gen.py (CLI/API fallback)",
+      "tool_name": "scripts/image_gen.py generate",
+      "mode": "generate",
+      "prompt_source": "prompts/image_prompts.json",
+      "size": "1536x1024",
+      "quality": "high",
+      "model": "gpt-image-2",
+      "handoff_rule": "所有插图必须使用同一后端/工具/模式；若不可用则报告 blocker"
+    }
+  },
+  "deck_context": {
+    "source_summary": "项目复现并比较 SparSamp（USENIX Security 2025）与 RRC（Yan & Murawaki, ACL 2026）两条生成式文本隐写路线；审计发现 RRC Algorithm 3/4 局部停止条件不是精确恢复的充分条件（精确反例 + 1/1024 正测度失败区域），实现 Verified-RRC（500/500 Mock 精确恢复）、Fixed-Length RRC（HMAC 认证帧、固定公开长度）、BDS 有界决策集合（R059 独立 seed 40/40 精确回放、0 false-safe）。主实验 R044：FP16→BF16 未校正 10/60、校正后 60/60，平均修正率 2.16%。",
+    "core_claim": "在指定模型/配置/数值环境下，公开整数概率合同 + 稀疏目标特定修正记录可以精确回放随机生成轨迹；经验贡献是修正稀疏性与开销，不是通用安全或跨硬件确定性。",
+    "canonical_terms": ["SparSamp", "RRC / Rotation Range Coding", "Verified-RRC", "Fixed-Length RRC", "HMAC 认证帧", "BDS（有界决策集合）", "SPRC（稀疏精度重放证书）", "FP16/BF16 跨精度回放"],
+    "prohibited_claims": [
+      "融合成新算法",
+      "已发表/已投稿",
+      "零 KL / 完全不可检测 / 通用安全",
+      "跨硬件绝对可复现",
+      "原论文全部错误",
+      "形式化验证了所有输入"
+    ]
+  },
+  "slides": [
+    {"n": 1, "title": "标题页", "role": "cover"},
+    {"n": 2, "title": "研究背景", "role": "context"},
+    {"n": 3, "title": "问题定义", "role": "problem framing"},
+    {"n": 4, "title": "技术路线：SparSamp 与 RRC", "role": "comparison"},
+    {"n": 5, "title": "SparSamp 原理", "role": "concept"},
+    {"n": 6, "title": "RRC 原理", "role": "concept/process"},
+    {"n": 7, "title": "关键发现：跨边界问题", "role": "key finding"},
+    {"n": 8, "title": "方法改进：Verified-RRC / Fixed-Length / HMAC", "role": "method"},
+    {"n": 9, "title": "工程可靠性：BDS 回放", "role": "method/evidence"},
+    {"n": 10, "title": "实验结果、局限、未来与总结", "role": "summary"}
+  ],
+  "required_images": [
+    {"asset": "assets/fig_cover_stego_channel.png", "slide": 1, "role": "概念插图（可选）"},
+    {"asset": "assets/fig_sparsamp_sampling.png", "slide": 5, "role": "概念插图"},
+    {"asset": "assets/fig_rrc_interval.png", "slide": 6, "role": "概念插图"},
+    {"asset": "assets/fig_counterexample_wrap.png", "slide": 7, "role": "概念插图"},
+    {"asset": "assets/fig_hmac_frame.png", "slide": 8, "role": "概念插图"},
+    {"asset": "assets/fig_bds_replay.png", "slide": 9, "role": "概念插图"},
+    {"asset": "C:/Users/41462/Documents/隐写/deliverables/assets/fig2_main_scale.png", "slide": 10, "role": "真实数据图（严格输入，保留数据）"},
+    {"asset": "C:/Users/41462/Documents/隐写/deliverables/assets/fig4_precision_direction.png", "slide": 9, "role": "真实数据图（可选）"}
+  ]
+}

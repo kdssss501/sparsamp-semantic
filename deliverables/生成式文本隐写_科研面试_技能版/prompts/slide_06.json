@@ -1,0 +1,35 @@
+{
+  "slide": 6,
+  "title": "RRC 原理与关键审计发现",
+  "prompt": "# Codex PPT Slide Image Prompt\n\n## Canvas\n{\n  \"type\": \"16:9 full-slide PowerPoint image\",\n  \"language\": \"zh-CN\",\n  \"slide_number\": 6,\n  \"render_slide_number\": false\n}\n\n## Required Background\n{\n  \"deck_context\": {\n    \"source_summary\": \"项目复现并比较 SparSamp（USENIX Security 2025）与 RRC（Yan & Murawaki, ACL 2026）两条生成式文本隐写路线；审计发现 RRC Algorithm 3/4 局部停止条件不是精确恢复的充分条件（精确反例 m=3 恢复为 5，失败区域测度 1/1024），实现 Verified-RRC（R012：Mock 500/500）、Fixed-Length RRC（HMAC 认证帧；R020 Mock 400/400）与 BDS 有界决策集合（R059：独立 seed 40/40 精确回放、0 false-safe）。主实验 R044：FP16→BF16 未校正 10/60、校正后 60/60，平均修正率 2.16% [1.80, 2.53]。\",\n    \"core_claim\": \"在指定模型、采样配置与数值环境下，公开整数概率合同配合稀疏目标特定修正记录可以精确回放随机生成轨迹；经验贡献是修正的稀疏性与开销边界，不是通用安全或跨硬件确定性。\",\n    \"canonical_terms\": [\n      \"SparSamp\",\n      \"RRC / Rotation Range Coding\",\n      \"Verified-RRC\",\n      \"Fixed-Length RRC\",\n      \"HMAC 认证帧\",\n      \"BDS（有界决策集合）\",\n      \"SPRC（稀疏精度重放证书）\",\n      \"FP16/BF16 跨精度回放\"\n    ],\n    \"prohibited_claims\": [\n      \"已发表 / 已投稿（当前为 working paper）\",\n      \"融合成新算法\",\n      \"零 KL / 完全不可检测 / 通用安全\",\n      \"跨硬件绝对可复现\",\n      \"原论文全部实现错误\",\n      \"形式化验证了所有输入\"\n    ]\n  }\n}\n\n## Global Style\n{\n  \"name\": \"科研答辩风（技能内置样式，按本项目材料适配）\",\n  \"visual_direction\": \"formal Chinese academic research defense deck, evidence-driven layout, disciplined visual hierarchy\",\n  \"canvas\": {\n    \"aspect_ratio\": \"16:9\",\n    \"background\": \"clean white #FFFFFF with subtle light gray #F5F7FA content panels\",\n    \"density\": \"medium-high, clear reading order\"\n  },\n  \"color_palette\": {\n    \"primary\": \"deep academic blue #003F8F / #004A9F\",\n    \"secondary\": \"research blue #0B5CAD, pale blue #EAF2FF\",\n    \"accent\": \"formal red #B5121B used sparingly for risks, boundaries and conclusions\",\n    \"neutral\": \"near-black #111111, dark gray #333333, border gray #D8DEE8\",\n    \"improvement_marker\": \"teal #0C8F88（改进/新方法）\",\n    \"risk_marker\": \"orange #D8781F（边界/风险）\"\n  },\n  \"typography\": \"bold Chinese sans-serif titles, left aligned; dense readable body; key phrases in red bold; section labels on deep blue blocks\",\n  \"page_system\": \"title area with section number; optional thin academic separator; evidence cards, callouts, tables; footer with source line\",\n  \"avoid\": \"marketing hero layouts, decorative gradients, cartoon illustrations, random icons, excessive whitespace, unrelated decorative objects\",\n  \"placeholder_rule\": \"本阶段不生成插图：原插图位置以虚线占位框标注『插图预留位（待生图）』；真实数据图（fig2/fig4）直接嵌入；所有文字由 PPT 原生文本完成\"\n}\n\n## Slide\n{\n  \"number\": 6,\n  \"title\": \"RRC 原理与关键审计发现\",\n  \"role\": \"key finding\",\n  \"intent\": null\n}\n\n## Text\n{\n  \"title\": \"RRC 原理与关键审计发现\",\n  \"key_points\": [\n    \"RRC：消息 m∈[0,2^l)，每步旋转并按 token 概率分割区间，选中含秘密点子区间\",\n    \"审计发现：局部停止条件 −1/2 < mid−d ≤ 1/2 不是精确恢复的充分条件\",\n    \"精确反例：M=8, m=3，条件满足却恢复 5≠3；失败区域正测度 1/1024\",\n    \"根因：反向模旋转跨切点；表述限定“本项目采用的 Algorithm 3/4 形式化下”\"\n  ],\n  \"speaker_focus\": null\n}\n\n## Layout\n{\n  \"composition\": \"三步原理卡 + 数轴反例示意 + 插图预留位\",\n  \"intent\": \"key finding\"\n}\n\n## Universal Constraints\n- The final image itself must contain the title and key points.\n- Render Chinese text exactly and legibly; avoid garbled characters.\n- Keep the confirmed deck style consistent while varying layout by slide role.\n- No watermark, unrelated logo, or extra slide number.\n",
+  "out": "slide_06.png",
+  "input_images": [],
+  "requires_context_images": false,
+  "expected_backend": "九秋工作台 CLI（待生图）",
+  "sample_generation_method": {
+    "backend_used": "scripts/image_gen.py (CLI/API fallback, 九秋工作台)",
+    "tool_name": "scripts/image_gen.py generate",
+    "mode": "generate",
+    "model": "gpt-image-2",
+    "size": "2560x1440",
+    "quality": "high",
+    "status": "pending_user_network_fix",
+    "note": "九秋（dingdangapii.cn）从本机直连与代理均 TLS 中断；用户已指示本阶段不生成、先预留空位"
+  },
+  "generation_contract": {
+    "must_use_selected_image_backend": true,
+    "must_match_sample_generation_method": true,
+    "forbidden_final_image_methods": [
+      "local drawing/rendering scripts",
+      "Pillow-generated slides",
+      "SVG/HTML/CSS/canvas screenshots",
+      "python-pptx/PptxGenJS/native PPT layout screenshots",
+      "manually composited text/image overlays"
+    ],
+    "must_return": [
+      "backend_used",
+      "selected_source",
+      "qa_note"
+    ]
+  }
+}

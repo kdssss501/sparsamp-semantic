@@ -1,0 +1,50 @@
+[
+  {
+    "filename": "fig_cover_stego_channel.png",
+    "use_case": "scientific-educational",
+    "prompt": "A clean conceptual scientific illustration for a top-tier computer-science paper. A row of seven vertical probability bars of varying heights represents a language model next-token distribution; one softly highlighted bar splits into a thin hidden channel line that carries binary bits through the distribution, then re-emerges on the right as the same text-like token stream. Emphasize a shared secret-key connection between the two ends drawn as a minimal dashed link. Flat editorial vector style, thin precise outlines, generous white space, low-saturation palette of deep blue, teal and warm gray. Pure white background, no gradients, no text, no labels, no numbers, no watermark, no photorealism.",
+    "style": "flat editorial scientific illustration, precise thin outlines, subtle depth",
+    "composition": "wide 3:2 composition, left-to-right flow, central negative space",
+    "constraints": "white background, no text or labels, no watermark, no gradient, no logos"
+  },
+  {
+    "filename": "fig_sparsamp_sampling.png",
+    "use_case": "scientific-educational",
+    "prompt": "A precise conceptual illustration of sparse controlled sampling over a probability distribution for a security-paper figure. Show a horizontal probability mass made of thin vertical token slots of varying widths; a small secret message block enters from the left and, together with a shared key symbol, selects a narrow sparse interval inside the mass. A marker point falls inside the interval and resolves to one token slot; the same slot is echoed on the right side by a replay arrow, showing the choice is reproducible. Flat vector editorial style, thin outlines, deep blue and teal accents, warm gray neutrals, generous white space. Pure white background, no text, no labels, no numbers, no watermark, no gradients.",
+    "style": "flat editorial scientific illustration, precise geometry",
+    "composition": "wide 3:2, left-to-right causal flow with one highlighted selection",
+    "constraints": "white background, no text or labels, no watermark, no gradient, no photorealism"
+  },
+  {
+    "filename": "fig_rrc_interval.png",
+    "use_case": "scientific-educational",
+    "prompt": "A clean mathematical-principle illustration of interval range coding for a top-tier paper. Depict one long horizontal interval shrinking into three nested sub-intervals from left to right: an outer line segment, a middle segment, and an inner segment; each segment is partitioned by thin tick marks proportional to token probabilities, and one small marker point stays inside the nested segments. A curved rotation arrow above the middle segment indicates the point is rotated before each subdivision. Flat editorial scientific illustration, precise thin lines, deep blue primary with teal and orange accents on white. Pure white background, no text, no labels, no formulas, no numbers, no watermark, no gradients.",
+    "style": "flat editorial scientific illustration, precise geometric lines",
+    "composition": "wide 3:2, three nested interval stages left-to-right",
+    "constraints": "white background, no text or labels or formulas, no watermark, no gradient"
+  },
+  {
+    "filename": "fig_counterexample_wrap.png",
+    "use_case": "scientific-educational",
+    "prompt": "A conceptual geometry illustration about modular wrapping in interval arithmetic for a scientific paper. Show a number line segment bent into a circular band; a small point travels along the band and crosses a seam line at the wrap boundary. On the right, the same point projected back onto the straight line lands in a different unit cell than expected, shown as two adjacent cells with the crossing seam highlighted. Emphasize that circular distance is preserved but linear distance is not. Flat editorial vector style, thin precise outlines, deep blue and orange accents with a teal seam highlight on pure white. No text, no labels, no numbers, no formulas, no watermark, no gradients.",
+    "style": "flat editorial scientific illustration, precise geometry",
+    "composition": "wide 3:2, circular band on the left and straight-line projection on the right",
+    "constraints": "white background, no text or labels or formulas, no watermark, no gradient, no photorealism"
+  },
+  {
+    "filename": "fig_hmac_frame.png",
+    "use_case": "scientific-educational",
+    "prompt": "A clean protocol-illustration of an authenticated fixed-length frame for a security-paper figure. Show a horizontal segmented strip: a short message block followed by a small key-shaped authentication tag block; the whole strip is embedded into a longer fixed-length token tape, and a light pad-lock-free check symbol (a simple seal) sits at the boundary of the authenticated prefix. Dashed vertical guides show the private completion point is hidden inside the fixed public length. Flat editorial vector style, thin outlines, deep blue and teal with a small orange risk marker, pure white background. No text, no labels, no lock or spy imagery, no watermark, no gradients.",
+    "style": "flat editorial scientific illustration, precise protocol diagram geometry",
+    "composition": "wide 3:2, horizontal segmented tape with hidden boundary guides",
+    "constraints": "white background, no text or labels, no watermark, no gradient, no offensive-security imagery"
+  },
+  {
+    "filename": "fig_bds_replay.png",
+    "use_case": "scientific-educational",
+    "prompt": "A precise conceptual illustration of bounded-decision-set cross-precision replay for a top-tier systems paper. Two parallel token streams start identically from the left; at a small fork point one stream briefly splits into several candidate paths inside a translucent bounded envelope, then rejoins a single correct path after a sparse correction marker (a small indexed slip). The two streams end aligned at the right, visually identical. Emphasize that only the unstable fork point needs a record. Flat editorial vector style, thin precise outlines, deep blue and teal with a small vermilion correction accent on pure white. No text, no labels, no numbers, no watermark, no gradients, no photorealism.",
+    "style": "flat editorial scientific illustration, precise geometry",
+    "composition": "wide 3:2, two parallel streams with one bounded fork and sparse correction",
+    "constraints": "white background, no text or labels, no watermark, no gradient"
+  }
+]

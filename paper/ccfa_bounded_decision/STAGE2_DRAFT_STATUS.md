@@ -12,13 +12,14 @@ Date: 2026-07-28
 - Four reproducible data figures, each emitted as PDF and 300-dpi PNG with source CSV.
 - BibTeX references copied from the previously verified project bibliography.
 - Claim-evidence map and image-generation prompt manifest.
+- Three non-data scientific illustrations generated through Jiuqiu Workbench and visually checked for labels, flow direction, and overlap.
 - Successful LaTeX build with no unresolved citation or reference.
 
-## Blocking completeness items
+## Resolved completeness items
 
-- Figures 1--3 remain explicit placeholders because the current task exposes the `imagegen` skill but not its built-in `image_gen` tool, and the approved CLI fallback has no `OPENAI_API_KEY` in the environment.
-- Workspace cache deletion remains unexecuted because the automatic risk reviewer rejected the recursive-delete command and requested a new explicit user confirmation after the risk disclosure.
+- Figures 1--3 now use accepted 2K, 3:2 PNG assets generated with `gpt-image-2`; operation and task identifiers are recorded in `IMAGEGEN_PROMPTS.md`.
+- The approved workspace cleanup completed on 2026-07-28 and is documented in `docs/maintenance/CLEANUP_2026-07-28.md`.
 
 ## Pipeline state
 
-The manuscript remains in Stage 2 WRITE. It must not be represented as a final submission until image assets are generated and visually validated. After that, the required next state is Stage 2.5 integrity verification, including reference, number, artifact-signature, and originality checks.
+The manuscript has completed Stage 2 WRITE and is ready for Stage 2.5 integrity verification, including reference, number, artifact-signature, layout, and originality checks. It must not yet be represented as a final submission.

@@ -2,6 +2,16 @@
 
 All non-data figures in this paper must be generated as raster illustrations. Data figures 4--7 are produced by `scripts/generate_ccfa_bounded_decision_figures.py` and are not image-generated.
 
+## Generation record
+
+All three assets were generated through the Jiuqiu Workbench `imagegen` skill with model `gpt-image-2`, size `2016x1344`, quality `high`, PNG output, and automatic moderation on 2026-07-28.
+
+- Figure 1: operation `ff9c5d57-825d-484b-b224-1200e6d9c841`, task `4605`, output key `workspace/206/tasks/4605/0.png`.
+- Figure 2: operation `4cbcd651-0661-4fc4-81de-50167e49123b`, task `4608`. The task response did not expose a durable output key.
+- Figure 3: operation `01ba8635-1ee8-46c4-82a0-aa172ebf1ac1`, task `4616`. The task response did not expose a durable output key.
+
+Each downloaded image was inspected at original resolution before inclusion. Figures 1--3 are explanatory, non-data illustrations; all empirical plots remain reproducibly generated from source data.
+
 ## Shared visual language
 
 - Use case: `scientific-educational`.

@@ -64,13 +64,13 @@ This paper makes four contributions:
   \item We publish machine-readable result signatures, atomic checkpoints, source-data CSVs, and paired reliability--cost baselines. We also state what the evidence does not establish: cross-hardware validity, distribution preservation, semantic equivalence, or universal numerical error bounds.
 \end{itemize}
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
   \generatedfigure{figures/figure_01_architecture.png}{1.0}{4.2cm}
   \Description{Cross-precision replay architecture from FP16 sender through an integer contract and bounded decision set to BF16 replay.}
   \caption{System architecture. The public integer contract converts a precision-sensitive distribution into a finite object. BDS stores only steps whose reachable decision set is not the reference singleton. This non-data illustration is generated from the prompt recorded in \texttt{IMAGEGEN\_PROMPTS.md}.}
   \label{fig:architecture}
-\end{figure}
+\end{figure*}
 
 \section{Background and Problem Statement}
 \subsection{Public integer sampling contract}
@@ -154,13 +154,13 @@ augmented by an unknown-tail symbol whenever an unobserved token can enter the t
 
 A step is \emph{certified} exactly when $\DecisionSet_t(\Delta)=\{y_t\}$. Otherwise the manifest records $(t,y_t)$. Figure~\ref{fig:principle} presents the geometric intuition: interval boxes induce feasible supports, feasible supports induce integer partitions, and the public point maps those partitions to a finite output set.
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
   \generatedfigure{figures/figure_02_math_principle.png}{1.0}{4.2cm}
   \Description{Logit intervals generate feasible top-two pairs and a finite set of decisions at a public random point.}
   \caption{Mathematical principle of BDS. The method certifies the composite public decision rather than separately assuming stable support or stable cumulative mass.}
   \label{fig:principle}
-\end{figure}
+\end{figure*}
 
 \subsection{Soundness in the finite model}
 \begin{lemma}[Pair coverage]
@@ -247,13 +247,13 @@ The implementation uses a top-16 reference envelope, top-two contract support, $
 
 For each reference step, the analyzer stores the number of feasible pairs and integer contracts, the candidate decision set, tail-alarm status, and whether a correction is required. Results are written atomically after every trial. Resume is permitted only when the configuration signature matches; an explicit fresh flag archives the old checkpoint before restarting. This preserves completed GPU work and prevents accidental merging across contracts.
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
   \generatedfigure{figures/figure_03_protocol.png}{1.0}{4.0cm}
   \Description{Seed-zero development is separated by a frozen contract from seed-one and seed-two confirmation.}
   \caption{Frozen evaluation protocol. Seed 0 was used for mechanism development. Thresholds and implementation were then frozen before evaluating seeds 1 and 2.}
   \label{fig:protocol}
-\end{figure}
+\end{figure*}
 
 \section{Experimental Methodology}
 \paragraph{Model and hardware.}

@@ -1,0 +1,193 @@
+{
+  "deck_name": "生成式文本隐写_科研面试_技能版",
+  "title": "大语言模型生成式文本隐写的可靠编码与跨精度回放研究",
+  "audience": "计算机学院老师（科研面试 / 保研面试）",
+  "duration_minutes": 8,
+  "slide_count": 10,
+  "aspect_ratio": "16:9",
+  "language": "zh-CN",
+  "delivery_style": "research_or_paper_reading",
+  "outline_approved": true,
+  "style": {
+    "name": "科研答辩风（技能内置样式，按本项目材料适配）",
+    "visual_direction": "formal Chinese academic research defense deck, evidence-driven layout, disciplined visual hierarchy",
+    "canvas": {
+      "aspect_ratio": "16:9",
+      "background": "clean white #FFFFFF with subtle light gray #F5F7FA content panels",
+      "density": "medium-high, clear reading order"
+    },
+    "color_palette": {
+      "primary": "deep academic blue #003F8F / #004A9F",
+      "secondary": "research blue #0B5CAD, pale blue #EAF2FF",
+      "accent": "formal red #B5121B used sparingly for risks, boundaries and conclusions",
+      "neutral": "near-black #111111, dark gray #333333, border gray #D8DEE8",
+      "improvement_marker": "teal #0C8F88（改进/新方法）",
+      "risk_marker": "orange #D8781F（边界/风险）"
+    },
+    "typography": "bold Chinese sans-serif titles, left aligned; dense readable body; key phrases in red bold; section labels on deep blue blocks",
+    "page_system": "title area with section number; optional thin academic separator; evidence cards, callouts, tables; footer with source line",
+    "avoid": "marketing hero layouts, decorative gradients, cartoon illustrations, random icons, excessive whitespace, unrelated decorative objects",
+    "placeholder_rule": "本阶段不生成插图：原插图位置以虚线占位框标注『插图预留位（待生图）』；真实数据图（fig2/fig4）直接嵌入；所有文字由 PPT 原生文本完成"
+  },
+  "deck_context": {
+    "source_summary": "项目复现并比较 SparSamp（USENIX Security 2025）与 RRC（Yan & Murawaki, ACL 2026）两条生成式文本隐写路线；审计发现 RRC Algorithm 3/4 局部停止条件不是精确恢复的充分条件（精确反例 m=3 恢复为 5，失败区域测度 1/1024），实现 Verified-RRC（R012：Mock 500/500）、Fixed-Length RRC（HMAC 认证帧；R020 Mock 400/400）与 BDS 有界决策集合（R059：独立 seed 40/40 精确回放、0 false-safe）。主实验 R044：FP16→BF16 未校正 10/60、校正后 60/60，平均修正率 2.16% [1.80, 2.53]。",
+    "core_claim": "在指定模型、采样配置与数值环境下，公开整数概率合同配合稀疏目标特定修正记录可以精确回放随机生成轨迹；经验贡献是修正的稀疏性与开销边界，不是通用安全或跨硬件确定性。",
+    "canonical_terms": ["SparSamp", "RRC / Rotation Range Coding", "Verified-RRC", "Fixed-Length RRC", "HMAC 认证帧", "BDS（有界决策集合）", "SPRC（稀疏精度重放证书）", "FP16/BF16 跨精度回放"],
+    "prohibited_claims": [
+      "已发表 / 已投稿（当前为 working paper）",
+      "融合成新算法",
+      "零 KL / 完全不可检测 / 通用安全",
+      "跨硬件绝对可复现",
+      "原论文全部实现错误",
+      "形式化验证了所有输入"
+    ]
+  },
+  "selected_image_backend": "九秋工作台 CLI/API 回退（scripts/image_gen.py，model gpt-image-2）——当前未就绪，本阶段先占位，待网络恢复后经确认再生成",
+  "sample_generation_method": {
+    "backend_used": "scripts/image_gen.py (CLI/API fallback, 九秋工作台)",
+    "tool_name": "scripts/image_gen.py generate",
+    "mode": "generate",
+    "model": "gpt-image-2",
+    "size": "2560x1440",
+    "quality": "high",
+    "status": "pending_user_network_fix",
+    "note": "九秋（dingdangapii.cn）从本机直连与代理均 TLS 中断；用户已指示本阶段不生成、先预留空位"
+  },
+  "slides": [
+    {
+      "n": 1,
+      "title": "封面",
+      "role": "cover",
+      "key_points": [
+        "大语言模型生成式文本隐写的可靠编码与跨精度回放研究",
+        "科研面试 / 保研面试 · 8 分钟",
+        "姓名：____  学校 / 专业：____",
+        "复现、比较并扩展 SparSamp 与 RRC 两条路线（working paper / 项目阶段成果）"
+      ],
+      "layout": {"composition": "deep-blue left title panel + right visual zone（插图预留位）", "intent": "cover"}
+    },
+    {
+      "n": 2,
+      "title": "研究背景与动机",
+      "role": "context",
+      "key_points": [
+        "LLM 每步给出 next-token 概率分布，生成式文本隐写利用它嵌入秘密消息",
+        "接收端凭相同密钥、模型、配置沿轨迹回放恢复",
+        "随机生成对数值精度敏感：一个 token 分叉会沿自回归轨迹放大",
+        "实证引子：FP16→BF16 未校正时 60 条轨迹仅 10 条精确重放（R044）"
+      ],
+      "layout": {"composition": "顶部问题句 + 左侧机制示意（插图预留位） + 右侧挑战卡 + 底部结论", "intent": "context"}
+    },
+    {
+      "n": 3,
+      "title": "研究问题与证据边界",
+      "role": "problem framing",
+      "key_points": [
+        "四目标互相牵制：自然性 / 容量 / 可恢复性 / 可检测性",
+        "逐步匹配 token 分布 ≠ 变长全文分布匹配（精确反例 TV = 1/2）",
+        "研究问题：公开整数概率合同 + 稀疏目标特定修正能否精确重放？",
+        "边界：不宣称零 KL、完全不可检测、通用安全或跨硬件确定性"
+      ],
+      "layout": {"composition": "2×2 目标卡 + 中央聚焦椭圆 + 底部边界结论行", "intent": "problem framing"}
+    },
+    {
+      "n": 4,
+      "title": "技术路线总览",
+      "role": "comparison",
+      "key_points": [
+        "路线 A：SparSamp（USENIX Security 2025）—— 复现与比较对象",
+        "路线 B：RRC（ACL 2026，Algorithm 3/4）—— 可靠性审计与扩展对象",
+        "官方复现：105 tokens / 576 bits / 5.486 bit/token 精确解码（R001）",
+        "兼容矩阵：1,193/1,200 完成；846/846 无歧义精确解码；16/16 容量误差 ≤5%（R002）",
+        "动作：复现、比较、扩展；不写“融合成新算法”"
+      ],
+      "layout": {"composition": "左右双路线卡 + 底部复现数据条 + 结论行", "intent": "comparison"}
+    },
+    {
+      "n": 5,
+      "title": "SparSamp 原理与复现",
+      "role": "concept",
+      "key_points": [
+        "原理：候选 token 概率分布 + 共享密钥受控偏移 + 消息块决定稀疏区间落点",
+        "恢复：block 收缩到单点后确定全部 bit，接收端反向回放",
+        "项目角色：复现与对比；FH-SparSamp v1 128-token 预算成功率 2/6，负面结果不作为推荐",
+        "表述：可回放的受控采样，不是“强行指定词”"
+      ],
+      "layout": {"composition": "左侧机制步骤 + 右侧概念插图预留位", "intent": "concept"},
+      "planned_placeholder_images": [{"filename": "fig_sparsamp_sampling.png", "role": "SparSamp 稀疏采样概念图"}]
+    },
+    {
+      "n": 6,
+      "title": "RRC 原理与关键审计发现",
+      "role": "key finding",
+      "key_points": [
+        "RRC：消息 m∈[0,2^l)，每步旋转并按 token 概率分割区间，选中含秘密点子区间",
+        "审计发现：局部停止条件 −1/2 < mid−d ≤ 1/2 不是精确恢复的充分条件",
+        "精确反例：M=8, m=3，条件满足却恢复 5≠3；失败区域正测度 1/1024",
+        "根因：反向模旋转跨切点；表述限定“本项目采用的 Algorithm 3/4 形式化下”"
+      ],
+      "layout": {"composition": "三步原理卡 + 数轴反例示意 + 插图预留位", "intent": "key finding"},
+      "planned_placeholder_images": [
+        {"filename": "fig_rrc_interval.png", "role": "RRC 区间旋转收缩概念图"},
+        {"filename": "fig_counterexample_wrap.png", "role": "跨边界反例几何示意"}
+      ]
+    },
+    {
+      "n": 7,
+      "title": "方法改进一：Verified-RRC 与 Fixed-Length",
+      "role": "method",
+      "key_points": [
+        "Verified-RRC：局部条件满足后完整逆重放，确认能恢复才停止",
+        "实证：R012 Mock 500/500；原局部规则 87%–96%；平均 +0.04–0.15 token（最大 +2）",
+        "Fixed-Length RRC：固定公开长度 N + HMAC 认证帧；R020 Mock 400/400、0 错 key 接受",
+        "边界：非任意模型必然终止；R021 4 对 matched cover 未见稳定熵偏移（1.110 vs 1.124 bit/token）"
+      ],
+      "layout": {"composition": "四步流程卡 + 三张结果卡 + 认证帧公式 + 插图预留位", "intent": "method"},
+      "planned_placeholder_images": [{"filename": "fig_hmac_frame.png", "role": "HMAC 认证帧与固定长度概念图"}]
+    },
+    {
+      "n": 8,
+      "title": "方法改进二：BDS 跨精度回放",
+      "role": "method/evidence",
+      "key_points": [
+        "问题：FP16→BF16 未校正仅 10/60 精确；平均修正率 2.16% [1.80, 2.53]",
+        "机制：公开整数概率合同（量化 bin / top-16 envelope / top-2 / 整数 mass）+ 有限枚举决策集",
+        "实证：R059 独立 seed 40/40 精确回放、0 false-safe；证书负载/完整轨迹 ≈54.6%",
+        "边界：Qwen2.5-1.5B-Instruct、RTX 3060 Laptop、指定软件栈；≠跨硬件保证"
+      ],
+      "layout": {"composition": "左侧插图预留位（可复用工作论文 Figure 1）+ 右侧三张证据卡 + 底部边界行", "intent": "method/evidence"},
+      "required_images": [
+        {"path": "C:/Users/41462/Documents/隐写/paper/ccfa_bounded_decision/figures/figure_01_architecture.png", "role": "可选概念图（工作论文 Figure 1，BDS 架构）", "fidelity": "reference/optional"}
+      ],
+      "planned_placeholder_images": [{"filename": "fig_bds_replay.png", "role": "FP16/BF16 分叉与稀疏修正概念图"}]
+    },
+    {
+      "n": 9,
+      "title": "实验结果汇总",
+      "role": "data evidence",
+      "key_points": [
+        "主实验（R044，真实数据）：校正后 60/60 vs 未校正 10/60；平均修正率 2.16% [1.80, 2.53]",
+        "方向消融（R046，真实数据）：BF16→FP16 反向 20/20 精确回放",
+        "开销对比（R051，真实数据）：SPRC 1,148 B = 完整轨迹的 24.76%；4-token 块修复 1,408 B",
+        "口径边界：payload-only 6.65% / referenced 24.76% / self-contained 63.89% 是不同估计量"
+      ],
+      "layout": {"composition": "左侧大图（fig2 真实数据）+ 右侧结果卡（fig4 真实数据）+ 底部口径说明", "intent": "data evidence"},
+      "required_images": [
+        {"path": "C:/Users/41462/Documents/隐写/figures/fig2_main_scale.png", "role": "严格输入资产：R044 主实验结果图（60/60 vs 10/60，2.16%）", "fidelity": "preserve data, axes, labels, colors, values"},
+        {"path": "C:/Users/41462/Documents/隐写/deliverables/assets/fig4_precision_direction.png", "role": "严格输入资产：R046 双向精度方向消融图", "fidelity": "preserve data, axes, labels, colors, values"}
+      ]
+    },
+    {
+      "n": 10,
+      "title": "局限、未来与总结",
+      "role": "summary",
+      "key_points": [
+        "三点总结：RRC 停止正确性审计 + Verified-RRC；跨精度稀疏修正回放；BDS 独立确认 40/40",
+        "局限：单模型单 GPU、无真人盲评（R048 未收集）、无跨硬件验证、无任意模型终止证明",
+        "未来：扩大模型/硬件矩阵、固定长度失败率区间、整数频数合同、盲评与检测实验",
+        "状态：working paper / 项目阶段成果；不宣称已发表或通用安全"
+      ],
+      "layout": {"composition": "三张结果卡 + 局限/未来两行 + 底部结论条", "intent": "summary"}
+    }
+  ]
+}
