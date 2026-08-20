@@ -266,6 +266,93 @@ def integer_mass_probabilities(
     ).probabilities
 
 
+def _build_softmax_table(
+    quantum: float,
+    temperature: float,
+    *,
+    max_relative_bin: int = 0,
+    min_relative_bin: int = -100,
+    fractional_bits: int = 32,
+) -> dict[int, int]:
+    """Precompute exp(q * b / T) as fixed-point integers for all relevant bins.
+
+    This replaces the Decimal exponentiation in the original allocation with a
+    purely integer lookup table.  The table is deterministic given the public
+    parameters and is shared between encoder and decoder.
+
+    Returns a dict mapping bin value → fixed-point weight (scaled by 2^fractional_bits).
+    """
+    if quantum <= 0 or temperature <= 0:
+        raise ValueError("quantum and temperature must be positive")
+    if fractional_bits < 16 or fractional_bits > 64:
+        raise ValueError("fractional_bits must be in [16, 64]")
+    if min_relative_bin > max_relative_bin:
+        raise ValueError("min_relative_bin must be <= max_relative_bin")
+
+    # Use Decimal for the precomputation (once, public)
+    with localcontext() as context:
+        context.prec = fractional_bits + 16
+        decimal_quantum = Decimal(str(quantum))
+        decimal_temperature = Decimal(str(temperature))
+        scale = Decimal(1 << fractional_bits)
+
+        table: dict[int, int] = {}
+        for b in range(min_relative_bin, max_relative_bin + 1):
+            exponent = (Decimal(b) * decimal_quantum) / decimal_temperature
+            weight = exponent.exp()  # exp(q * b / T)
+            fixed = int(weight * scale)  # convert to fixed-point
+            table[b] = fixed
+
+    return table
+
+
+# Global cache: (quantum, temperature, fractional_bits) -> table
+_softmax_table_cache: dict[tuple[float, float, int], dict[int, int]] = {}
+
+
+def _get_softmax_table(
+    quantum: float,
+    temperature: float,
+    *,
+    fractional_bits: int = 32,
+    min_relative_bin: int = -100,
+) -> dict[int, int]:
+    """Get or compute the softmax lookup table for the given parameters."""
+    key = (quantum, temperature, fractional_bits)
+    if key not in _softmax_table_cache:
+        _softmax_table_cache[key] = _build_softmax_table(
+            quantum, temperature,
+            max_relative_bin=0,
+            min_relative_bin=min_relative_bin,
+            fractional_bits=fractional_bits,
+        )
+    return _softmax_table_cache[key]
+
+
+def _compute_weight_sum(
+    logit_bins: Sequence[int],
+    table: dict[int, int],
+    *,
+    max_bin: int,
+) -> tuple[list[int], int]:
+    """Look up weights from the table and compute their sum.
+
+    Returns (weights, weight_sum) where weights are fixed-point integers.
+    For bins outside the precomputed range, the weight is 0 (exp(-inf) ≈ 0).
+    """
+    weights: list[int] = []
+    total = 0
+    for b in logit_bins:
+        relative = b - max_bin
+        if relative in table:
+            w = table[relative]
+        else:
+            w = 0  # exp(-large) ≈ 0
+        weights.append(w)
+        total += w
+    return weights, total
+
+
 def allocate_logit_bin_mass(
     token_ids: Sequence[int],
     logit_bins: Sequence[int],
@@ -273,13 +360,18 @@ def allocate_logit_bin_mass(
     quantum: float,
     temperature: float,
     mass_bits: int,
+    fractional_bits: int = 32,
 ) -> IntegerMassAllocation:
     """Map shared integer logit bins to deterministic power-of-two counts.
 
-    Decimal exponentiation removes endpoint floating-point softmax from the
-    probability contract. One count is reserved for every retained token; the
-    remaining mass follows deterministic largest-remainder apportionment with
-    token ID as the public tie breaker.
+    This version uses a precomputed softmax table instead of Decimal
+    exponentiation, making the allocation purely integer arithmetic
+    (except for the one-time table construction).  The table is cached
+    and shared between encoder and decoder.
+
+    One count is reserved for every retained token; the remaining mass
+    follows deterministic largest-remainder apportionment with token ID
+    as the public tie breaker.
     """
 
     if not token_ids or len(token_ids) != len(logit_bins):
@@ -296,30 +388,44 @@ def allocate_logit_bin_mass(
     if len(token_ids) > total_mass:
         raise ValueError("total integer mass is too small to preserve candidate support")
 
-    with localcontext() as context:
-        context.prec = 80
-        decimal_quantum = Decimal(str(quantum))
-        decimal_temperature = Decimal(str(temperature))
-        maximum_bin = max(logit_bins)
-        weights = [
-            ((Decimal(value - maximum_bin) * decimal_quantum) / decimal_temperature).exp()
-            for value in logit_bins
-        ]
-        weight_sum = sum(weights, start=Decimal(0))
-        remaining = total_mass - len(token_ids)
-        quotas = [weight * remaining / weight_sum for weight in weights]
-        floors = [
-            int(quota.to_integral_value(rounding=ROUND_FLOOR)) for quota in quotas
-        ]
-        counts = [1 + value for value in floors]
-        residual = total_mass - sum(counts)
-        remainders = [quota - floor for quota, floor in zip(quotas, floors, strict=True)]
-        order = sorted(
-            range(len(token_ids)),
-            key=lambda index: (-remainders[index], int(token_ids[index])),
-        )
-        for index in order[:residual]:
-            counts[index] += 1
+    # Get the precomputed softmax table
+    table = _get_softmax_table(quantum, temperature, fractional_bits=fractional_bits)
+
+    # Look up weights and compute sum (all integer arithmetic)
+    max_bin = max(logit_bins)
+    weights, weight_sum = _compute_weight_sum(logit_bins, table, max_bin=max_bin)
+
+    if weight_sum == 0:
+        # All bins are outside the precomputed range; fall back to uniform
+        weights = [1] * len(token_ids)
+        weight_sum = len(token_ids)
+
+    # Allocate integer mass using largest-remainder
+    remaining = total_mass - len(token_ids)
+    # quotas = weight * remaining / weight_sum, but we need to avoid floating point
+    # We compute floor(weight * remaining / weight_sum) using integer arithmetic:
+    # floor((weight * remaining) / weight_sum)
+    floors: list[int] = []
+    remainders: list[int] = []
+    for w in weights:
+        # quotient = (w * remaining) // weight_sum  (integer division)
+        # remainder = (w * remaining) % weight_sum
+        product = w * remaining
+        q = product // weight_sum
+        r = product % weight_sum
+        floors.append(q)
+        remainders.append(r)
+
+    counts = [1 + f for f in floors]
+    residual = total_mass - sum(counts)
+
+    # Sort by remainder descending, then by token ID ascending (public tie breaker)
+    order = sorted(
+        range(len(token_ids)),
+        key=lambda index: (-remainders[index], int(token_ids[index])),
+    )
+    for index in order[:residual]:
+        counts[index] += 1
 
     return IntegerMassAllocation(
         counts=tuple(counts),

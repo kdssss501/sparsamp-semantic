@@ -28,8 +28,17 @@ from .byte_sliced import (
 )
 from .probability_contract import IntegerMassAllocation, allocate_integer_mass
 from .rrc import RrcConfig, RotationRangeCodec
+from .bds_enhanced_rrc import (
+    BdsRrcConfig,
+    BdsEnvelope,
+    BdsEnhancedRotationRangeCodec,
+    verify_bds_robustness,
+)
 
 __all__ = [
+    "BdsRrcConfig",
+    "BdsEnvelope",
+    "BdsEnhancedRotationRangeCodec",
     "CodecConfig",
     "DecodeResult",
     "EncodeResult",
@@ -62,4 +71,5 @@ __all__ = [
     "allocate_integer_mass",
     "finish_session",
     "is_sentence_complete",
+    "verify_bds_robustness",
 ]
