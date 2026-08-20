@@ -652,7 +652,10 @@ class BdsEnhancedRotationRangeCodec:
                     if not cum_robust:
                         vulnerable_steps.append(step)
                     # Store the nominal cumulative bounds for the certificate
-                    cert_entry = (step, str(cum_left), str(cum_right))
+                    total_mass = Decimal(1 << (self.config.probability_mass_bits or self.config.contract_mass_bits))
+                    cl_int = int(cum_left * total_mass)
+                    cr_int = int(cum_right * total_mass)
+                    cert_entry = (step, cl_int, cr_int)
                     if not hasattr(self, '_certificate'):
                         self._certificate = []
                     self._certificate.append(cert_entry)
@@ -788,7 +791,7 @@ class BdsEnhancedRotationRangeCodec:
         session: ProviderSession,
         token_ids: tuple[Hashable, ...] | list[Hashable],
         key: bytes,
-        certificate: tuple[tuple[int, str, str], ...] = (),
+        certificate: tuple[tuple[int, int, int], ...] = (),
     ) -> DecodeResult:
         """Recover a fixed-length bit string using BDS-assisted decoding.
 
@@ -802,8 +805,9 @@ class BdsEnhancedRotationRangeCodec:
         
         # Build a lookup: step -> (cum_left, cum_right)
         cert_map = {}
-        for step_idx, cum_left_str, cum_right_str in certificate:
-            cert_map[step_idx] = (Decimal(cum_left_str), Decimal(cum_right_str))
+        for step_idx, cl_int, cr_int in certificate:
+            total_mass = Decimal(1 << (self.config.probability_mass_bits or self.config.contract_mass_bits))
+            cert_map[step_idx] = (Decimal(cl_int) / total_mass, Decimal(cr_int) / total_mass)
         
         # Use the fallback codec but with certificate override
         # We need to intercept the interval narrowing for vulnerable steps
